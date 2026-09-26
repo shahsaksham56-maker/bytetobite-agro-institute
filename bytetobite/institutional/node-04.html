@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite — Node 04: Quality &amp; Dispatch Readiness</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #cfd8dc;
+            color: #111827;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 1;
+            pointer-events: none;
+        }
+
+        .glass-defs {
+            position: absolute;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+
+        .hero {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            color: #111827;
+            pointer-events: none;
+        }
+
+        .icon {
+            flex: none;
+        }
+
+        .rule {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .rule--left {
+            left: 1.5rem;
+        }
+
+        .rule--right {
+            right: 1.5rem;
+        }
+
+        .rule__seg {
+            width: 1px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .rule__seg--end {
+            height: 12%;
+        }
+
+        .rule__seg--mid {
+            flex: 1 1 0%;
+        }
+
+        .rule__plus {
+            font-size: 0.8125rem;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            color: rgba(0, 0, 0, 0.35);
+            padding: 0.35rem 0;
+        }
+
+        @media (min-width: 860px) {
+            .rule {
+                display: flex;
+            }
+        }
+
+        .nav {
+            position: relative;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 3.5rem;
+            padding-right: clamp(140px, 12vw, 200px);
+        }
+
+        .nav__item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #111827;
+            background: none;
+            border: 0;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: opacity 250ms ease;
+        }
+
+        .nav__item:hover {
+            opacity: 0.65;
+        }
+
+        .nav__label {
+            font-size: 0.9375rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+
+        .nav__status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            pointer-events: auto;
+            white-space: nowrap;
+        }
+
+        .nav__dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: #10b981;
+            box-shadow: 0 0 8px currentColor;
+            transition: background 300ms, color 300ms;
+            flex-shrink: 0;
+        }
+
+        .hero-bottom {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 1rem 3.5rem 2.5rem;
+            overflow-y: auto;
+        }
+
+        @media (min-width: 900px) {
+            .hero-bottom {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 4rem;
+                overflow-y: hidden;
+            }
+        }
+
+        .lede {
+            max-width: 34rem;
+            pointer-events: auto;
+        }
+
+        .lede__sub {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(17, 24, 39, 0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .lede__title {
+            font-size: 2.5rem;
+            font-weight: 400;
+            line-height: 1.12;
+            letter-spacing: -0.04em;
+            color: #111827;
+        }
+
+        .lede__title span {
+            font-weight: 600;
+        }
+
+        .lede__body {
+            margin-top: 1rem;
+            max-width: 400px;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: rgba(17, 24, 39, 0.68);
+        }
+
+        .controls-grid {
+            margin-top: 1.75rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem 1.5rem;
+            max-width: 430px;
+        }
+
+        .control-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: rgba(17, 24, 39, 0.7);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-label b {
+            font-family: 'JetBrains Mono', monospace;
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .control-input {
+            width: 100%;
+            accent-color: #111827;
+            cursor: pointer;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .order-btn-container {
+            margin-top: 2rem;
+            position: relative;
+            display: inline-block;
+            width: 320px;
+            height: 56px;
+        }
+
+        .order-btn {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
+            background: #111827;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            overflow: hidden;
+            box-shadow:
+                0 12px 28px -6px rgba(17, 24, 39, 0.35),
+                0 4px 12px -2px rgba(17, 24, 39, 0.2);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            user-select: none;
+            pointer-events: auto;
+        }
+
+        .order-btn:hover:not(:disabled) {
+            background: #1f2937;
+            transform: translateY(-2px) scale(1.01);
+            box-shadow:
+                0 16px 32px -6px rgba(17, 24, 39, 0.4),
+                0 6px 16px -2px rgba(17, 24, 39, 0.25);
+        }
+
+        .order-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .order-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+            background: #4b5563;
+            box-shadow: none;
+        }
+
+        .order-btn.animating {
+            pointer-events: none;
+        }
+
+        .btn-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 0 1.25rem;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .default-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .order-btn.animating .default-text {
+            opacity: 0;
+            transform: translateY(-26px);
+        }
+
+        .success-text {
+            opacity: 0;
+            transform: translateY(26px);
+        }
+
+        .order-btn.completed .success-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .check-icon {
+            width: 18px;
+            height: 18px;
+            stroke: #10b981;
+        }
+
+        .road-dashed {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            margin-top: -1px;
+            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.4) 50%, transparent 50%);
+            background-size: 16px 2px;
+            background-repeat: repeat-x;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .order-btn.speeding .road-dashed {
+            opacity: 1;
+            animation: roadDash 0.18s infinite linear;
+        }
+
+        @keyframes roadDash {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: -16px 0;
+            }
+        }
+
+        .box-wrapper {
+            position: absolute;
+            left: 62px;
+            top: 50%;
+            width: 26px;
+            height: 24px;
+            margin-top: -12px;
+            transform: scale(0);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            z-index: 2;
+        }
+
+        .order-btn.show-box .box-wrapper {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .order-btn.box-loaded .box-wrapper {
+            opacity: 0;
+            transform: scale(0.1) translateX(25px);
+            transition: transform 0.35s ease, opacity 0.2s ease;
+        }
+
+        .truck-wrapper {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 140px;
+            height: 48px;
+            margin-top: -24px;
+            transform: translateX(330px);
+            z-index: 3;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .truck-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .door-top,
+        .door-bottom {
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: 16px 4px;
+        }
+
+        .door-bottom {
+            transform-origin: 16px 44px;
+        }
+
+        .truck-wrapper.doors-open .door-top {
+            transform: rotate(95deg);
+        }
+
+        .truck-wrapper.doors-open .door-bottom {
+            transform: rotate(-95deg);
+        }
+
+        .light-beams {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .truck-wrapper.lights-on .light-beams {
+            opacity: 1;
+            filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.7));
+        }
+
+        .truck-wrapper.lights-on .headlight-top,
+        .truck-wrapper.lights-on .headlight-bottom {
+            fill: #FEF08A;
+            filter: drop-shadow(0 0 8px #FACC15);
+        }
+
+        .truck-wrapper.lights-on .truck-svg {
+            animation: truckBounce 0.16s infinite alternate ease-in-out;
+        }
+
+        @keyframes truckBounce {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-0.8px);
+            }
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 390px;
+            max-width: 100%;
+            height: 520px;
+            padding: 2.25rem 2rem;
+            border-radius: 40px;
+            overflow: hidden;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06),
+                inset 0 1px 1px rgba(255, 255, 255, 0.6);
+            pointer-events: auto;
+        }
+
+        #dup-video-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        #dup-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            filter: url(#liquid-glass-refraction);
+        }
+
+        .card__frost {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            border-radius: 40px;
+            pointer-events: none;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.4),
+                inset 0 -1.5px 2px rgba(0, 0, 0, 0.08);
+            transition: background 300ms ease;
+        }
+
+        .card:hover .card__frost {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .card__head,
+        .card__body,
+        .card__footer {
+            position: relative;
+            z-index: 2;
+        }
+
+        .card__head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .card__title {
+            font-size: 1.1875rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .card__index {
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: rgba(0, 0, 0, 0.4);
+            letter-spacing: 0.05em;
+        }
+
+        .card__body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.84rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+        }
+
+        .metric-row__label {
+            color: rgba(17, 24, 39, 0.65);
+            font-weight: 400;
+        }
+
+        .metric-row__value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .route-badge {
+            margin-top: 0.35rem;
+            padding: 0.85rem 1rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .route-badge__header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-badge__dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 9999px;
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        .route-badge__name {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .route-badge__meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.725rem;
+            color: rgba(17, 24, 39, 0.55);
+            margin-top: 4px;
+            padding-left: 15px;
+        }
+
+        .card__footer {
+            margin-top: auto;
+            padding-top: 0.75rem;
+        }
+
+        .card__wave {
+            display: block;
+            width: 100%;
+            height: 52px;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .menu {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            visibility: hidden;
+            pointer-events: none;
+            transition: visibility 0s linear 400ms;
+        }
+
+        .menu.is-open {
+            visibility: visible;
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+
+        .menu__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            transition: opacity 400ms ease;
+        }
+
+        .menu.is-open .menu__backdrop {
+            opacity: 1;
+        }
+
+        .menu__panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            width: 360px;
+            max-width: 100%;
+            height: 100%;
+            padding: 2.25rem 2.5rem;
+            background: #f8fafc;
+            transform: translateX(-100%);
+            transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .menu.is-open .menu__panel {
+            transform: translateX(0);
+        }
+
+        .menu__close {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            align-self: flex-start;
+            margin-bottom: 2.5rem;
+            background: none;
+            border: 0;
+            font: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .menu__nav {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu__link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            color: #111827;
+            text-decoration: none;
+            font-size: 1.25rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+        }
+
+        .menu__link:hover {
+            opacity: 0.6;
+        }
+
+        .menu__foot {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .toast-wrap {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            padding: 10px 20px;
+            background: rgba(17, 24, 39, 0.94);
+            color: #fff;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .toast-item.warn {
+            background: rgba(180, 83, 9, 0.95);
+        }
+
+        .toast-item.error {
+            background: rgba(153, 27, 27, 0.95);
+        }
+
+        .toast-item.success {
+            background: rgba(6, 95, 70, 0.95);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <video id="bg-video" class="bg-video" aria-hidden="true" autoplay muted loop playsinline preload="auto"
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260816_125506_3a597378-ec85-4ebd-bd22-03b45508ac62.mp4"></video>
+
+    <svg class="glass-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <defs>
+            <filter id="liquid-glass-refraction" x="-30%" y="-30%" width="160%" height="160%"
+                color-interpolation-filters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.012 0.015" numOctaves="3" result="noise" />
+                <feColorMatrix in="SourceAlpha" type="matrix" result="boosted_alpha"
+                    values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 100 0" />
+                <feGaussianBlur in="boosted_alpha" stdDeviation="45" result="blurred_alpha" />
+                <feComponentTransfer in="blurred_alpha" result="edge_mask">
+                    <feFuncA type="linear" slope="-1.3" intercept="1" />
+                </feComponentTransfer>
+                <feComposite in="noise" in2="edge_mask" operator="arithmetic" k1="1" k2="0" k3="0" k4="0"
+                    result="masked_noise" />
+                <feDisplacementMap in="SourceGraphic" in2="masked_noise" scale="65" xChannelSelector="R"
+                    yChannelSelector="G" result="red_displaced" />
+                <feColorMatrix in="red_displaced" type="matrix" result="red"
+                    values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+                <feDisplacementMap in="SourceGraphic" in2="masked_noise" scale="56" xChannelSelector="R"
+                    yChannelSelector="G" result="green_displaced" />
+                <feColorMatrix in="green_displaced" type="matrix" result="green"
+                    values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+                <feDisplacementMap in="SourceGraphic" in2="masked_noise" scale="47" xChannelSelector="R"
+                    yChannelSelector="G" result="blue_displaced" />
+                <feColorMatrix in="blue_displaced" type="matrix" result="blue"
+                    values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" />
+                <feBlend in="red" in2="green" mode="screen" result="rg" />
+                <feBlend in="rg" in2="blue" mode="screen" result="chromatic_dispersion" />
+            </filter>
+        </defs>
+    </svg>
+
+    <main class="hero">
+        <div class="rule rule--left" aria-hidden="true">
+            <span class="rule__seg rule__seg--end"></span>
+            <span class="rule__plus">+</span>
+            <span class="rule__seg rule__seg--mid"></span>
+            <span class="rule__plus">+</span>
+            <span class="rule__seg rule__seg--end"></span>
+        </div>
+        <div class="rule rule--right" aria-hidden="true">
+            <span class="rule__seg rule__seg--end"></span>
+            <span class="rule__plus">+</span>
+            <span class="rule__seg rule__seg--mid"></span>
+            <span class="rule__plus">+</span>
+            <span class="rule__seg rule__seg--end"></span>
+        </div>
+
+        <nav class="nav">
+            <button id="menu-open" class="nav__item" aria-expanded="false" aria-controls="menu">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.75">
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="4" y1="12" x2="20" y2="12" />
+                    <line x1="4" y1="18" x2="20" y2="18" />
+                </svg>
+                <span class="nav__label">Menu</span>
+            </button>
+
+            <div class="nav__status-pill">
+                <span class="nav__dot" id="system-dot"></span>
+                <span id="system-status-text">Connecting…</span>
+            </div>
+        </nav>
+
+        <div class="hero-bottom">
+            <div class="lede">
+                <p class="lede__sub">Kitchen Quality Station · Node 04</p>
+                <h1 class="lede__title">Food Freshness &amp;<br /><span>Dispatch Readiness</span></h1>
+                <p class="lede__body">
+                    Node 04 checks how long the food has been kept warm, whether it's still safe to donate, and how much
+                    value can still be saved. Final NGO matching happens on Node 05.
+                </p>
+
+                <div class="controls-grid">
+                    <div class="control-box">
+                        <span class="control-label">Time Kept Waiting <b id="val-hold">25m</b></span>
+                        <input type="range" class="control-input" id="input-hold" min="0" max="120" value="25" />
+                    </div>
+                    <div class="control-box">
+                        <span class="control-label">Room Temp <b id="val-temp">28°C</b></span>
+                        <input type="range" class="control-input" id="input-temp" min="20" max="45" value="28" />
+                    </div>
+                    <div class="control-box">
+                        <span class="control-label">Extra Plates <b id="val-surplus">0</b></span>
+                        <input type="range" class="control-input" id="input-surplus" min="0" max="300" step="5"
+                            value="0" />
+                    </div>
+                    <div class="control-box">
+                        <span class="control-label">Safe Time Limit <b id="val-shelf">90m</b></span>
+                        <input type="range" class="control-input" id="input-shelf" min="45" max="150" value="90" />
+                    </div>
+                </div>
+
+                <div class="order-btn-container">
+                    <button class="order-btn" id="orderBtn" aria-label="Confirm batch is safe for donation">
+                        <span class="btn-text default-text" id="btn-dispatch-label">
+                            <span>Confirm &amp; mark ready</span>
+                            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14" />
+                                <path d="m12 5 7 7-7 7" />
+                            </svg>
+                        </span>
+
+                        <span class="btn-text success-text">
+                            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Marked ready ✓</span>
+                        </span>
+
+                        <div class="road-dashed" id="roadDashed"></div>
+
+                        <div class="box-wrapper" id="boxWrapper">
+                            <svg class="box-svg" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="26" height="24" rx="4" fill="#E5A853" />
+                                <rect x="9.5" width="7" height="24" fill="#C48432" />
+                                <line x1="0" y1="1" x2="26" y2="1" stroke="#FCE7C8" stroke-opacity="0.6" />
+                            </svg>
+                        </div>
+
+                        <div class="truck-wrapper" id="truckWrapper">
+                            <svg class="truck-svg" viewBox="0 0 140 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="beamGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#FDE047" stop-opacity="0.85" />
+                                        <stop offset="40%" stop-color="#FACC15" stop-opacity="0.45" />
+                                        <stop offset="85%" stop-color="#FACC15" stop-opacity="0.1" />
+                                        <stop offset="100%" stop-color="#FACC15" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+
+                                <g class="light-beams" id="lightBeams">
+                                    <polygon points="96,7 165,-8 165,24" fill="url(#beamGlow)" />
+                                    <polygon points="96,41 165,24 165,56" fill="url(#beamGlow)" />
+                                    <polygon points="96,24 175,10 175,38" fill="url(#beamGlow)" opacity="0.5" />
+                                </g>
+
+                                <line x1="72" y1="4" x2="65" y2="-1" stroke="#ffffff" stroke-width="2.5"
+                                    stroke-linecap="round" />
+                                <line x1="72" y1="44" x2="65" y2="49" stroke="#ffffff" stroke-width="2.5"
+                                    stroke-linecap="round" />
+
+                                <g class="truck-doors" id="svgDoors">
+                                    <line class="door-top" x1="16" y1="4" x2="16" y2="24" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" />
+                                    <line class="door-bottom" x1="16" y1="44" x2="16" y2="24" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" />
+                                </g>
+
+                                <rect x="16" y="4" width="56" height="40" rx="4" fill="#FFFFFF" />
+                                <line x1="62" y1="4" x2="62" y2="44" stroke="#E2E8F0" stroke-width="1.5" />
+
+                                <path d="M72 4 H88 C94 4 98 9 98 24 C98 39 94 44 88 44 H72 V4 Z" fill="#2563EB" />
+                                <path d="M76 7 H86 C89.5 7 92 11 92 24 C92 37 89.5 41 86 41 H76 V7 Z" fill="#0F172A" />
+                                <line x1="79" y1="10" x2="89" y2="20" stroke="#FFFFFF" stroke-opacity="0.35"
+                                    stroke-width="2.5" stroke-linecap="round" />
+
+                                <rect class="headlight-top" x="94" y="6" width="4" height="7" rx="1.5" fill="#FACCB1" />
+                                <rect class="headlight-bottom" x="94" y="35" width="4" height="7" rx="1.5"
+                                    fill="#FACCB1" />
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <aside class="card" data-glass-card>
+                <div id="dup-video-container"><canvas id="dup-image"></canvas></div>
+                <div class="card__frost" aria-hidden="true"></div>
+
+                <div class="card__head">
+                    <h2 class="card__title">Quality Summary</h2>
+                    <span class="card__index">//NODE-04</span>
+                </div>
+
+                <div class="card__body">
+                    <div class="metric-row">
+                        <span class="metric-row__label">Freshness</span>
+                        <span class="metric-row__value" id="card-freshness">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-row__label">Safe Time Left</span>
+                        <span class="metric-row__value" id="card-remaining">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-row__label">Heat Speed Multiplier</span>
+                        <span class="metric-row__value" id="card-thermal">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-row__label">Saved Food Value (₹)</span>
+                        <span class="metric-row__value" id="card-value">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-row__label">Pollution Saved</span>
+                        <span class="metric-row__value" id="card-co2">--</span>
+                    </div>
+
+                    <div class="route-badge">
+                        <div class="route-badge__header">
+                            <span class="route-badge__dot" id="cluster-dot"></span>
+                            <span class="route-badge__name" id="card-cluster-name">Checking quality…</span>
+                        </div>
+                        <div class="route-badge__meta" id="card-cluster-meta">Reading from grid…</div>
+                    </div>
+                </div>
+
+                <div class="card__footer">
+                    <svg id="string-svg" class="card__wave" viewBox="0 0 300 60" preserveAspectRatio="none"
+                        aria-hidden="true">
+                        <path id="wave-path" d="M 0 30 Q 150 30 300 30" stroke="#111827" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    </svg>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <div class="menu" id="menu">
+        <div class="menu__backdrop" id="menu-backdrop"></div>
+        <div class="menu__panel">
+            <button class="menu__close" id="menu-close">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                </svg>
+                <span>Close Menu</span>
+            </button>
+
+            <nav class="menu__nav">
+                <a class="menu__link" href="node-01.html"><span>01 Kitchen Planning</span></a>
+                <a class="menu__link" href="node-02.html"><span>02 Kitchen Prep &amp; Monitor</span></a>
+                <a class="menu__link" href="node-03.html"><span>03 Live Counter</span></a>
+                <a class="menu__link" href="node-04.html"><span>04 Quality &amp; Dispatch</span></a>
+                <a class="menu__link" href="node-05.html"><span>05 NGO Logistics</span></a>
+                <a class="menu__link" href="node-06.html"><span>06 Savings &amp; Records</span></a>
+            </nav>
+
+            <div class="menu__foot">
+                <p class="mono" style="font-size: 0.75rem; color: rgba(17,24,39,0.5);">ByteToBite Institutional · Node
+                    04</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <script src="institutional-db.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // TOASTS
+        // ═══════════════════════════════════════════════════════════════
+        function showToast(msg, type) {
+            type = type || 'info';
+            const wrap = document.getElementById('toast-wrap');
+            const el = document.createElement('div');
+            el.className = 'toast-item ' + (type !== 'info' ? type : '');
+            el.textContent = msg;
+            wrap.appendChild(el);
+            setTimeout(function () {
+                el.style.transition = 'opacity 0.35s, transform 0.35s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function () { el.remove(); }, 400);
+            }, 3400);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ENGINE
+        // ═══════════════════════════════════════════════════════════════
+        class QualityEngine {
+            constructor() {
+                this.unitCostPerMeal = 45.0;
+                this.co2FactorKgPerMeal = 0.42;
+
+                this.state = {
+                    surplusBatchCount: 0,
+                    elapsedHoldTimeMinutes: 25,
+                    maxShelfLifeMinutes: 90,
+                    ambientTemperatureC: 28,
+                    institute: null,
+                    plan: null,
+                    prep: null,
+                    tally: null,
+                    connected: false,
+                    ready: false
+                };
+
+                this.listeners = new Set();
+                this.init();
+            }
+
+            async init() {
+                try {
+                    if (!window.InstitutionalAPI) {
+                        this.setStatusText('No API — include institutional-db.js', true);
+                        return;
+                    }
+                    const session = await window.InstitutionalAPI.getCurrentSession();
+                    if (!session || !session.institute_id) {
+                        this.setStatusText('No session — sign in first', true);
+                        return;
+                    }
+                    const inst = await window.InstitutionalAPI.getInstitute(session.institute_id);
+                    if (!inst) {
+                        this.setStatusText('Institute not found', true);
+                        return;
+                    }
+                    this.state.institute = inst;
+                    document.getElementById('system-status-text').textContent = inst.name || 'Connected';
+
+                    await this.refreshFromGrid();
+
+                    this.state.connected = true;
+                    this.notify();
+
+                    const self = this;
+                    window.InstitutionalAPI.subscribe(async function (type) {
+                        const label = String(type || '').replace('bytetobite:', '').replace('-changed', '');
+                        if (label === 'tallies' || label === 'meal-plans' || label === 'meal-preps') {
+                            await self.refreshFromGrid();
+                        }
+                    });
+                } catch (e) {
+                    console.error('Node 04 init failed', e);
+                    this.setStatusText('Grid error', true);
+                }
+            }
+
+            setStatusText(text, isError) {
+                const t = document.getElementById('system-status-text');
+                const d = document.getElementById('system-dot');
+                if (t) t.textContent = text;
+                if (d && isError) {
+                    d.style.background = '#ef4444';
+                    d.style.color = '#ef4444';
+                }
+            }
+
+            async refreshFromGrid() {
+                try {
+                    if (!this.state.institute) return;
+                    const plans = await window.InstitutionalAPI.getMealPlans(this.state.institute.id);
+                    const sorted = plans.slice().sort(function (a, b) { return (b.created_at || 0) - (a.created_at || 0); });
+                    const active =
+                        sorted.find(function (p) { return p.status === 'IN_SERVICE'; }) ||
+                        sorted.find(function (p) { return p.status === 'PUBLISHED'; }) ||
+                        sorted.find(function (p) { return p.status === 'COMPLETED'; }) ||
+                        sorted[0] || null;
+
+                    if (!active) {
+                        this.state.plan = null;
+                        this.state.prep = null;
+                        this.state.tally = null;
+                        this.state.surplusBatchCount = 0;
+                        this.notify();
+                        return;
+                    }
+
+                    this.state.plan = active;
+                    const prep = await window.InstitutionalAPI.getPrepByPlan(active.id);
+                    this.state.prep = prep;
+                    const tally = prep && prep.id ? await window.InstitutionalAPI.getLatestTally(prep.id) : null;
+                    this.state.tally = tally;
+
+                    const prepared = (prep && prep.prepared_count) || active.prepared_count || active.predicted_demand || 0;
+                    const served = (tally && tally.served_count) || 0;
+                    this.state.surplusBatchCount = Math.max(0, prepared - served);
+
+                    if (tally && tally.created_at) {
+                        const mins = Math.max(0, Math.floor((Date.now() - tally.created_at) / 60000));
+                        this.state.elapsedHoldTimeMinutes = Math.min(120, mins);
+                    }
+
+                    this.notify();
+                } catch (e) {
+                    console.warn('refreshFromGrid failed', e);
+                }
+            }
+
+            subscribe(fn) {
+                this.listeners.add(fn);
+                fn(this.compute());
+                const self = this;
+                return function () { self.listeners.delete(fn); };
+            }
+
+            notify() {
+                const c = this.compute();
+                this.listeners.forEach(function (fn) { try { fn(c); } catch (e) { console.warn(e); } });
+            }
+
+            setElapsedHoldTime(m) {
+                this.state.elapsedHoldTimeMinutes = Math.max(0, Math.min(180, Number(m)));
+                this.notify();
+            }
+            setAmbientTemperature(c) {
+                this.state.ambientTemperatureC = Number(c);
+                this.notify();
+            }
+            setSurplusBatchCount(n) {
+                this.state.surplusBatchCount = Math.max(0, Number(n));
+                this.notify();
+            }
+            setMaxShelfLife(m) {
+                this.state.maxShelfLifeMinutes = Math.max(1, Number(m));
+                this.notify();
+            }
+
+            compute() {
+                const hold = this.state.elapsedHoldTimeMinutes;
+                const shelf = this.state.maxShelfLifeMinutes;
+                const tempC = this.state.ambientTemperatureC;
+                const surplus = this.state.surplusBatchCount;
+
+                const thermalMultiplier = 1.0 + Math.max(0, (tempC - 25) / 10) * 0.25;
+                const effectiveHold = hold * thermalMultiplier;
+                const remaining = Math.max(0, shelf - effectiveHold);
+                const freshness = Math.max(0, Math.min(1.0, remaining / shelf));
+
+                let quality = { code: 'FRESH', label: 'Fresh & Good', color: '#10b981' };
+                if (freshness < 0.20 || remaining <= 0) {
+                    quality = { code: 'EXPIRED', label: 'Cold / Unsafe — send to compost', color: '#ef4444' };
+                } else if (freshness < 0.60) {
+                    quality = { code: 'URGENT', label: 'Send Immediately', color: '#f59e0b' };
+                }
+
+                const isRescuable = freshness >= 0.20 && remaining > 0;
+                const mealsRescued = isRescuable ? surplus : 0;
+                const valueINR = mealsRescued * this.unitCostPerMeal;
+                const co2Kg = Number((mealsRescued * this.co2FactorKgPerMeal).toFixed(2));
+                const canMarkReady = quality.code !== 'EXPIRED' && surplus > 0;
+
+                return {
+                    surplusBatchCount: surplus,
+                    elapsedHoldTimeMinutes: hold,
+                    maxShelfLifeMinutes: shelf,
+                    ambientTemperatureC: tempC,
+                    thermalMultiplier: Number(thermalMultiplier.toFixed(3)),
+                    effectiveHold: Number(effectiveHold.toFixed(1)),
+                    remainingMinutes: Number(remaining.toFixed(1)),
+                    freshnessIndex: Number(freshness.toFixed(3)),
+                    freshnessPercent: Math.round(freshness * 100),
+                    quality: quality,
+                    mealsRescued: mealsRescued,
+                    valueINR: valueINR,
+                    co2Kg: co2Kg,
+                    canMarkReady: canMarkReady,
+                    connected: this.state.connected,
+                    ready: this.state.ready,
+                    plan: this.state.plan,
+                    prep: this.state.prep,
+                    institute: this.state.institute
+                };
+            }
+
+            async markReady() {
+                const payload = this.compute();
+                if (!payload.canMarkReady) {
+                    return { success: false, reason: 'Not safe to mark ready' };
+                }
+
+                // Node 04's only job: write a thermal record
+                if (window.InstitutionalAPI && this.state.prep && this.state.prep.id) {
+                    try {
+                        await window.InstitutionalAPI.saveThermalCheck({
+                            prep_id: this.state.prep.id,
+                            institute_id: this.state.institute.id,
+                            temp_c: 60 + Math.max(0, 25 - this.state.ambientTemperatureC) * 0.3,
+                            state: payload.quality.code,
+                            hold_minutes: payload.elapsedHoldTimeMinutes,
+                            remaining_minutes: payload.remainingMinutes,
+                            freshness_index: payload.freshnessIndex,
+                            ready_for_dispatch: true
+                        });
+                    } catch (e) {
+                        console.warn('thermal save failed', e);
+                        return { success: false, reason: 'Could not write thermal record' };
+                    }
+                }
+
+                // Also mark the plan ready so Node 05 knows to pick it up
+                if (window.InstitutionalAPI && this.state.plan) {
+                    try {
+                        await window.InstitutionalAPI.saveMealPlan(Object.assign({}, this.state.plan, {
+                            dispatch_ready: true,
+                            dispatch_ready_at: Date.now()
+                        }));
+                    } catch (e) {
+                        console.warn('plan ready flag failed', e);
+                    }
+                }
+
+                this.state.ready = true;
+                this.notify();
+                return { success: true, payload: payload };
+            }
+        }
+
+        const engine = new QualityEngine();
+
+        // ═══════════════════════════════════════════════════════════════
+        // UI BINDINGS
+        // ═══════════════════════════════════════════════════════════════
+        const inputHold = document.getElementById('input-hold');
+        const inputTemp = document.getElementById('input-temp');
+        const inputSurplus = document.getElementById('input-surplus');
+        const inputShelf = document.getElementById('input-shelf');
+
+        const valHold = document.getElementById('val-hold');
+        const valTemp = document.getElementById('val-temp');
+        const valSurplus = document.getElementById('val-surplus');
+        const valShelf = document.getElementById('val-shelf');
+
+        const cardFreshness = document.getElementById('card-freshness');
+        const cardRemaining = document.getElementById('card-remaining');
+        const cardThermal = document.getElementById('card-thermal');
+        const cardValue = document.getElementById('card-value');
+        const cardCo2 = document.getElementById('card-co2');
+        const cardClusterName = document.getElementById('card-cluster-name');
+        const cardClusterMeta = document.getElementById('card-cluster-meta');
+        const clusterDot = document.getElementById('cluster-dot');
+        const systemDot = document.getElementById('system-dot');
+        const systemStatusText = document.getElementById('system-status-text');
+
+        const orderBtn = document.getElementById('orderBtn');
+        const btnDispatchLabel = document.getElementById('btn-dispatch-label');
+        const truckWrapper = document.getElementById('truckWrapper');
+
+        const inrFormatter = new Intl.NumberFormat('en-IN', {
+            style: 'currency', currency: 'INR', maximumFractionDigits: 0
+        });
+
+        let currentState = null;
+        let isAnimating = false;
+        let isCompleted = false;
+        let animationTimeout = null;
+
+        engine.subscribe(function (data) {
+            currentState = data;
+
+            // Sliders stay in sync
+            if (document.activeElement !== inputSurplus) inputSurplus.value = data.surplusBatchCount;
+            if (document.activeElement !== inputHold) inputHold.value = data.elapsedHoldTimeMinutes;
+            if (document.activeElement !== inputTemp) inputTemp.value = data.ambientTemperatureC;
+            if (document.activeElement !== inputShelf) inputShelf.value = data.maxShelfLifeMinutes;
+
+            valHold.textContent = data.elapsedHoldTimeMinutes + 'm';
+            valTemp.textContent = data.ambientTemperatureC + '°C';
+            valSurplus.textContent = data.surplusBatchCount;
+            valShelf.textContent = data.maxShelfLifeMinutes + 'm';
+
+            cardFreshness.textContent = data.freshnessPercent + '%';
+            cardRemaining.textContent = data.remainingMinutes + ' mins';
+            cardThermal.textContent = '×' + data.thermalMultiplier;
+            cardValue.textContent = inrFormatter.format(data.valueINR);
+            cardCo2.textContent = data.co2Kg + ' kg';
+
+            if (data.quality.code === 'EXPIRED') {
+                clusterDot.style.background = '#ef4444';
+                clusterDot.style.boxShadow = '0 0 6px #ef4444';
+                cardClusterName.textContent = 'Compost Required';
+                cardClusterMeta.textContent = 'Food has gone cold. Unsafe to donate — send to compost.';
+            } else if (data.quality.code === 'URGENT') {
+                clusterDot.style.background = '#f59e0b';
+                clusterDot.style.boxShadow = '0 0 6px #f59e0b';
+                cardClusterName.textContent = 'Urgent — dispatch soon';
+                cardClusterMeta.textContent = 'Safe window is closing. NGOs will be matched on Node 05.';
+            } else {
+                clusterDot.style.background = '#10b981';
+                clusterDot.style.boxShadow = '0 0 6px #10b981';
+                cardClusterName.textContent = 'Quality Certified';
+                cardClusterMeta.textContent = 'Batch is safe to donate. NGOs will be matched on Node 05.';
+            }
+
+            if (data.connected) {
+                systemDot.style.background = data.quality.color;
+                systemDot.style.color = data.quality.color;
+                systemStatusText.textContent = data.quality.label;
+            }
+
+            if (!isAnimating && !isCompleted) {
+                orderBtn.disabled = !data.canMarkReady;
+                let label = 'Confirm & mark ready';
+                if (data.quality.code === 'EXPIRED') label = 'Send to compost pit';
+                else if (!data.surplusBatchCount) label = 'No surplus yet';
+
+                btnDispatchLabel.innerHTML =
+                    '<span>' + label + '</span>' +
+                    '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                    '<path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>';
+            }
+        });
+
+        inputHold.addEventListener('input', function (e) { engine.setElapsedHoldTime(e.target.value); });
+        inputTemp.addEventListener('input', function (e) { engine.setAmbientTemperature(e.target.value); });
+        inputSurplus.addEventListener('input', function (e) { engine.setSurplusBatchCount(e.target.value); });
+        inputShelf.addEventListener('input', function (e) { engine.setMaxShelfLife(e.target.value); });
+
+        // ═══════════════════════════════════════════════════════════════
+        // TRUCK ANIMATION
+        // ═══════════════════════════════════════════════════════════════
+        function delay(ms) {
+            return new Promise(function (resolve) { animationTimeout = setTimeout(resolve, ms); });
+        }
+        function setTruckTransition(sec, easing) {
+            easing = easing || 'cubic-bezier(0.25, 1, 0.5, 1)';
+            truckWrapper.style.transition = 'transform ' + sec + 's ' + easing;
+        }
+        function resetTruck() {
+            if (animationTimeout) clearTimeout(animationTimeout);
+            isAnimating = false;
+            isCompleted = false;
+            orderBtn.className = 'order-btn';
+            truckWrapper.className = 'truck-wrapper';
+            truckWrapper.style.transition = 'none';
+            truckWrapper.style.transform = 'translateX(330px)';
+            void truckWrapper.offsetWidth;
+            engine.notify();
+        }
+
+        async function runOrder() {
+            if (isAnimating) return;
+            if (!currentState || !currentState.canMarkReady) return;
+
+            isAnimating = true;
+            isCompleted = false;
+
+            const result = await engine.markReady();
+            if (!result.success) {
+                isAnimating = false;
+                showToast(result.reason || 'Could not mark ready', 'warn');
+                return;
+            }
+
+            showToast('Batch marked ready · NGOs can now pick it up on Node 05', 'success');
+
+            orderBtn.classList.add('animating');
+            orderBtn.classList.add('show-box');
+            await delay(250);
+
+            setTruckTransition(0.55);
+            truckWrapper.style.transform = 'translateX(130px)';
+            await delay(550);
+
+            truckWrapper.classList.add('doors-open');
+            await delay(350);
+
+            setTruckTransition(0.75, 'cubic-bezier(0.4, 0, 0.2, 1)');
+            truckWrapper.style.transform = 'translateX(52px)';
+            await delay(350);
+
+            orderBtn.classList.add('box-loaded');
+            await delay(400);
+
+            truckWrapper.classList.remove('doors-open');
+            await delay(450);
+
+            truckWrapper.classList.add('lights-on');
+            orderBtn.classList.add('speeding');
+
+            setTruckTransition(1.5, 'cubic-bezier(0.2, 0, 0.4, 1)');
+            truckWrapper.style.transform = 'translateX(340px)';
+            await delay(1500);
+
+            orderBtn.classList.remove('speeding');
+            orderBtn.classList.remove('show-box');
+            truckWrapper.classList.remove('lights-on');
+            orderBtn.classList.add('completed');
+            isCompleted = true;
+            isAnimating = false;
+        }
+
+        orderBtn.addEventListener('click', function () {
+            if (!isAnimating && !isCompleted) {
+                runOrder();
+            } else if (isCompleted) {
+                resetTruck();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if ((e.code === 'Space' || e.code === 'Enter') && document.activeElement === orderBtn) {
+                e.preventDefault();
+                orderBtn.click();
+            }
+        });
+
+        resetTruck();
+
+        // ═══════════════════════════════════════════════════════════════
+        // WAVE PHYSICS
+        // ═══════════════════════════════════════════════════════════════
+        const wavePath = document.getElementById('wave-path');
+        const stringSvg = document.getElementById('string-svg');
+
+        const TOTAL_POINTS = 36;
+        const SVG_WIDTH = 300;
+        const SVG_HEIGHT = 60;
+        const BASE_Y = SVG_HEIGHT / 2;
+
+        const wavePoints = [];
+        for (let i = 0; i < TOTAL_POINTS; i++) {
+            wavePoints.push({
+                x: (i / (TOTAL_POINTS - 1)) * SVG_WIDTH,
+                y: BASE_Y,
+                vy: 0
+            });
+        }
+
+        let wavePhase = 0;
+        let waveHovered = false;
+
+        stringSvg.addEventListener('mouseenter', function () {
+            waveHovered = true;
+            for (let i = 1; i < TOTAL_POINTS - 1; i++) {
+                const envelope = Math.sin((i / (TOTAL_POINTS - 1)) * Math.PI);
+                wavePoints[i].vy += (Math.random() - 0.5) * 35 * envelope;
+            }
+        });
+        stringSvg.addEventListener('mouseleave', function () { waveHovered = false; });
+        stringSvg.addEventListener('mousemove', function (e) {
+            const rect = stringSvg.getBoundingClientRect();
+            const relX = (e.clientX - rect.left) / rect.width;
+            const idx = Math.floor(relX * TOTAL_POINTS);
+            if (idx > 1 && idx < TOTAL_POINTS - 2) {
+                wavePoints[idx].vy += (Math.random() - 0.5) * 12.0;
+                wavePoints[idx - 1].vy += (Math.random() - 0.5) * 8.0;
+                wavePoints[idx + 1].vy += (Math.random() - 0.5) * 8.0;
+            }
+        });
+
+        function renderWave() {
+            wavePhase += 0.045;
+
+            for (let i = 1; i < TOTAL_POINTS - 1; i++) {
+                const norm = i / (TOTAL_POINTS - 1);
+                const envelope = Math.sin(norm * Math.PI);
+                const w1 = Math.sin(norm * Math.PI * 4.0 - wavePhase * 2.0) * 14.0;
+                const w2 = Math.sin(norm * Math.PI * 7.0 + wavePhase * 3.2) * 5.5;
+                const w3 = Math.cos(norm * Math.PI * 2.0 - wavePhase * 1.5) * 6.5;
+                const targetY = BASE_Y + (w1 + w2 + w3) * envelope * (waveHovered ? 1.5 : 1.0);
+                wavePoints[i].vy += (targetY - wavePoints[i].y) * 0.055;
+            }
+            for (let i = 1; i < TOTAL_POINTS - 1; i++) {
+                const dl = wavePoints[i - 1].y - wavePoints[i].y;
+                const dr = wavePoints[i + 1].y - wavePoints[i].y;
+                wavePoints[i].vy += (dl + dr) * 0.28;
+            }
+            for (let i = 1; i < TOTAL_POINTS - 1; i++) {
+                wavePoints[i].vy *= 0.94;
+                wavePoints[i].y += wavePoints[i].vy;
+            }
+            wavePoints[0].y = BASE_Y;
+            wavePoints[TOTAL_POINTS - 1].y = BASE_Y;
+
+            let d = 'M ' + wavePoints[0].x.toFixed(1) + ' ' + wavePoints[0].y.toFixed(1);
+            for (let i = 0; i < wavePoints.length - 1; i++) {
+                const curr = wavePoints[i];
+                const next = wavePoints[i + 1];
+                const midX = (curr.x + next.x) / 2;
+                const midY = (curr.y + next.y) / 2;
+                d += ' Q ' + curr.x.toFixed(1) + ' ' + curr.y.toFixed(1) + ', ' + midX.toFixed(1) + ' ' + midY.toFixed(1);
+            }
+            const last = wavePoints[wavePoints.length - 1];
+            d += ' T ' + last.x.toFixed(1) + ' ' + last.y.toFixed(1);
+
+            wavePath.setAttribute('d', d);
+            requestAnimationFrame(renderWave);
+        }
+        requestAnimationFrame(renderWave);
+
+        // ═══════════════════════════════════════════════════════════════
+        // LIQUID GLASS REFRACTION
+        // ═══════════════════════════════════════════════════════════════
+        const video = document.getElementById('bg-video');
+        const card = document.querySelector('[data-glass-card]');
+        const container = document.getElementById('dup-video-container');
+        const canvas = document.getElementById('dup-image');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+
+        function renderGlass() {
+            requestAnimationFrame(renderGlass);
+            if (!card || !video || !container || !canvas || !ctx) return;
+            if (!video.videoWidth || !video.videoHeight) return;
+            const rect = card.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+            const vw = document.documentElement.clientWidth;
+            const vh = document.documentElement.clientHeight;
+            container.style.left = (-rect.left) + 'px';
+            container.style.top = (-rect.top) + 'px';
+            container.style.width = vw + 'px';
+            container.style.height = vh + 'px';
+            if (canvas.width !== vw || canvas.height !== vh) {
+                canvas.width = vw;
+                canvas.height = vh;
+            }
+            const cover = Math.max(vw / video.videoWidth, vh / video.videoHeight);
+            const sw = vw / cover;
+            const sh = vh / cover;
+            const sx = (video.videoWidth - sw) / 2;
+            const sy = (video.videoHeight - sh) / 2;
+            try { ctx.drawImage(video, sx, sy, sw, sh, 0, 0, vw, vh); } catch (e) { }
+        }
+        requestAnimationFrame(renderGlass);
+
+        // ═══════════════════════════════════════════════════════════════
+        // MENU
+        // ═══════════════════════════════════════════════════════════════
+        const menu = document.getElementById('menu');
+        const menuOpen = document.getElementById('menu-open');
+        const menuClose = document.getElementById('menu-close');
+        const menuBackdrop = document.getElementById('menu-backdrop');
+
+        function setMenu(open) {
+            if (!menu || !menuOpen) return;
+            if (open) menu.classList.add('is-open');
+            else menu.classList.remove('is-open');
+            menuOpen.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        if (menuOpen) menuOpen.addEventListener('click', function () { setMenu(true); });
+        if (menuClose) menuClose.addEventListener('click', function () { setMenu(false); });
+        if (menuBackdrop) menuBackdrop.addEventListener('click', function () { setMenu(false); });
+    </script>
+</body>
+
+</html>

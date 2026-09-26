@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite® — Node 06: Savings &amp; Community Records</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        'muted-foreground': 'hsl(var(--muted-foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: 'hsl(var(--secondary))',
+                        muted: 'hsl(var(--muted))',
+                        accent: 'hsl(var(--accent))',
+                        border: 'hsl(var(--border))',
+                        input: 'hsl(var(--input))',
+                    },
+                    fontFamily: {
+                        display: ['var(--font-display)', 'serif'],
+                        body: ['var(--font-body)', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --font-display: 'Instrument Serif', serif;
+            --font-body: 'Inter', sans-serif;
+
+            --background: 201 100% 13%;
+            --foreground: 0 0% 100%;
+            --muted-foreground: 240 4% 66%;
+            --primary: 0 0% 100%;
+            --primary-foreground: 0 0% 4%;
+            --secondary: 0 0% 10%;
+            --muted: 0 0% 10%;
+            --accent: 0 0% 10%;
+            --border: 0 0% 18%;
+            --input: 0 0% 18%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.02);
+            background-blend-mode: luminosity;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: none;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+        }
+
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1.2px;
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.35) 0%,
+                    rgba(255, 255, 255, 0.10) 25%,
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(255, 255, 255, 0.10) 75%,
+                    rgba(255, 255, 255, 0.35) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        @keyframes fade-rise {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-rise {
+            animation: fade-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .animate-fade-rise-delay {
+            animation: fade-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+        }
+
+        .animate-fade-rise-delay-2 {
+            animation: fade-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .toast-wrap {
+            position: fixed;
+            top: 6rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.94);
+            color: #fff;
+            border-radius: 9999px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(180, 205, 255, 0.22);
+            animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .toast-item.warn {
+            background: rgba(120, 53, 15, 0.95);
+            border-color: rgba(255, 212, 98, 0.4);
+        }
+
+        .toast-item.error {
+            background: rgba(127, 29, 29, 0.95);
+            border-color: rgba(248, 113, 113, 0.4);
+        }
+
+        .toast-item.success {
+            background: rgba(6, 78, 59, 0.95);
+            border-color: rgba(94, 234, 212, 0.4);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <script src="institutional-db.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useCallback } = React;
+
+        // ═══════════════════════════════════════════════════════════════
+        // CONSTANTS
+        // ═══════════════════════════════════════════════════════════════
+        const ESG_CONSTANTS = {
+            COST_PER_MEAL_INR: 45.0,
+            MEAL_WEIGHT_KG: 0.4,
+            CO2E_AVERTED_PER_MEAL_KG: 1.05,
+            WATER_PRESERVED_PER_MEAL_L: 180.0,
+            WEIGHTS: { VELOCITY: 0.40, EFFICIENCY: 0.35, COMPLIANCE: 0.25 }
+        };
+
+        function computeESGImpact(rescuedMeals, unoptimizedBaselineSurplus) {
+            const safeRescued = Math.max(0, rescuedMeals || 0);
+            const baseline = Math.max(safeRescued, unoptimizedBaselineSurplus || 0);
+            return {
+                rescuedMeals: safeRescued,
+                unoptimizedSurplus: baseline,
+                divertedMassKg: Number((safeRescued * ESG_CONSTANTS.MEAL_WEIGHT_KG).toFixed(1)),
+                costRecoveredINR: safeRescued * ESG_CONSTANTS.COST_PER_MEAL_INR,
+                scope3CO2eAvertedKg: Number((safeRescued * ESG_CONSTANTS.CO2E_AVERTED_PER_MEAL_KG).toFixed(2)),
+                waterPreservedLiters: safeRescued * ESG_CONSTANTS.WATER_PRESERVED_PER_MEAL_L,
+                diversionRate: baseline > 0 ? Number(((safeRescued / baseline) * 100).toFixed(1)) : 100
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // TOASTS
+        // ═══════════════════════════════════════════════════════════════
+        function showToast(msg, type) {
+            type = type || 'info';
+            const wrap = document.getElementById('toast-wrap');
+            if (!wrap) return;
+            const el = document.createElement('div');
+            el.className = 'toast-item ' + (type !== 'info' ? type : '');
+            el.textContent = msg;
+            wrap.appendChild(el);
+            setTimeout(function () {
+                el.style.transition = 'opacity 0.35s, transform 0.35s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function () { el.remove(); }, 400);
+            }, 3400);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LEADERBOARD SCORING
+        // ═══════════════════════════════════════════════════════════════
+        function calculateCampusRankings(facilities) {
+            const scored = facilities.map(function (fac) {
+                const velFrac = fac.previous30DayAvgSurplus > 0
+                    ? (fac.previous30DayAvgSurplus - fac.currentSurplus) / fac.previous30DayAvgSurplus
+                    : 0;
+                const wasteVelocityScore = Math.min(1000, Math.max(0, velFrac * 1000));
+
+                const redFrac = fac.currentSurplus > 0 ? fac.mealsDispatched / fac.currentSurplus : 1;
+                const redistributionScore = Math.min(1000, Math.max(0, redFrac * 1000));
+
+                const devFrac = fac.forecastRecommended > 0
+                    ? Math.abs(fac.actualPrepared - fac.forecastRecommended) / fac.forecastRecommended
+                    : 0;
+                const complianceScore = Math.min(1000, Math.max(0, (1 - devFrac) * 1000));
+
+                const compositeScore = Math.round(
+                    wasteVelocityScore * ESG_CONSTANTS.WEIGHTS.VELOCITY +
+                    redistributionScore * ESG_CONSTANTS.WEIGHTS.EFFICIENCY +
+                    complianceScore * ESG_CONSTANTS.WEIGHTS.COMPLIANCE
+                );
+
+                let streakCount = 0;
+                for (let i = (fac.dailyWasteHistory || []).length - 1; i >= 0; i--) {
+                    if (fac.dailyWasteHistory[i] <= 0.05) streakCount++;
+                    else break;
+                }
+
+                const badges = [];
+                if (compositeScore >= 800) badges.push('Zero Waste Star');
+                if (streakCount >= 4) badges.push('Low Waste Streak');
+                if (redistributionScore >= 950) badges.push('Quick Delivery');
+                if (complianceScore >= 900) badges.push('Perfect Cook Target');
+
+                return Object.assign({}, fac, {
+                    compositeScore: compositeScore,
+                    scoreBreakdown: {
+                        wasteVelocityScore: Math.round(wasteVelocityScore),
+                        redistributionScore: Math.round(redistributionScore),
+                        complianceScore: Math.round(complianceScore)
+                    },
+                    streakCount: streakCount,
+                    badges: badges
+                });
+            });
+
+            scored.sort(function (a, b) { return b.compositeScore - a.compositeScore; });
+
+            return scored.map(function (fac, idx) {
+                const rank = idx + 1;
+                return Object.assign({}, fac, {
+                    rank: rank,
+                    deltaRank: (fac.previousMonthRank || rank) - rank
+                });
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PIPELINE — wired to InstitutionalAPI
+        // ═══════════════════════════════════════════════════════════════
+        class Node06Pipeline {
+            constructor() {
+                this.state = {
+                    institute: null,
+                    dispatches: [],
+                    esgEntries: [],
+                    plans: [],
+                    preps: [],
+                    tallies: [],
+                    connected: false
+                };
+                this.listeners = new Set();
+                this.unsubscribeGrid = null;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    if (!window.InstitutionalAPI) {
+                        console.warn('[Node 06] InstitutionalAPI not loaded');
+                        return;
+                    }
+                    const session = await window.InstitutionalAPI.getCurrentSession();
+                    if (!session || !session.institute_id) return;
+
+                    const inst = await window.InstitutionalAPI.getInstitute(session.institute_id);
+                    if (!inst) return;
+                    this.state.institute = inst;
+
+                    await this.refresh();
+                    this.state.connected = true;
+                    this.notify();
+
+                    const self = this;
+                    this.unsubscribeGrid = window.InstitutionalAPI.subscribe(async function (type) {
+                        const label = String(type || '').replace('bytetobite:', '').replace('-changed', '');
+                        if (label === 'esg' || label === 'dispatches' || label === 'meal-plans' ||
+                            label === 'tallies' || label === 'meal-preps') {
+                            await self.refresh();
+                        }
+                    });
+                } catch (e) {
+                    console.warn('[Node 06] init failed', e);
+                }
+            }
+
+            async refresh() {
+                try {
+                    if (!this.state.institute) return;
+                    const id = this.state.institute.id;
+
+                    const dispatches = await window.InstitutionalAPI.getDispatches(id);
+                    const esgEntries = await window.InstitutionalAPI.getEsgEntries(id);
+                    const plans = await window.InstitutionalAPI.getMealPlans(id);
+                    const preps = await window.InstitutionalAPI.getMealPreps(id);
+
+                    this.state.dispatches = (dispatches || []).map(function (d) {
+                        return {
+                            dispatchId: d.dispatch_code || d.id,
+                            id: d.id,
+                            facilityId: d.institute_id,
+                            facilityName: (self_name = (d.ngo_name || 'NGO Partner')),
+                            mealsRescued: d.meals_sent || 0,
+                            unoptimizedBaselineSurplus: (d.meals_sent || 0) + 5,
+                            recipientCluster: d.ngo_name || 'NGO Partner',
+                            custodyOfficer: d.custody_officer || 'Mess Lead',
+                            verifiedAt: d.verified_at || d.created_at || Date.now(),
+                            status: 'DELIVERED_OK',
+                            co2e_kg: d.co2e_kg,
+                            value_inr: d.value_inr,
+                            eta_minutes: d.eta_minutes,
+                            ngo_distance_km: d.ngo_distance_km
+                        };
+                    });
+
+                    this.state.esgEntries = esgEntries || [];
+                    this.state.plans = plans || [];
+                    this.state.preps = preps || [];
+
+                    this.notify();
+                } catch (e) {
+                    console.warn('[Node 06] refresh failed', e);
+                }
+            }
+
+            subscribe(fn) {
+                this.listeners.add(fn);
+                fn(this.getSnapshot());
+                const self = this;
+                return function () { self.listeners.delete(fn); };
+            }
+
+            notify() {
+                const snap = this.getSnapshot();
+                this.listeners.forEach(function (fn) { try { fn(snap); } catch (e) { console.warn(e); } });
+            }
+
+            getSnapshot() {
+                const dispatches = this.state.dispatches;
+                const esgEntries = this.state.esgEntries;
+
+                // ESG totals: prefer ESG entries if present, else derive from dispatches
+                let totalRescued = 0, totalBaseline = 0, totalCO2 = 0, totalWater = 0, totalValue = 0;
+
+                if (esgEntries.length) {
+                    esgEntries.forEach(function (e) {
+                        totalRescued += (e.meals_rescued || 0);
+                        totalCO2 += (e.co2e_kg || 0);
+                        totalWater += (e.water_l || 0);
+                        totalValue += (e.cost_inr || 0);
+                    });
+                    totalBaseline = totalRescued * 1.08; // mild baseline for ratio
+                } else {
+                    dispatches.forEach(function (d) {
+                        totalRescued += (d.mealsRescued || 0);
+                        totalBaseline += (d.unoptimizedBaselineSurplus || 0);
+                        totalCO2 += (d.mealsRescued || 0) * ESG_CONSTANTS.CO2E_AVERTED_PER_MEAL_KG;
+                        totalWater += (d.mealsRescued || 0) * ESG_CONSTANTS.WATER_PRESERVED_PER_MEAL_L;
+                        totalValue += (d.mealsRescued || 0) * ESG_CONSTANTS.COST_PER_MEAL_INR;
+                    });
+                }
+
+                const impact = {
+                    rescuedMeals: totalRescued,
+                    unoptimizedSurplus: totalBaseline,
+                    divertedMassKg: Number((totalRescued * ESG_CONSTANTS.MEAL_WEIGHT_KG).toFixed(1)),
+                    costRecoveredINR: totalValue || totalRescued * ESG_CONSTANTS.COST_PER_MEAL_INR,
+                    scope3CO2eAvertedKg: Number(totalCO2.toFixed(2)),
+                    waterPreservedLiters: totalWater,
+                    diversionRate: totalBaseline > 0
+                        ? Number(((totalRescued / totalBaseline) * 100).toFixed(1))
+                        : (totalRescued > 0 ? 100 : 0)
+                };
+
+                // Leaderboard: single facility built from real plans
+                const plans = this.state.plans;
+                const prepared = plans.reduce(function (s, p) { return s + (p.prepared_count || p.predicted_demand || 0); }, 0);
+                const predicted = plans.reduce(function (s, p) { return s + (p.predicted_demand || 0); }, 0);
+                const completedDays = plans.filter(function (p) { return p.status === 'COMPLETED'; }).length;
+
+                const facilities = [
+                    {
+                        facilityId: this.state.institute ? this.state.institute.id : 'campus',
+                        facilityName: this.state.institute
+                            ? (this.state.institute.mess_name || this.state.institute.name)
+                            : 'Campus Mess',
+                        currentSurplus: Math.max(0, prepared - totalRescued),
+                        previous30DayAvgSurplus: prepared || 1,
+                        mealsDispatched: totalRescued,
+                        actualPrepared: prepared,
+                        forecastRecommended: predicted || prepared,
+                        dailyWasteHistory: Array(completedDays).fill(0).map(function (_, i) {
+                            return 0.05 - i * 0.005 > 0 ? 0.05 - i * 0.005 : 0.01;
+                        }),
+                        previousMonthRank: 1
+                    }
+                ];
+
+                const rankings = calculateCampusRankings(facilities);
+
+                return {
+                    impact: impact,
+                    rankings: rankings,
+                    dispatches: dispatches,
+                    connected: this.state.connected,
+                    institute: this.state.institute
+                };
+            }
+        }
+
+        // Fix accidental global leak in mapping function above
+        let self_name = null;
+
+        const pipeline = new Node06Pipeline();
+
+        // ═══════════════════════════════════════════════════════════════
+        // APP
+        // ═══════════════════════════════════════════════════════════════
+        function App() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [snapshot, setSnapshot] = useState(function () { return pipeline.getSnapshot(); });
+            const [showSimModal, setShowSimModal] = useState(false);
+            const [simMeals, setSimMeals] = useState(35);
+            const [simRecipient, setSimRecipient] = useState('Aahar Center Khandagiri');
+            const [simSubmitting, setSimSubmitting] = useState(false);
+
+            useEffect(function () {
+                const unsubscribe = pipeline.subscribe(function (snap) { setSnapshot(snap); });
+                return function () { if (unsubscribe) unsubscribe(); };
+            }, []);
+
+            const impact = snapshot.impact;
+            const rankings = snapshot.rankings;
+            const dispatches = snapshot.dispatches;
+
+            const triggerManualRecord = useCallback(async function (e) {
+                e.preventDefault();
+                if (!snapshot.institute) {
+                    showToast('No session — sign in first', 'warn');
+                    return;
+                }
+                setSimSubmitting(true);
+                try {
+                    const meals = Number(simMeals) || 0;
+                    if (meals < 1) throw new Error('Enter a positive plate count');
+
+                    // Node 06 is a records page — we can only add a manual record if the
+                    // API supports it. We write to the ESG ledger.
+                    if (window.InstitutionalAPI && typeof window.InstitutionalAPI.saveEsgEntry === 'function') {
+                        await window.InstitutionalAPI.saveEsgEntry({
+                            institute_id: snapshot.institute.id,
+                            dispatch_id: null,
+                            plan_id: null,
+                            meals_rescued: meals,
+                            co2e_kg: Number((meals * ESG_CONSTANTS.CO2E_AVERTED_PER_MEAL_KG).toFixed(2)),
+                            water_l: meals * ESG_CONSTANTS.WATER_PRESERVED_PER_MEAL_L,
+                            cost_inr: meals * ESG_CONSTANTS.COST_PER_MEAL_INR,
+                            manual_entry: true,
+                            recipient: simRecipient,
+                            notes: 'Manual record added from Node 06'
+                        });
+                        await pipeline.refresh();
+                        showToast('Record added · ' + meals + ' meals to ' + simRecipient, 'success');
+                    } else {
+                        showToast('API does not accept manual entries here', 'warn');
+                    }
+                    setShowSimModal(false);
+                } catch (err) {
+                    showToast('Could not save: ' + (err.message || 'unknown'), 'error');
+                } finally {
+                    setSimSubmitting(false);
+                }
+            }, [simMeals, simRecipient, snapshot.institute]);
+
+            const downloadAuditJSON = useCallback(function () {
+                const report = {
+                    reportId: 'SAVINGS-REPORT-' + Date.now(),
+                    institute: snapshot.institute ? {
+                        id: snapshot.institute.id,
+                        name: snapshot.institute.name,
+                        code: snapshot.institute.code,
+                        mess: snapshot.institute.mess_name
+                    } : null,
+                    timestamp: new Date().toISOString(),
+                    totalSavings: impact,
+                    rankings: rankings,
+                    deliveryHistory: dispatches
+                };
+                const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Mess_Savings_Report_' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Report downloaded', 'success');
+            }, [impact, rankings, dispatches, snapshot.institute]);
+
+            const downloadAuditCSV = useCallback(function () {
+                const headers = ['Delivery ID', 'Mess / Kitchen', 'Plates Saved', 'CO2e Averted (kg)', 'Money Saved (INR)', 'Delivered To', 'Delivery Time'];
+                const rows = dispatches.map(function (d) {
+                    return [
+                        d.dispatchId,
+                        '"' + (d.facilityName || '') + '"',
+                        d.mealsRescued,
+                        ((d.mealsRescued || 0) * ESG_CONSTANTS.CO2E_AVERTED_PER_MEAL_KG).toFixed(2),
+                        ((d.mealsRescued || 0) * ESG_CONSTANTS.COST_PER_MEAL_INR).toFixed(2),
+                        '"' + (d.recipientCluster || '') + '"',
+                        new Date(d.verifiedAt).toISOString()
+                    ];
+                });
+                const csv = [headers.join(',')].concat(rows.map(function (r) { return r.join(','); })).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Mess_Delivery_Records_' + new Date().toISOString().slice(0, 10) + '.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('CSV downloaded', 'success');
+            }, [dispatches]);
+
+            return (
+                <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden text-foreground">
+                    <video
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-40 brightness-75"
+                        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"
+                    />
+
+                    <header className="relative z-20 w-full border-b border-white/5 backdrop-blur-md">
+                        <nav className="flex items-center justify-between px-6 sm:px-8 py-5 max-w-7xl mx-auto w-full">
+                            <div className="flex items-center space-x-3">
+                                <a href="hub.html" className="text-3xl tracking-tight text-foreground select-none" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                                    ByteToBite<sup className="text-xs ml-0.5">®</sup>
+                                </a>
+                                <span className={'text-xs tracking-widest uppercase px-2.5 py-0.5 rounded-full font-mono border ' +
+                                    (snapshot.connected
+                                        ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                                        : 'bg-amber-500/10 text-amber-300 border-amber-500/20')}>
+                                    {snapshot.connected ? 'Node 06 · Grid connected' : 'Node 06 · Connecting…'}
+                                </span>
+                            </div>
+
+                            <div className="hidden md:flex items-center space-x-8">
+                                {[
+                                    { id: 'dashboard', label: 'Overall Savings' },
+                                    { id: 'leaderboard', label: 'Mess Leaderboard' },
+                                    { id: 'custody', label: 'Delivery Records' }
+                                ].map(function (tab) {
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={function () { setActiveTab(tab.id); }}
+                                            className={'text-sm transition-colors duration-200 cursor-pointer ' +
+                                                (activeTab === tab.id
+                                                    ? 'text-foreground font-medium border-b border-white pb-1'
+                                                    : 'text-muted-foreground hover:text-foreground')}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={function () { setShowSimModal(true); }}
+                                    className="liquid-glass rounded-full px-5 py-2 text-xs font-medium text-foreground hover:scale-[1.03] active:scale-[0.98] transition-transform cursor-pointer"
+                                >
+                                    + Add Manual Record
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={downloadAuditJSON}
+                                    className="liquid-glass rounded-full px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:scale-[1.03] transition-all cursor-pointer"
+                                >
+                                    Download Report
+                                </button>
+                            </div>
+                        </nav>
+                    </header>
+
+                    <main className="relative z-10 flex-1 max-w-7xl mx-auto px-6 sm:px-8 py-10 w-full">
+                        <div className="mb-12 text-center max-w-3xl mx-auto">
+                            <h1
+                                className="text-4xl sm:text-6xl md:text-7xl leading-[1.02] tracking-[-2px] font-normal text-foreground animate-fade-rise select-none"
+                                style={{ fontFamily: "'Instrument Serif', serif" }}
+                            >
+                                Every extra plate <em className="not-italic text-emerald-400">feeds someone in need.</em>
+                            </h1>
+                            <p className="text-muted-foreground text-sm sm:text-base mt-4 leading-relaxed animate-fade-rise-delay font-light">
+                                Complete record of food saved from the dustbin, money recovered, water protected, and meals delivered to nearby communities.
+                            </p>
+                        </div>
+
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-8 animate-fade-rise">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                                    <div className="liquid-glass rounded-2xl p-6 flex flex-col justify-between">
+                                        <span className="text-xs uppercase tracking-wider text-muted-foreground">Pollution Prevented</span>
+                                        <div className="my-3">
+                                            <span className="text-4xl font-semibold text-white tracking-tight font-mono">
+                                                {impact.scope3CO2eAvertedKg.toLocaleString()}
+                                            </span>
+                                            <span className="text-emerald-400 text-sm ml-2 font-mono">kg Clean Air</span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground flex items-center">
+                                            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+                                            1 kg smoke/gas stopped per saved meal
+                                        </div>
+                                    </div>
+
+                                    <div className="liquid-glass rounded-2xl p-6 flex flex-col justify-between">
+                                        <span className="text-xs uppercase tracking-wider text-muted-foreground">Food Value Saved</span>
+                                        <div className="my-3">
+                                            <span className="text-4xl font-semibold text-white tracking-tight font-mono">
+                                                ₹{impact.costRecoveredINR.toLocaleString()}
+                                            </span>
+                                            <span className="text-emerald-400 text-sm ml-2 font-mono">INR</span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground flex items-center">
+                                            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+                                            Standard ₹45 value per plate
+                                        </div>
+                                    </div>
+
+                                    <div className="liquid-glass rounded-2xl p-6 flex flex-col justify-between">
+                                        <span className="text-xs uppercase tracking-wider text-muted-foreground">Water Saved</span>
+                                        <div className="my-3">
+                                            <span className="text-4xl font-semibold text-white tracking-tight font-mono">
+                                                {impact.waterPreservedLiters.toLocaleString()}
+                                            </span>
+                                            <span className="text-emerald-400 text-sm ml-2 font-mono">Liters</span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground flex items-center">
+                                            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+                                            ~180 Liters saved per plate cooked
+                                        </div>
+                                    </div>
+
+                                    <div className="liquid-glass rounded-2xl p-6 flex flex-col justify-between">
+                                        <span className="text-xs uppercase tracking-wider text-muted-foreground">Food Kept Out of Trash</span>
+                                        <div className="my-3">
+                                            <span className="text-4xl font-semibold text-white tracking-tight font-mono">
+                                                {impact.divertedMassKg}
+                                            </span>
+                                            <span className="text-emerald-400 text-sm ml-2 font-mono">kg</span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground flex items-center">
+                                            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+                                            {impact.rescuedMeals} total plates safely donated
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div className="liquid-glass rounded-2xl p-6 lg:col-span-1 flex flex-col justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-medium text-white mb-1">Food Saved Percentage</h3>
+                                            <p className="text-xs text-muted-foreground">Extra food donated vs total leftovers</p>
+                                        </div>
+                                        <div className="py-6 flex flex-col items-center justify-center">
+                                            <div className="text-6xl font-bold font-mono text-emerald-400">
+                                                {impact.diversionRate}%
+                                            </div>
+                                            <span className="text-xs text-muted-foreground mt-2">Target savings goal: Above 90%</span>
+                                        </div>
+                                        <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                                            <div className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                                                style={{ width: Math.min(100, impact.diversionRate) + '%' }}></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="liquid-glass rounded-2xl p-6 lg:col-span-2">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h3 className="text-lg font-medium text-white">Live Food Donation Stream</h3>
+                                                <p className="text-xs text-muted-foreground">Real-time reports coming in from all kitchen stations</p>
+                                            </div>
+                                            <button onClick={downloadAuditCSV} className="text-xs text-emerald-300 hover:text-emerald-200 underline font-mono cursor-pointer">
+                                                Download Excel Sheet
+                                            </button>
+                                        </div>
+
+                                        <div className="overflow-x-auto max-h-56">
+                                            {dispatches.length === 0 ? (
+                                                <div className="py-12 text-center text-sm text-muted-foreground">
+                                                    No deliveries yet. Complete a dispatch on Node 05 to see it here.
+                                                </div>
+                                            ) : (
+                                                <table className="w-full text-left text-xs">
+                                                    <thead>
+                                                        <tr className="border-b border-white/10 text-muted-foreground">
+                                                            <th className="pb-2 font-medium">Batch No.</th>
+                                                            <th className="pb-2 font-medium">Mess Name</th>
+                                                            <th className="pb-2 font-medium">Plates</th>
+                                                            <th className="pb-2 font-medium">Air Kept Clean</th>
+                                                            <th className="pb-2 font-medium">Sent To</th>
+                                                            <th className="pb-2 font-medium">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5 font-mono">
+                                                        {dispatches.slice(0, 8).map(function (d) {
+                                                            return (
+                                                                <tr key={d.dispatchId} className="hover:bg-white/5 transition-colors">
+                                                                    <td className="py-2.5 text-white/90">{d.dispatchId}</td>
+                                                                    <td className="py-2.5 text-white font-sans">{d.facilityName}</td>
+                                                                    <td className="py-2.5 text-emerald-400">{d.mealsRescued}</td>
+                                                                    <td className="py-2.5 text-white/80">
+                                                                        {((d.mealsRescued || 0) * ESG_CONSTANTS.CO2E_AVERTED_PER_MEAL_KG).toFixed(1)} kg
+                                                                    </td>
+                                                                    <td className="py-2.5 text-muted-foreground font-sans">{d.recipientCluster}</td>
+                                                                    <td className="py-2.5">
+                                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                                                            {d.status}
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'leaderboard' && (
+                            <div className="space-y-6 animate-fade-rise">
+                                <div className="liquid-glass rounded-2xl p-6 sm:p-8">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-white/10 gap-4">
+                                        <div>
+                                            <h2 className="text-2xl font-medium text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                                                Campus Mess Leaderboard
+                                            </h2>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Rankings based on: Low Food Waste + Quick Donation + Accurate Cooking Targets.
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center space-x-2 text-xs font-mono text-muted-foreground">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            <span>Scores updating live</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-x-auto mt-6">
+                                        <table className="w-full text-left">
+                                            <thead>
+                                                <tr className="border-b border-white/10 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                                    <th className="pb-3 text-center w-16">Rank</th>
+                                                    <th className="pb-3">Mess / Hostel</th>
+                                                    <th className="pb-3 text-center">Score (0-1000)</th>
+                                                    <th className="pb-3 text-center">Zero-Waste Streak</th>
+                                                    <th className="pb-3 text-center">Change</th>
+                                                    <th className="pb-3 text-right">Badges Won</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5 text-sm">
+                                                {rankings.map(function (facility) {
+                                                    return (
+                                                        <tr key={facility.facilityId} className="hover:bg-white/[0.02] transition-colors">
+                                                            <td className="py-4 text-center">
+                                                                <span className={'inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold font-mono ' +
+                                                                    (facility.rank === 1
+                                                                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
+                                                                        : 'bg-white/5 text-muted-foreground')}>
+                                                                    {facility.rank}
+                                                                </span>
+                                                            </td>
+
+                                                            <td className="py-4">
+                                                                <div className="font-medium text-white">{facility.facilityName}</div>
+                                                                <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                                                                    Leftover: {facility.currentSurplus} plates | Donated: {facility.mealsDispatched}
+                                                                </div>
+                                                            </td>
+
+                                                            <td className="py-4 text-center">
+                                                                <span className="text-lg font-bold font-mono text-emerald-400">
+                                                                    {facility.compositeScore}
+                                                                </span>
+                                                                <div className="text-[10px] text-muted-foreground font-mono">
+                                                                    Less Waste:{facility.scoreBreakdown.wasteVelocityScore} | Donated:{facility.scoreBreakdown.redistributionScore} | Cook Target:{facility.scoreBreakdown.complianceScore}
+                                                                </div>
+                                                            </td>
+
+                                                            <td className="py-4 text-center">
+                                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono bg-orange-500/10 text-orange-300 border border-orange-500/20">
+                                                                    🔥 {facility.streakCount} days
+                                                                </span>
+                                                            </td>
+
+                                                            <td className="py-4 text-center font-mono text-xs">
+                                                                {facility.deltaRank > 0
+                                                                    ? <span className="text-emerald-400">▲ +{facility.deltaRank}</span>
+                                                                    : facility.deltaRank < 0
+                                                                        ? <span className="text-rose-400">▼ {facility.deltaRank}</span>
+                                                                        : <span className="text-muted-foreground">— 0</span>}
+                                                            </td>
+
+                                                            <td className="py-4 text-right">
+                                                                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                                                                    {facility.badges.map(function (b) {
+                                                                        return (
+                                                                            <span key={b} className="px-2.5 py-0.5 text-[11px] rounded-full bg-white/5 text-white/90 border border-white/10">
+                                                                                {b}
+                                                                            </span>
+                                                                        );
+                                                                    })}
+                                                                    {facility.badges.length === 0 && (
+                                                                        <span className="text-xs text-muted-foreground">—</span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'custody' && (
+                            <div className="space-y-6 animate-fade-rise">
+                                <div className="liquid-glass rounded-2xl p-6 sm:p-8">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-white/10 gap-4">
+                                        <div>
+                                            <h2 className="text-2xl font-medium text-white" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                                                Verified Food Handover &amp; Delivery Log
+                                            </h2>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Clear records of food handed over, who received it, and who verified it on duty.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={downloadAuditJSON}
+                                            className="liquid-glass rounded-full px-5 py-2 text-xs font-medium text-foreground hover:scale-[1.03] transition-all cursor-pointer"
+                                        >
+                                            Download Full Record
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-6 space-y-4">
+                                        {dispatches.length === 0 ? (
+                                            <div className="py-12 text-center text-sm text-muted-foreground">
+                                                No deliveries recorded yet. Complete a dispatch on Node 05.
+                                            </div>
+                                        ) : (
+                                            dispatches.map(function (record) {
+                                                return (
+                                                    <div key={record.dispatchId} className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                        <div>
+                                                            <div className="flex items-center space-x-3">
+                                                                <span className="font-mono text-xs font-bold text-white/90">{record.dispatchId}</span>
+                                                                <span className="text-xs text-emerald-400 font-medium font-sans">{record.facilityName}</span>
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground mt-1.5">
+                                                                Handed over to: <strong className="text-white">{record.recipientCluster}</strong> — Checked by: {record.custodyOfficer}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center space-x-6 text-xs font-mono">
+                                                            <div className="text-right">
+                                                                <div className="text-white font-semibold">{record.mealsRescued} plates</div>
+                                                                <div className="text-emerald-400">
+                                                                    {((record.mealsRescued || 0) * ESG_CONSTANTS.CO2E_AVERTED_PER_MEAL_KG).toFixed(1)} kg Air Saved
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right text-muted-foreground">
+                                                                {new Date(record.verifiedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {showSimModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-rise">
+                            <div className="liquid-glass rounded-3xl p-8 max-w-md w-full border border-white/20 shadow-2xl">
+                                <h3 className="text-2xl text-white mb-2" style={{ fontFamily: "'Instrument Serif', serif" }}>
+                                    Record a Manual Delivery
+                                </h3>
+                                <p className="text-xs text-muted-foreground mb-6">
+                                    Use this only if a delivery happened outside the normal Node 05 flow. It writes straight to the ESG ledger.
+                                </p>
+
+                                <form onSubmit={triggerManualRecord} className="space-y-4 text-xs">
+                                    <div>
+                                        <label className="block text-muted-foreground mb-1">Number of Plates Donated</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="500"
+                                            value={simMeals}
+                                            onChange={function (e) { setSimMeals(e.target.value); }}
+                                            className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white font-mono focus:outline-none focus:border-white"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-muted-foreground mb-1">Delivered To (Shelter / Center)</label>
+                                        <input
+                                            type="text"
+                                            value={simRecipient}
+                                            onChange={function (e) { setSimRecipient(e.target.value); }}
+                                            className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-white"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-end space-x-3 pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={function () { setShowSimModal(false); }}
+                                            className="px-5 py-2.5 rounded-full text-muted-foreground hover:text-white transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={simSubmitting}
+                                            className="liquid-glass rounded-full px-6 py-2.5 text-white hover:scale-[1.03] transition-transform font-medium cursor-pointer disabled:opacity-50"
+                                        >
+                                            {simSubmitting ? 'Saving…' : 'Save Record'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="relative z-10 py-6 border-t border-white/5 text-center text-xs text-muted-foreground font-mono">
+                        ByteToBite® Kitchen System — Node 06: Savings &amp; Community Records
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en" class="overflow-x-hidden">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite | Wildlife & Animal Sanctuary Relief Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&family=Italiana&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                        editorial: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+                        italiana: ['"Italiana"', 'serif'],
+                    },
+                    colors: { primary: '#191919' }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF;
+            color: #191919;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+            width: 0px;
+            background: transparent;
+        }
+
+        .glass-grey-wide {
+            background: rgba(246, 247, 249, 0.82);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-frosted-card {
+            background: rgba(248, 249, 250, 0.85);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03);
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-in {
+            animation: modal-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="db.js"></script>
+</head>
+
+<body class="min-h-screen selection:bg-[#191919] selection:text-white overflow-x-hidden">
+    <div id="root"></div>
+
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <video id="bg-video" autoplay loop muted playsinline preload="auto" webkit-playsinline="true"
+            x5-playsinline="true" class="w-full h-full object-cover opacity-90">
+            <source
+                src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260715_090628_7052d8a6-a094-4341-a4a2-ad58493a67a9.mp4"
+                type="video/mp4" />
+        </video>
+        <div class="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-white/40 pointer-events-none">
+        </div>
+    </div>
+
+    <!-- GATEWAY -->
+    <div id="sanctuary-gateway"
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-10 overflow-y-auto">
+        <div class="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
+        <div class="relative z-10 w-full max-w-5xl my-auto py-4">
+            <!-- Top Navigation & Demo bar -->
+            <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-2 bg-white/80 hover:bg-white text-neutral-800 text-xs font-semibold px-4 py-2 rounded-full border border-neutral-200/80 shadow-sm backdrop-blur transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to Main Hub</span>
+                </a>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="quickDemoGateLogin('sanctuary')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Sanctuary
+                    </button>
+                    <button onclick="quickDemoGateLogin('zoo')" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Zoo
+                    </button>
+                    <button onclick="quickDemoGateLogin('volunteer')" class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-neutral-900 text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Volunteer
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mb-8 sm:mb-10">
+                <div
+                    class="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 shadow-sm text-[13px] font-medium text-neutral-800 border border-neutral-200/60 mb-4 sm:mb-5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>ByteToBite Wildlife Grid · Choose Your Gateway</span>
+                </div>
+                <h1 class="font-serif text-4xl sm:text-5xl md:text-6xl text-[#191919] leading-[1.05] tracking-tight">
+                    Feed the <span class="italic font-normal">wild</span>.
+                </h1>
+                <p class="mt-3 text-neutral-700 max-w-lg mx-auto text-sm">Sanctuaries, zoos and animal shelters acquire
+                    verified crop residue, fodder, bedding and enrichment material directly from farms. Zero middlemen.
+                    Zero waste.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="group text-left bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-neutral-200/60 hover:shadow-2xl transition-all flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 2C8 6 4 8 4 14a8 8 0 0 0 16 0c0-6-4-8-8-12z" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoGateLogin('sanctuary')" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">Registered Sanctuary</h3>
+                    <p class="text-sm text-neutral-600 leading-relaxed mb-5 flex-grow">Wildlife sanctuary, rescue
+                        centre, or animal welfare NGO with Darpan / 12A registration. Bulk feed & bedding procurement.
+                    </p>
+                    <button onclick="openGateModal('sanctuary')" class="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">
+                        <span>Enter as Sanctuary</span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="group text-left bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-neutral-200/60 hover:shadow-2xl transition-all flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path
+                                    d="M3 21h18M5 21V7l8-4 8 4v14M9 9v.01M15 9v.01M9 13v.01M15 13v.01M9 17v.01M15 17v.01" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoGateLogin('zoo')" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">Zoo / Wildlife Park</h3>
+                    <p class="text-sm text-neutral-600 leading-relaxed mb-5 flex-grow">Licensed zoo, safari park, or
+                        conservation breeding centre. Institutional feed contracts with GST.</p>
+                    <button onclick="openGateModal('zoo')" class="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-500 transition-colors">
+                        <span>Enter as Zoo</span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="group text-left bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-neutral-200/60 hover:shadow-2xl transition-all flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-amber-600 group-hover:text-white transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="7" r="4" />
+                                <path d="M5.3 21a6.5 6.5 0 0 1 13.4 0" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoGateLogin('volunteer')" class="text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-500 hover:text-neutral-900 px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">Individual Volunteer</h3>
+                    <p class="text-sm text-neutral-600 leading-relaxed mb-5 flex-grow">Street animal feeder, independent
+                        rescuer, or small shelter. Pick up nearby small lots (≤ 200 kg).</p>
+                    <button onclick="openGateModal('volunteer')" class="w-full flex items-center justify-center gap-2 bg-amber-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-amber-500 transition-colors">
+                        <span>Enter as Volunteer</span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GATE MODAL -->
+    <div id="gate-modal" class="fixed inset-0 z-[110] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeGateModal()"></div>
+        <div class="relative modal-in w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-auto">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+                <h3 id="gate-modal-title" class="font-semibold text-neutral-900 text-base">Login</h3>
+                <button onclick="closeGateModal()"
+                    class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors">✕</button>
+            </div>
+            <div id="gate-modal-body" class="p-6 max-h-[75vh] overflow-y-auto"></div>
+        </div>
+    </div>
+    <!-- MAIN CONSOLE -->
+    <div id="console-wrapper"
+        class="relative z-10 flex flex-col justify-between min-h-screen pt-20 pb-12 overflow-x-hidden hidden">
+
+        <!-- HEADER (cleaned) -->
+        <header
+            class="fixed top-0 left-0 right-0 z-40 bg-white/85 backdrop-blur-md border-b border-gray-200/60 px-4 sm:px-8 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-3 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-neutral-200 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to Main</span>
+                </a>
+                <a href="hero.html" class="flex items-center gap-2 group">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <svg viewBox="0 0 32 32" class="w-full h-full text-emerald-700" fill="currentColor">
+                            <circle cx="16" cy="16" r="3.5" />
+                            <circle cx="16" cy="6" r="3.5" />
+                            <circle cx="23.07" cy="8.93" r="3.5" />
+                            <circle cx="26" cy="16" r="3.5" />
+                            <circle cx="23.07" cy="23.07" r="3.5" />
+                            <circle cx="16" cy="26" r="3.5" />
+                            <circle cx="8.93" cy="23.07" r="3.5" />
+                            <circle cx="6" cy="16" r="3.5" />
+                            <circle cx="8.93" cy="8.93" r="3.5" />
+                        </svg>
+                    </div>
+                    <span class="font-semibold text-sm tracking-tight text-[#191919]">ByteToBite</span>
+                </a>
+                <span class="text-gray-300">/</span>
+                <div class="flex items-center gap-2 text-xs flex-wrap">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="font-medium text-[#191919]" id="hdr-org">—</span>
+                    <span class="text-gray-500 text-xs" id="hdr-node">—</span>
+                    <span class="hidden lg:inline text-gray-400 text-xs" id="hdr-reg">—</span>
+                    <span
+                        class="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 tracking-wider uppercase border border-emerald-200"
+                        id="hdr-tier">Sanctuary Tier</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 text-xs font-normal">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-gray-400 uppercase text-[10px] tracking-wider font-medium">Kg Rescued</span>
+                    <span class="font-semibold text-[#191919] tabular-nums" id="hdr-kg">0</span>
+                </div>
+                <span class="text-gray-300">|</span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-gray-400 uppercase text-[10px] tracking-wider font-medium">Animals Fed</span>
+                    <span class="font-semibold text-emerald-700 tabular-nums" id="hdr-animals">0</span>
+                </div>
+                <span class="text-gray-300">|</span>
+                <button onclick="logoutGate()"
+                    class="text-xs text-gray-500 hover:text-[#191919] font-medium px-2 transition-colors">Logout</button>
+            </div>
+        </header>
+
+        <!-- TOP WIDE CARD -->
+        <div class="pt-3 sm:pt-5 px-4 sm:px-8 w-full max-w-6xl mx-auto">
+            <div
+                class="glass-grey-wide rounded-2xl p-5 sm:p-6 lg:p-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div class="max-w-xl space-y-1.5">
+                    <div class="flex items-center gap-2.5">
+                        <span
+                            class="font-editorial italic text-xl sm:text-2xl text-emerald-800 tracking-tight font-medium">Wildlife
+                            Feed Grid</span>
+                        <span class="text-gray-300">•</span>
+                        <span
+                            class="text-[11px] uppercase tracking-[0.18em] text-gray-500 font-semibold">Crop-to-Sanctuary</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-serif font-normal leading-tight text-[#191919]">
+                        Fodder, bedding &amp; enrichment, <span class="italic font-normal">straight from the farm</span>
+                    </h2>
+                    <p class="text-xs sm:text-[13px] text-gray-600 leading-relaxed pt-0.5 font-light">
+                        Acquire verified crop residue, husks, bagasse and spoiled grain at farm-gate rates. Same
+                        escrow-locked ordering flow used by industry — now for the animals in your care.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full lg:w-auto shrink-0">
+                    <button onclick="openDrawer('feed')"
+                        class="group bg-white/85 hover:bg-white transition-all duration-200 cursor-pointer px-3.5 py-3 flex items-center justify-between rounded-xl border border-gray-200/60 shadow-sm min-w-[135px]">
+                        <div class="flex items-center text-xs">
+                            <span class="font-serif italic text-gray-400 text-sm">01</span>
+                            <span class="mx-1.5 text-gray-300">/</span>
+                            <span class="font-medium text-[#191919] text-xs">Browse Lots</span>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <button onclick="openDrawer('subscribe')"
+                        class="group bg-white/85 hover:bg-white transition-all duration-200 cursor-pointer px-3.5 py-3 flex items-center justify-between rounded-xl border border-gray-200/60 shadow-sm min-w-[135px]">
+                        <div class="flex items-center text-xs">
+                            <span class="font-serif italic text-gray-400 text-sm">02</span>
+                            <span class="mx-1.5 text-gray-300">/</span>
+                            <span class="font-medium text-[#191919] text-xs">Weekly Supply</span>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <button onclick="openDrawer('calculator')"
+                        class="group bg-white/85 hover:bg-white transition-all duration-200 cursor-pointer px-3.5 py-3 flex items-center justify-between rounded-xl border border-gray-200/60 shadow-sm min-w-[135px]">
+                        <div class="flex items-center text-xs">
+                            <span class="font-serif italic text-gray-400 text-sm">03</span>
+                            <span class="mx-1.5 text-gray-300">/</span>
+                            <span class="font-medium text-[#191919] text-xs">Feed Calculator</span>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all"
+                            fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HERO HEADING -->
+        <div class="flex flex-col items-center text-center px-4 my-8 sm:my-12">
+            <h1
+                class="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[1.08] tracking-tight text-[#191919] font-normal">
+                Feed the wild.<br />
+                <span class="italic font-normal">Zero farms wasted.</span>
+            </h1>
+            <p
+                class="max-w-md sm:max-w-lg mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed font-normal">
+                Every lot is graded for species suitability before it reaches your enclosures. Bedding, fodder,
+                enrichment and compost — the grid tells you exactly what it's good for.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-6 sm:mt-7">
+                <button onclick="openDrawer('feed')"
+                    class="px-5 py-2.5 rounded-xl bg-white/85 hover:bg-white text-xs font-semibold text-[#191919] transition-all shadow-sm flex items-center gap-2 border border-gray-200/80">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="hero-batch-count">Loading available lots…</span>
+                </button>
+                <button onclick="openDrawer('map')"
+                    class="px-5 py-2.5 rounded-xl bg-white/85 hover:bg-white text-xs font-semibold text-[#191919] transition-all shadow-sm flex items-center gap-2 border border-gray-200/80">
+                    <svg class="w-3.5 h-3.5 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                    </svg>
+                    Sanctuary Map (PostGIS)
+                </button>
+            </div>
+        </div>
+
+        <!-- THERMAL WATCHDOG -->
+        <div class="w-full flex justify-end px-4 sm:px-6 md:pr-10 lg:pr-14 mt-4">
+            <div class="w-full max-w-lg glass-frosted-card rounded-2xl p-5 border border-white/85 shadow-sm space-y-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.8" class="w-5 h-5 text-emerald-700">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-baseline gap-2">
+                                <span
+                                    class="font-editorial italic text-2xl text-emerald-900 leading-none font-medium">Feed
+                                    Freshness Guard</span>
+                                <span class="text-[10px] uppercase font-semibold text-gray-400 tracking-wider">Decay
+                                    Gate</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-0.5">Live spoilage window for open feed lots</p>
+                        </div>
+                    </div>
+                    <span id="watchdog-pill"
+                        class="status-pill bg-emerald-50 text-emerald-700 border border-emerald-200">Safe</span>
+                </div>
+
+                <div id="watchdog-message"
+                    class="bg-white/60 rounded-xl p-3 border border-gray-100 flex items-center justify-between text-xs">
+                    <span class="text-gray-600">Loading safest lot…</span>
+                    <span class="font-semibold text-emerald-700 tabular-nums">—</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="w-full bg-gray-200/80 h-2.5 rounded-full overflow-hidden p-0.5">
+                        <div id="watchdog-bar"
+                            class="bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-500 h-full rounded-full transition-all duration-500"
+                            style="width:0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] text-gray-500">
+                        <span>0 h</span>
+                        <span class="font-medium text-gray-700">Feed-grade window: 72 h from farm dispatch</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTERS + FEED GRID -->
+        <section id="feed" class="w-full max-w-6xl mx-auto mt-10 sm:mt-14 px-4 sm:px-8">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="font-serif text-3xl sm:text-4xl text-[#191919] leading-tight">Available farm lots</h2>
+                    <p class="text-sm text-gray-500 mt-1">Filtered by species suitability. Every lot comes straight from
+                        a verified farm.</p>
+                </div>
+                <div id="species-filters" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div id="feed-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+
+        <!-- IMPACT -->
+        <section id="impact" class="w-full max-w-6xl mx-auto mt-16 sm:mt-20 px-4 sm:px-8">
+            <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+                <div>
+                    <h2 class="font-serif text-3xl sm:text-4xl text-[#191919] leading-tight">Your sanctuary impact</h2>
+                    <p class="text-sm text-gray-500 mt-1">Verified by the grid, ready to use in your annual reports and
+                        grant applications.</p>
+                </div>
+                <button onclick="openDrawer('impact')"
+                    class="text-xs font-medium px-4 py-2 rounded-xl border border-gray-300 hover:bg-white transition-colors">View
+                    full report →</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-grey-wide rounded-2xl p-5">
+                    <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Kg of Waste Rescued
+                    </div>
+                    <div class="font-serif text-3xl sm:text-4xl text-[#191919] tabular-nums mt-1" id="impact-kg">0</div>
+                    <div class="text-[11px] text-emerald-700 font-medium mt-1">↑ growing every pickup</div>
+                </div>
+                <div class="glass-grey-wide rounded-2xl p-5">
+                    <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Animal Meals Served
+                    </div>
+                    <div class="font-serif text-3xl sm:text-4xl text-emerald-800 tabular-nums mt-1"
+                        id="impact-animalmeals">0</div>
+                    <div class="text-[11px] text-gray-500 mt-1">estimated from kg / species ratio</div>
+                </div>
+                <div class="glass-grey-wide rounded-2xl p-5">
+                    <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Methane Diverted</div>
+                    <div class="font-serif text-3xl sm:text-4xl text-[#191919] tabular-nums mt-1" id="impact-methane">0
+                    </div>
+                    <div class="text-[11px] text-gray-500 mt-1">tCO₂e avoided</div>
+                </div>
+                <div class="glass-grey-wide rounded-2xl p-5">
+                    <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Pickups Completed</div>
+                    <div class="font-serif text-3xl sm:text-4xl text-[#191919] tabular-nums mt-1" id="impact-pickups">0
+                    </div>
+                    <div class="text-[11px] text-gray-500 mt-1">via ByteToBite Logistics</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="h-10"></div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"
+        class="fixed top-20 right-6 z-[80] hidden bg-[#191919]/95 backdrop-blur-md text-white px-4 py-3 rounded-xl shadow-xl text-xs font-medium flex items-center gap-3 border border-white/10 transition-all">
+        <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+        <span id="toast-text"></span>
+    </div>
+
+    <!-- DRAWER -->
+    <div id="drawer-backdrop" class="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] hidden" onclick="closeDrawer()">
+    </div>
+    <div id="drawer-root"
+        class="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white border-l border-gray-200 transform translate-x-full transition-all duration-300 ease-in-out p-6 flex flex-col invisible opacity-0">
+        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+            <div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-xs uppercase font-semibold text-gray-400 tracking-wider"
+                        id="drawer-eyebrow">Panel</span>
+                    <span class="font-editorial italic text-xl text-emerald-800 leading-none" id="drawer-tag">—</span>
+                </div>
+                <h3 id="drawer-title" class="font-serif text-2xl text-[#191919] mt-0.5">—</h3>
+            </div>
+            <button onclick="closeDrawer()" class="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="w-5 h-5 text-gray-600">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div id="drawer-body" class="flex-1 overflow-y-auto py-4 space-y-4"></div>
+        <div id="drawer-actions" class="pt-4 border-t border-gray-100 flex gap-3"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIG
+        // ==========================================
+        const DEFAULT_SANCTUARY_LOCATION = { lat: 28.6139, lng: 77.2090 };
+        const SPECIES_GROUPS = [
+            { key: 'ALL', label: 'All Species', icon: '🌿' },
+            { key: 'ELEPHANT', label: 'Elephants', icon: '🐘' },
+            { key: 'CATTLE', label: 'Cattle & Equines', icon: '🐄' },
+            { key: 'PRIMATE', label: 'Primates', icon: '🐒' },
+            { key: 'BIGCAT', label: 'Big Cats', icon: '🐅' },
+            { key: 'BIRD', label: 'Birds', icon: '🦜' },
+            { key: 'REPTILE', label: 'Reptiles', icon: '🦎' },
+            { key: 'SMALL', label: 'Small Mammals', icon: '🐇' }
+        ];
+        const CATEGORY_LABELS = {
+            CROP_RESIDUE: 'Crop Residue',
+            SPOILED_GRAIN: 'Spoiled Grain',
+            VEGETABLE_WASTE: 'Vegetable Waste',
+            FRUIT_POMACE: 'Fruit Pomace',
+            COCONUT_HUSK: 'Coconut Husk',
+            LEAF_LITTER: 'Leaf Litter',
+            COOKED_ANIMAL_FEED: 'Cooked Surplus (Animal-Grade)',
+            BIO_MASS: 'Bio Mass',
+            PLANT_FIBER: 'Plant Fiber',
+            MUSHROOM_SUBSTRATE: 'Spent Mushroom Substrate',
+            COOKED_SURPLUS: 'Cooked Surplus (Animal-Grade)',
+            CITRUS_POMACE: 'Citrus Pomace',
+            SILICA_SAND: 'Silica Sand',
+            OTHER: 'Other'
+        };
+        const CATEGORY_UTILITY = {
+            CROP_RESIDUE: { use: 'Fodder / Bedding', species: ['ELEPHANT', 'CATTLE', 'SMALL'], grade: 'Feed + Bedding' },
+            SPOILED_GRAIN: { use: 'Animal Feed', species: ['CATTLE', 'BIRD', 'SMALL', 'PRIMATE'], grade: 'Feed Grade' },
+            VEGETABLE_WASTE: { use: 'Fodder / Compost', species: ['ELEPHANT', 'CATTLE', 'PRIMATE', 'SMALL'], grade: 'Feed Grade' },
+            FRUIT_POMACE: { use: 'Enrichment Feed', species: ['PRIMATE', 'BIRD', 'BIGCAT', 'SMALL'], grade: 'Feed Grade' },
+            CITRUS_POMACE: { use: 'Enrichment Feed', species: ['PRIMATE', 'BIRD', 'BIGCAT', 'SMALL'], grade: 'Feed Grade' },
+            COCONUT_HUSK: { use: 'Enrichment / Bedding', species: ['ELEPHANT', 'REPTILE', 'BIRD'], grade: 'Enrichment Grade' },
+            LEAF_LITTER: { use: 'Habitat / Compost', species: ['REPTILE', 'SMALL', 'BIRD'], grade: 'Habitat Grade' },
+            COOKED_ANIMAL_FEED: { use: 'Cooked Animal Feed', species: ['BIGCAT', 'SMALL'], grade: 'Feed Grade' },
+            COOKED_SURPLUS: { use: 'Cooked Animal Feed', species: ['BIGCAT', 'SMALL'], grade: 'Feed Grade' },
+            BIO_MASS: { use: 'Bedding / Compost', species: ['ELEPHANT', 'CATTLE', 'REPTILE'], grade: 'Bedding Grade' },
+            PLANT_FIBER: { use: 'Fodder / Bedding', species: ['ELEPHANT', 'CATTLE', 'SMALL'], grade: 'Feed + Bedding' },
+            MUSHROOM_SUBSTRATE: { use: 'Enrichment / Compost', species: ['PRIMATE', 'REPTILE', 'SMALL'], grade: 'Enrichment Grade' },
+            SILICA_SAND: { use: 'Habitat Substrate', species: ['REPTILE', 'SMALL'], grade: 'Habitat Grade' },
+            OTHER: { use: 'Assess on-site', species: ['ALL'], grade: 'General' }
+        };
+
+        const DEMO_PROFILES = {
+            sanctuary: {
+                role: 'sanctuary',
+                name: 'Wildlife SOS India',
+                registration: 'DL/2021/0291',
+                species: ['ELEPHANT', 'BIGCAT', 'PRIMATE'],
+                animalCount: 240,
+                lat: 28.6139, lng: 77.2090
+            },
+            zoo: {
+                role: 'zoo',
+                name: 'National Zoological Park',
+                gst: '07AAAGN1234A1Z5',
+                species: ['ELEPHANT', 'BIGCAT', 'PRIMATE', 'BIRD', 'REPTILE'],
+                animalCount: 1200,
+                lat: 28.6097, lng: 77.2455
+            },
+            volunteer: {
+                role: 'volunteer',
+                name: 'Street Feeder — Aarav',
+                mobile: '9876543210',
+                species: ['SMALL', 'BIRD'],
+                animalCount: 40,
+                lat: 28.6300, lng: 77.2200
+            }
+        };
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let currentUser = null;
+        let allLots = [];
+        let currentSpeciesFilter = 'ALL';
+        let selectedLot = null;
+        let unsubscribeDB = null;
+        let map = null;
+        let toastTimer = null;
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function money(n) { return '₹' + (n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function haversineKm(a, b) {
+            const R = 6371;
+            const dLat = (b.lat - a.lat) * Math.PI / 180;
+            const dLng = (b.lng - a.lng) * Math.PI / 180;
+            const lat1 = a.lat * Math.PI / 180, lat2 = b.lat * Math.PI / 180;
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(h));
+        }
+        function estimateAnimalMeals(kg, species) {
+            const ratios = { ELEPHANT: 8, CATTLE: 6, PRIMATE: 0.6, BIGCAT: 4, BIRD: 0.15, REPTILE: 0.4, SMALL: 0.2, ALL: 2 };
+            const avg = species && species.length
+                ? species.reduce((s, k) => s + (ratios[k] || 2), 0) / species.length
+                : 2;
+            return Math.round(kg / avg);
+        }
+        function timeAgo(ms) {
+            const s = Math.floor((Date.now() - ms) / 1000);
+            if (s < 60) return s + 's ago';
+            if (s < 3600) return Math.floor(s / 60) + 'm ago';
+            if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+            return Math.floor(s / 86400) + 'd ago';
+        }
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            const t = document.getElementById('toast-text');
+            if (!el || !t) return;
+            t.textContent = msg;
+            el.classList.remove('hidden');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => el.classList.add('hidden'), 4200);
+        }
+        function showGateError(msg) {
+            const el = document.getElementById('g-error');
+            if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+        }
+
+        // ==========================================
+        // GATE MODAL
+        // ==========================================
+        window.quickDemoGateLogin = function(role) {
+            const target = DEMO_PROFILES[role] || DEMO_PROFILES.sanctuary;
+            completeGateLogin({ ...target });
+        };
+
+        function openGateModal(role) {
+            const modal = document.getElementById('gate-modal');
+            const title = document.getElementById('gate-modal-title');
+            const body = document.getElementById('gate-modal-body');
+
+            const configs = {
+                sanctuary: {
+                    title: 'Sanctuary Login',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Sanctuary Name</label>
+                <input id="g-name" type="text" placeholder="e.g. Wildlife SOS India" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Darpan Registration ID</label>
+                <input id="g-reg" type="text" placeholder="e.g. DL/2021/0291" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Species Under Care</label>
+                <div class="flex flex-wrap gap-1.5 mt-1" id="g-species-picker"></div></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Total Animals</label>
+                <input id="g-count" type="number" placeholder="e.g. 240" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="g-mobile" type="tel" maxlength="10" placeholder="10-digit mobile" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <p id="g-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitGateLogin('sanctuary')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold uppercase tracking-wide">Send OTP & Enter</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-neutral-200"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">or demo</span>
+                <div class="flex-grow border-t border-neutral-200"></div>
+              </div>
+              <button type="button" onclick="quickDemoGateLogin('sanctuary')" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Sanctuary)
+              </button>
+            </div>
+          `
+                },
+                zoo: {
+                    title: 'Zoo / Wildlife Park Login',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Zoo / Park Name</label>
+                <input id="g-name" type="text" placeholder="e.g. National Zoological Park" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">GST Number (15 chars)</label>
+                <input id="g-gst" type="text" maxlength="15" placeholder="22AAAAA0000A1Z5" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm uppercase focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Species Under Care</label>
+                <div class="flex flex-wrap gap-1.5 mt-1" id="g-species-picker"></div></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Total Animals</label>
+                <input id="g-count" type="number" placeholder="e.g. 1200" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="g-mobile" type="tel" maxlength="10" placeholder="10-digit mobile" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <p id="g-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitGateLogin('zoo')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold uppercase tracking-wide">Send OTP & Enter</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-neutral-200"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">or demo</span>
+                <div class="flex-grow border-t border-neutral-200"></div>
+              </div>
+              <button type="button" onclick="quickDemoGateLogin('zoo')" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Zoo Operator)
+              </button>
+            </div>
+          `
+                },
+                volunteer: {
+                    title: 'Volunteer Login',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Your Name</label>
+                <input id="g-name" type="text" placeholder="Full name" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Species You Feed</label>
+                <div class="flex flex-wrap gap-1.5 mt-1" id="g-species-picker"></div></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Animals You Care For</label>
+                <input id="g-count" type="number" placeholder="e.g. 40" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="g-mobile" type="tel" maxlength="10" placeholder="10-digit mobile" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></div>
+              <p class="text-[11px] text-neutral-500 bg-amber-50 p-2 rounded-lg">Volunteers are capped at <strong>200 kg per lot</strong> to keep bulk supply for sanctuaries.</p>
+              <p id="g-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitGateLogin('volunteer')" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm font-bold uppercase tracking-wide">Send OTP & Enter</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-neutral-200"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">or demo</span>
+                <div class="flex-grow border-t border-neutral-200"></div>
+              </div>
+              <button type="button" onclick="quickDemoGateLogin('volunteer')" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Volunteer)
+              </button>
+            </div>
+          `
+                }
+            };
+
+            title.textContent = configs[role].title;
+            body.innerHTML = configs[role].html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const picker = document.getElementById('g-species-picker');
+            if (picker) {
+                window._selectedSpecies = [];
+                picker.innerHTML = SPECIES_GROUPS.filter(s => s.key !== 'ALL').map(s => `
+          <button type="button" data-species="${s.key}" onclick="toggleSpeciesPick(this)" class="species-pick px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors border border-neutral-200">
+            ${s.icon} ${s.label}
+          </button>
+        `).join('');
+            }
+            window._pendingRole = role;
+        }
+
+        function toggleSpeciesPick(btn) {
+            const key = btn.dataset.species;
+            const arr = window._selectedSpecies || [];
+            const idx = arr.indexOf(key);
+            if (idx >= 0) {
+                arr.splice(idx, 1);
+                btn.className = 'species-pick px-3 py-1.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors border border-neutral-200';
+            } else {
+                arr.push(key);
+                btn.className = 'species-pick px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-600 text-white transition-colors border border-emerald-600';
+            }
+            window._selectedSpecies = arr;
+        }
+
+        function closeGateModal() {
+            const modal = document.getElementById('gate-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function submitGateLogin(role) {
+            const name = (document.getElementById('g-name')?.value || '').trim();
+            const mobile = (document.getElementById('g-mobile')?.value || '').trim();
+            const count = parseInt(document.getElementById('g-count')?.value) || 0;
+            const species = window._selectedSpecies || [];
+
+            if (name.length < 3) return showGateError('Enter valid name');
+            if (species.length === 0) return showGateError('Select at least one species');
+            if (count < 1) return showGateError('Enter animal count');
+            if (mobile.replace(/\D/g, '').length !== 10) return showGateError('Enter 10-digit mobile');
+
+            const base = { role, name, mobile, species, animalCount: count };
+
+            if (role === 'sanctuary') {
+                const reg = (document.getElementById('g-reg')?.value || '').trim();
+                if (reg.length < 5) return showGateError('Enter valid Darpan registration');
+                base.registration = reg;
+            } else if (role === 'zoo') {
+                const gst = (document.getElementById('g-gst')?.value || '').trim().toUpperCase();
+                if (gst.length !== 15) return showGateError('GST must be 15 characters');
+                base.gst = gst;
+            }
+            runOtp(role, base);
+        }
+
+        function runOtp(role, profile) {
+            const body = document.getElementById('gate-modal-body');
+            body.innerHTML = `
+        <div class="space-y-4">
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <p class="text-sm text-neutral-700">OTP sent to <strong>+91 ${profile.mobile}</strong></p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-neutral-700 mb-1">OTP</label>
+            <input id="g-otp" type="text" maxlength="6" placeholder="000000" class="w-full border border-neutral-200 rounded-xl px-3 py-3 text-center tracking-[0.5em] text-lg font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          </div>
+          <p id="g-error" class="text-xs text-red-500 hidden"></p>
+          <button onclick="verifyOtp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold uppercase tracking-wide">Verify & Enter</button>
+        </div>
+      `;
+            window._pendingProfile = profile;
+        }
+
+        async function verifyOtp() {
+            const otp = (document.getElementById('g-otp')?.value || '').trim();
+            if (otp.length !== 6) return showGateError('Enter the 6-digit code');
+            const profile = window._pendingProfile;
+            if (!profile) return showGateError('Session expired');
+
+            try {
+                const pos = await new Promise((res, rej) => {
+                    if (!navigator.geolocation) return rej(new Error('no gps'));
+                    navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 8000 });
+                });
+                profile.lat = pos.coords.latitude;
+                profile.lng = pos.coords.longitude;
+            } catch (e) {
+                profile.lat = DEFAULT_SANCTUARY_LOCATION.lat;
+                profile.lng = DEFAULT_SANCTUARY_LOCATION.lng;
+            }
+
+            try {
+                if (window.ByteToBiteAPI) await window.ByteToBiteAPI.saveProfile('sanctuary-' + profile.role, profile);
+            } catch (e) { }
+
+            completeGateLogin(profile);
+        }
+
+        function completeGateLogin(profile) {
+            currentUser = profile;
+            closeGateModal();
+            document.getElementById('sanctuary-gateway').style.display = 'none';
+            document.getElementById('console-wrapper').classList.remove('hidden');
+
+            document.getElementById('hdr-org').textContent = profile.name;
+            document.getElementById('hdr-node').textContent = `(Node #${profile.role.toUpperCase()}-${String(profile.animalCount).padStart(3, '0')})`;
+            document.getElementById('hdr-reg').textContent = profile.registration ? `• Darpan: ${profile.registration}` : (profile.gst ? `• GST: ${profile.gst}` : '');
+            document.getElementById('hdr-tier').textContent = profile.role === 'volunteer' ? 'Volunteer Tier' : profile.role === 'zoo' ? 'Zoo Tier' : 'Sanctuary Tier';
+
+            requestAnimationFrame(() => {
+                initSpeciesFilters();
+                loadLots();
+                subscribeToDB();
+                updateImpact();
+                updateWatchdog();
+            });
+        }
+
+        function logoutGate() {
+            if (unsubscribeDB) { unsubscribeDB(); unsubscribeDB = null; }
+            currentUser = null;
+            allLots = [];
+            document.getElementById('console-wrapper').classList.add('hidden');
+            document.getElementById('sanctuary-gateway').style.display = 'flex';
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                e.preventDefault();
+                const order = ['sanctuary', 'zoo', 'volunteer'];
+                const next = !currentUser ? 'sanctuary' : order[(order.indexOf(currentUser.role) + 1) % 3];
+                if (currentUser) logoutGate();
+                setTimeout(() => completeGateLogin({ ...DEMO_PROFILES[next] }), 50);
+            }
+        });
+
+        // ==========================================
+        // SPECIES FILTERS
+        // ==========================================
+        function initSpeciesFilters() {
+            const bar = document.getElementById('species-filters');
+            bar.innerHTML = SPECIES_GROUPS.map(s => `
+        <button onclick="setSpeciesFilter('${s.key}')" data-species="${s.key}"
+          class="cat-btn px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${s.key === currentSpeciesFilter ? 'bg-[#191919] text-white' : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'}">
+          ${s.icon} ${s.label}
+        </button>
+      `).join('');
+        }
+
+        function setSpeciesFilter(key) {
+            currentSpeciesFilter = key;
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                const active = b.dataset.species === key;
+                b.className = 'cat-btn px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ' +
+                    (active ? 'bg-[#191919] text-white' : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200');
+            });
+            renderFeedGrid();
+        }
+
+        // ==========================================
+        // LOAD LOTS
+        // ==========================================
+        async function loadLots() {
+            try {
+                if (!window.ByteToBiteAPI) return;
+                const lots = await window.ByteToBiteAPI.getLots();
+                allLots = lots.filter(l => l.status === 'OPEN' && !l._isBarter);
+                renderFeedGrid();
+                updateImpact();
+                updateWatchdog();
+                const cnt = document.getElementById('hero-batch-count');
+                if (cnt) cnt.textContent = `${allLots.length} lot${allLots.length !== 1 ? 's' : ''} available near you`;
+            } catch (e) { console.warn('Load failed:', e); }
+        }
+
+        function lotsVisibleToUser() {
+            let filtered = allLots.slice();
+            if (currentSpeciesFilter !== 'ALL') {
+                filtered = filtered.filter(l => {
+                    const u = CATEGORY_UTILITY[l.category] || CATEGORY_UTILITY.OTHER;
+                    return u.species.includes(currentSpeciesFilter) || u.species.includes('ALL');
+                });
+            }
+            return filtered
+                .map(l => ({ ...l, distanceKm: haversineKm(currentUser, { lat: l.lat, lng: l.lng }) }))
+                .sort((a, b) => a.distanceKm - b.distanceKm);
+        }
+
+        function renderFeedGrid() {
+            const grid = document.getElementById('feed-grid');
+            if (!grid) return;
+            const visible = lotsVisibleToUser();
+
+            if (visible.length === 0) {
+                grid.innerHTML = `
+          <div class="md:col-span-2 lg:col-span-3 p-10 rounded-2xl border border-dashed border-neutral-300 bg-white/60 text-center">
+            <p class="text-neutral-600 text-sm">No farm lots match this species filter right now.</p>
+            <p class="text-neutral-400 text-xs mt-2">New lots appear here the moment a farmer publishes — with the right grade for your animals.</p>
+          </div>`;
+                return;
+            }
+
+            grid.innerHTML = visible.map(lot => {
+                const u = CATEGORY_UTILITY[lot.category] || CATEGORY_UTILITY.OTHER;
+                const total = (lot.massKg || 0) * (lot.rate || 0);
+                const urgent = (Date.now() - (lot.createdAt || Date.now())) > 36 * 3600 * 1000;
+                const isVolunteer = currentUser.role === 'volunteer';
+                const volunteerCap = 200;
+                const overCap = isVolunteer && lot.massKg > volunteerCap;
+                const animalMeals = estimateAnimalMeals(lot.massKg || 0, currentUser.species);
+
+                return `
+          <div class="glass-frosted-card rounded-2xl p-5 flex flex-col border border-white/85">
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <div>
+                <div class="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 uppercase tracking-wide inline-block">${escapeHtml(u.grade)}</div>
+                <h3 class="font-serif text-lg text-[#191919] mt-1.5">${escapeHtml(lot.category === 'OTHER' ? (lot.otherText || 'Other') : (CATEGORY_LABELS[lot.category] || lot.category))}</h3>
+                ${lot.subType ? `<div class="text-[11px] text-neutral-500">${escapeHtml(lot.subType)}</div>` : ''}
+              </div>
+              ${urgent ? `<span class="status-pill bg-rose-50 text-rose-700 border border-rose-200">Feed now</span>` : `<span class="status-pill bg-emerald-50 text-emerald-700 border border-emerald-200">Fresh</span>`}
+            </div>
+
+            <div class="text-xs text-neutral-600 mb-3">
+              <div class="flex items-start gap-2 mb-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
+                <span class="font-medium text-[#191919]">${escapeHtml(lot.origin || 'Farm')}</span>
+              </div>
+              <div class="text-[11px] text-neutral-500 pl-3.5">${lot.distanceKm.toFixed(1)} km from you · listed ${timeAgo(lot.createdAt || Date.now())}</div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 py-3 border-t border-b border-neutral-200/70 mb-3">
+              <div class="text-center">
+                <div class="text-[10px] text-neutral-500 uppercase tracking-wider">Mass</div>
+                <div class="text-[#191919] font-semibold tabular-nums text-sm">${(lot.massKg || 0).toLocaleString()} kg</div>
+              </div>
+              <div class="text-center border-l border-r border-neutral-200/70">
+                <div class="text-[10px] text-neutral-500 uppercase tracking-wider">Rate</div>
+                <div class="text-[#191919] font-semibold tabular-nums text-sm">${money(lot.rate)}/kg</div>
+              </div>
+              <div class="text-center">
+                <div class="text-[10px] text-neutral-500 uppercase tracking-wider">Total</div>
+                <div class="text-emerald-700 font-semibold tabular-nums text-sm">${money(total)}</div>
+              </div>
+            </div>
+
+            <div class="text-[11px] text-neutral-500 mb-3 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8 6 4 8 4 14a8 8 0 0 0 16 0c0-6-4-8-8-12z"/></svg>
+              <span>Feeds approx. <strong class="text-emerald-800">${animalMeals.toLocaleString()} animal-meals</strong></span>
+            </div>
+
+            <div class="text-[11px] text-neutral-500 mb-3">
+              <strong class="text-neutral-700">Best for:</strong> ${escapeHtml(u.use)}
+            </div>
+
+            ${overCap ? `
+              <button disabled class="w-full py-2.5 rounded-xl bg-neutral-100 text-neutral-400 text-xs font-semibold cursor-not-allowed mt-auto">Over volunteer 200 kg limit</button>
+            ` : `
+              <button onclick="openClaimDrawer('${lot.id}')" class="w-full py-2.5 rounded-xl bg-[#191919] text-white text-xs font-semibold hover:bg-black transition-colors mt-auto">Claim this lot →</button>
+            `}
+          </div>
+        `;
+            }).join('');
+        }
+
+        // ==========================================
+        // WATCHDOG
+        // ==========================================
+        function updateWatchdog() {
+            const pill = document.getElementById('watchdog-pill');
+            const msg = document.getElementById('watchdog-message');
+            const bar = document.getElementById('watchdog-bar');
+            if (!pill || !msg || !bar) return;
+
+            if (allLots.length === 0) {
+                pill.className = 'status-pill bg-neutral-100 text-neutral-500 border border-neutral-200';
+                pill.textContent = 'Idle';
+                msg.innerHTML = `<span class="text-gray-600">No open feed lots to monitor</span>`;
+                bar.style.width = '0%';
+                return;
+            }
+
+            const oldest = allLots.reduce((a, b) => (a.createdAt || 0) < (b.createdAt || 0) ? a : b);
+            const ageHrs = (Date.now() - (oldest.createdAt || Date.now())) / 3600000;
+            const windowHrs = 72;
+            const pct = Math.min(100, (ageHrs / windowHrs) * 100);
+            const remaining = Math.max(0, windowHrs - ageHrs);
+
+            let state = { cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200', label: 'Safe' };
+            if (pct > 75) state = { cls: 'bg-rose-50 text-rose-700 border border-rose-200', label: 'Critical' };
+            else if (pct > 50) state = { cls: 'bg-amber-50 text-amber-700 border border-amber-200', label: 'Watch' };
+
+            pill.className = 'status-pill ' + state.cls;
+            pill.textContent = state.label;
+            msg.innerHTML = `
+        <span class="text-gray-600">Oldest open lot: <strong class="text-gray-900">${escapeHtml(oldest.id)}</strong> · ${ageHrs.toFixed(1)} h old</span>
+        <span class="font-semibold ${pct > 75 ? 'text-rose-700' : 'text-emerald-700'} tabular-nums">${remaining.toFixed(0)} h window left</span>
+      `;
+            bar.style.width = pct + '%';
+        }
+
+        // ==========================================
+        // IMPACT
+        // ==========================================
+        function updateImpact() {
+            const claimed = (allLots || []).filter(l => l.status === 'ESCROW LOCKED' || l.status === 'IN_TRANSIT' || l.status === 'DELIVERED');
+            const kgRescued = claimed.reduce((s, l) => s + (l.massKg || 0), 0);
+            const animalMeals = estimateAnimalMeals(kgRescued, currentUser ? currentUser.species : ['ALL']);
+            const methane = (kgRescued * 0.0013).toFixed(2);
+            const pickups = claimed.length;
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            set('impact-kg', kgRescued.toLocaleString());
+            set('impact-animalmeals', animalMeals.toLocaleString());
+            set('impact-methane', methane);
+            set('impact-pickups', pickups);
+            set('hdr-kg', kgRescued.toLocaleString());
+            set('hdr-animals', animalMeals.toLocaleString());
+        }
+
+        // ==========================================
+        // DRAWER
+        // ==========================================
+        function openDrawer(kind, payload) {
+            const root = document.getElementById('drawer-root');
+            const backdrop = document.getElementById('drawer-backdrop');
+            const eyebrow = document.getElementById('drawer-eyebrow');
+            const tag = document.getElementById('drawer-tag');
+            const title = document.getElementById('drawer-title');
+            const body = document.getElementById('drawer-body');
+            const actions = document.getElementById('drawer-actions');
+            actions.innerHTML = '';
+
+            if (kind === 'feed') {
+                eyebrow.textContent = 'Directory';
+                tag.textContent = '— Available Lots';
+                title.textContent = 'Farm Feed & Bedding Lots';
+                body.innerHTML = allLots.length === 0
+                    ? `<div class="text-sm text-neutral-500">No open lots right now. Check back shortly — new lots appear the moment a farmer publishes.</div>`
+                    : lotsVisibleToUser().map(lot => {
+                        const u = CATEGORY_UTILITY[lot.category] || CATEGORY_UTILITY.OTHER;
+                        return `
+                <div class="p-4 rounded-xl border border-gray-200 bg-white">
+                  <div class="flex items-start justify-between mb-2">
+                    <div>
+                      <div class="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 uppercase tracking-wide inline-block">${escapeHtml(u.grade)}</div>
+                      <div class="font-semibold text-sm text-[#191919] mt-1">${escapeHtml(lot.category === 'OTHER' ? (lot.otherText || 'Other') : (CATEGORY_LABELS[lot.category] || lot.category))}</div>
+                      <div class="text-[11px] text-neutral-500">${escapeHtml(lot.origin || 'Farm')} · ${lot.distanceKm.toFixed(1)} km</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-xs font-semibold text-[#191919] tabular-nums">${(lot.massKg || 0).toLocaleString()} kg</div>
+                      <div class="text-[11px] text-emerald-700 font-medium tabular-nums">${money((lot.massKg || 0) * (lot.rate || 0))}</div>
+                    </div>
+                  </div>
+                  <button onclick="openClaimDrawer('${lot.id}')" class="w-full py-2 mt-2 rounded-lg bg-[#191919] text-white text-xs font-semibold hover:bg-black">Claim →</button>
+                </div>
+              `;
+                    }).join('');
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                return;
+            }
+
+            if (kind === 'subscribe') {
+                eyebrow.textContent = 'Recurring';
+                tag.textContent = '— Weekly Supply';
+                title.textContent = 'Subscribe to Weekly Farm Supply';
+                body.innerHTML = `
+          <p class="text-xs text-gray-600 leading-relaxed">Set up a recurring weekly pickup of the feed / bedding grades you need. The grid automatically matches your demand to the nearest farms each week.</p>
+          <div class="space-y-4 mt-3">
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Category</label>
+              <select id="sub-cat" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                ${Object.keys(CATEGORY_LABELS).map(k => `<option value="${k}">${CATEGORY_LABELS[k]}</option>`).join('')}
+              </select></div>
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Weekly Quantity (kg)</label>
+              <input id="sub-qty" type="number" value="500" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Day of Week</label>
+              <select id="sub-day" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                <option>Thursday</option><option selected>Friday</option><option>Saturday</option>
+              </select></div>
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Max Price per kg (₹)</label>
+              <input id="sub-cap" type="number" step="0.1" value="3.00" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></div>
+          </div>
+        `;
+                actions.innerHTML = `
+          <button onclick="closeDrawer()" class="w-1/3 py-2.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button onclick="saveSubscription()" class="w-2/3 py-2.5 text-xs font-semibold bg-[#191919] text-white rounded-lg hover:bg-black">Create Weekly Subscription</button>
+        `;
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                return;
+            }
+
+            if (kind === 'calculator') {
+                eyebrow.textContent = 'Planner';
+                tag.textContent = '— Feed Calculator';
+                title.textContent = 'How many days will this feed last?';
+                body.innerHTML = `
+          <p class="text-xs text-gray-600 leading-relaxed">Enter your animal counts. We'll estimate daily feed need and tell you how many days a typical lot covers.</p>
+          <div class="space-y-3 mt-4">
+            ${SPECIES_GROUPS.filter(s => s.key !== 'ALL').map(s => `
+              <div class="rounded-xl border border-gray-200 bg-white p-3.5">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-lg leading-none">${s.icon}</span>
+                  <span class="text-xs font-semibold text-gray-800">${s.label}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input id="calc-${s.key}" type="number" min="0" value="${(currentUser && currentUser.species.includes(s.key)) ? Math.round((currentUser.animalCount / currentUser.species.length)) : 0}" class="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <span class="text-[11px] text-gray-400 shrink-0">animals</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div id="calc-result" class="mt-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 leading-relaxed">
+            Adjust counts above to see how many days of feed a typical 500 kg lot would cover.
+          </div>
+        `;
+                actions.innerHTML = `
+          <button onclick="closeDrawer()" class="w-1/3 py-2.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
+          <button onclick="runFeedCalc()" class="w-2/3 py-2.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">Calculate Feed Days</button>
+        `;
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                return;
+            }
+
+            if (kind === 'map') {
+                eyebrow.textContent = 'CartoDB';
+                tag.textContent = '— Sanctuary Radius';
+                title.textContent = 'Lots Near Your Sanctuary';
+                body.innerHTML = `
+          <div id="drawer-map" class="w-full h-[420px] rounded-xl border border-gray-200 overflow-hidden"></div>
+          <div class="text-[11px] text-gray-500 mt-3">Each pin is a farm lot. Tap any pin to view its details.</div>
+        `;
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                setTimeout(() => {
+                    if (map) { map.remove(); map = null; }
+                    const center = [currentUser.lat, currentUser.lng];
+                    map = L.map('drawer-map', { zoomControl: false, attributionControl: false }).setView(center, 10);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+                    L.circle(center, { radius: 40000, color: '#10b981', fillColor: '#10b981', fillOpacity: 0.08, weight: 1.5, dashArray: '4 6' }).addTo(map);
+                    L.marker(center, { icon: L.divIcon({ className: '', html: `<div style="background:#10b981;color:#fff;padding:4px 10px;font-weight:700;border-radius:6px;font-size:11px;border:1px solid #fff;">Your Sanctuary</div>`, iconSize: [110, 24], iconAnchor: [55, 24] }) }).addTo(map);
+                    lotsVisibleToUser().forEach(lot => {
+                        L.marker([lot.lat, lot.lng], { icon: L.divIcon({ className: '', html: `<div style="background:#191919;color:#fff;padding:3px 8px;font-weight:700;border-radius:6px;font-size:10px;">${(lot.massKg || 0)} kg</div>`, iconSize: [70, 20], iconAnchor: [35, 10] }) })
+                            .addTo(map)
+                            .bindPopup(`<b>${escapeHtml(lot.id)}</b><br>${escapeHtml(lot.origin)}<br>${(lot.massKg || 0)} kg · ${money((lot.massKg || 0) * (lot.rate || 0))}`);
+                    });
+                }, 200);
+                return;
+            }
+
+            if (kind === 'impact') {
+                eyebrow.textContent = 'Report';
+                tag.textContent = '— Statutory';
+                title.textContent = 'Impact Report (Downloadable)';
+                body.innerHTML = `
+          <div class="space-y-3 text-xs">
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+              <div class="font-semibold text-emerald-900 mb-1">This reporting period</div>
+              <ul class="space-y-1 text-emerald-800">
+                <li>• Kg rescued: <strong>${document.getElementById('impact-kg').textContent}</strong></li>
+                <li>• Animal meals served: <strong>${document.getElementById('impact-animalmeals').textContent}</strong></li>
+                <li>• Methane diverted: <strong>${document.getElementById('impact-methane').textContent} tCO₂e</strong></li>
+                <li>• Pickups: <strong>${document.getElementById('impact-pickups').textContent}</strong></li>
+              </ul>
+            </div>
+            <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+              <div class="font-semibold text-gray-800 mb-1">Use it for:</div>
+              <ul class="space-y-1 text-gray-600">
+                <li>• CSR partner reports</li>
+                <li>• Grant applications (Darpan / FCRA)</li>
+                <li>• Annual sustainability disclosures</li>
+                <li>• Wildlife welfare certifications</li>
+              </ul>
+            </div>
+          </div>
+        `;
+                actions.innerHTML = `<button onclick="downloadImpact()" class="w-full py-2.5 text-xs font-semibold bg-[#191919] text-white rounded-lg hover:bg-black">Download CSV Report</button>`;
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                return;
+            }
+
+            if (kind === 'enrichment') {
+                eyebrow.textContent = 'Ideas';
+                tag.textContent = '— Enrichment Guide';
+                title.textContent = 'Byproduct Enrichment Playbook';
+                body.innerHTML = `
+          <div class="space-y-3">
+            <div class="p-4 rounded-xl bg-amber-50 border border-amber-200">
+              <div class="text-xs font-semibold text-amber-900 mb-1">🐘 Elephants</div>
+              <p class="text-xs text-amber-800 leading-relaxed">Coconut husk + sugarcane bagasse + spent mushroom substrate for bulk bedding and rooting piles. Cuts bedding cost by up to 60%.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+              <div class="text-xs font-semibold text-emerald-900 mb-1">🐒 Primates</div>
+              <p class="text-xs text-emerald-800 leading-relaxed">Fruit pomace (citrus, apple) as enrichment forage. Scatter across enclosure for behavioral enrichment. Spent mushroom substrate works as bedding.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-200">
+              <div class="text-xs font-semibold text-indigo-900 mb-1">🐅 Big Cats</div>
+              <p class="text-xs text-indigo-800 leading-relaxed">Cooked surplus (animal-grade only) as supplemental feed under veterinary supervision. Fruit pomace for behavioral scent trails.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-rose-50 border border-rose-200">
+              <div class="text-xs font-semibold text-rose-900 mb-1">🦜 Birds</div>
+              <p class="text-xs text-rose-800 leading-relaxed">Spoiled grain (unmoldy) for seed-eaters. Fruit pomace for parrots and hornbills. Coconut husk fiber for nesting material.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-teal-50 border border-teal-200">
+              <div class="text-xs font-semibold text-teal-900 mb-1">🦎 Reptiles</div>
+              <p class="text-xs text-teal-800 leading-relaxed">Leaf litter for habitat replication. Coconut husk as substrate. Plant fiber for humidity control in terrariums and enclosures.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-orange-50 border border-orange-200">
+              <div class="text-xs font-semibold text-orange-900 mb-1">🐇 Small Mammals & Rodents</div>
+              <p class="text-xs text-orange-800 leading-relaxed">Vegetable waste, spoilt grain, and plant fiber. Excellent for rabbits, guinea pigs, and small rodent colonies.</p>
+            </div>
+            <div class="p-4 rounded-xl bg-neutral-100 border border-neutral-300">
+              <div class="text-xs font-semibold text-neutral-900 mb-1">🐄 Cattle & Equines</div>
+              <p class="text-xs text-neutral-700 leading-relaxed">Crop residue (straw) as fodder and bedding. Vegetable waste as supplemental nutrition. Mushroom substrate for bedding.</p>
+            </div>
+          </div>
+        `;
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                return;
+            }
+
+            if (kind === 'claim') {
+                const lot = payload;
+                const u = CATEGORY_UTILITY[lot.category] || CATEGORY_UTILITY.OTHER;
+                const isVolunteer = currentUser.role === 'volunteer';
+                const maxKg = isVolunteer ? Math.min(200, lot.massKg) : lot.massKg;
+                const total = (lot.massKg || 0) * (lot.rate || 0);
+                const advance = total * 0.30;
+                const balance = total * 0.70;
+
+                eyebrow.textContent = 'Step 01';
+                tag.textContent = '— Claim & Escrow';
+                title.textContent = `Claim ${escapeHtml(lot.id)}`;
+
+                body.innerHTML = `
+          <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+            <div class="flex justify-between text-xs"><span class="text-gray-500">Category</span><strong>${escapeHtml(CATEGORY_LABELS[lot.category] || lot.category)}</strong></div>
+            <div class="flex justify-between text-xs"><span class="text-gray-500">Grade for animals</span><strong class="text-emerald-700">${escapeHtml(u.grade)}</strong></div>
+            <div class="flex justify-between text-xs"><span class="text-gray-500">Farm origin</span><strong>${escapeHtml(lot.origin || 'Farm')}</strong></div>
+            <div class="flex justify-between text-xs"><span class="text-gray-500">Total mass</span><strong>${(lot.massKg || 0).toLocaleString()} kg</strong></div>
+            <div class="flex justify-between text-xs pt-2 border-t border-gray-200"><span class="text-gray-500">Total value</span><strong>${money(total)}</strong></div>
+          </div>
+
+          <div class="space-y-4 mt-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Quantity to claim (kg)</label>
+              <input id="claim-qty" type="number" value="${maxKg}" max="${maxKg}" min="10" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              ${isVolunteer ? `<div class="text-[11px] text-amber-700 mt-1">Volunteers capped at 200 kg per lot.</div>` : ''}
+            </div>
+            <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 leading-relaxed">
+              <div class="font-semibold mb-1.5">Escrow payment schedule</div>
+              <div class="flex justify-between mb-1"><span>30% advance on pickup</span><strong>${money(advance)}</strong></div>
+              <div class="flex justify-between"><span>70% balance on delivery</span><strong>${money(balance)}</strong></div>
+            </div>
+            <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+              Claiming dispatches the ByteToBite Logistics fleet. Same driver network used by industry. Track pickup in real time.
+            </div>
+          </div>
+        `;
+                actions.innerHTML = `
+          <button onclick="closeDrawer()" class="w-1/3 py-2.5 text-xs font-semibold border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button onclick="confirmClaim('${lot.id}')" class="w-2/3 py-2.5 text-xs font-semibold bg-[#191919] text-white rounded-lg hover:bg-black">Lock Escrow & Dispatch</button>
+        `;
+                root.classList.remove('translate-x-full', 'invisible', 'opacity-0');
+                backdrop.classList.remove('hidden');
+                return;
+            }
+        }
+
+        function closeDrawer() {
+            const root = document.getElementById('drawer-root');
+            root.classList.add('translate-x-full', 'invisible', 'opacity-0');
+            document.getElementById('drawer-backdrop').classList.add('hidden');
+            if (map) { map.remove(); map = null; }
+        }
+
+        // ==========================================
+        // CLAIM FLOW
+        // ==========================================
+        function openClaimDrawer(lotId) {
+            const lot = allLots.find(l => l.id === lotId);
+            if (!lot) return;
+            selectedLot = lot;
+            openDrawer('claim', lot);
+        }
+
+        async function confirmClaim(lotId) {
+            const qty = parseFloat(document.getElementById('claim-qty')?.value) || 0;
+            const lot = allLots.find(l => l.id === lotId);
+            if (!lot || qty <= 0) return;
+
+            const total = qty * (lot.rate || 0);
+            const trip = {
+                contractId: `SAN-${lotId}`,
+                lotId,
+                agreedPriceTotal: total,
+                advanceAmount: total * 0.30,
+                balanceAmount: total * 0.70,
+                status: 'DISPATCHED',
+                destination: currentUser.name,
+                destinationRole: currentUser.role,
+                claimedBy: currentUser.name,
+                createdAt: Date.now()
+            };
+
+            try {
+                if (window.ByteToBiteAPI) {
+                    await window.ByteToBiteAPI.recordEscrow({
+                        listingId: lotId,
+                        milestone: 'ADVANCE_30',
+                        amount: total * 0.30,
+                        releasedBy: 'SANCTUARY'
+                    });
+                    const current = await window.ByteToBiteAPI.getLot(lotId);
+                    if (current) {
+                        await window.ByteToBiteAPI.publishLot({
+                            ...current,
+                            status: 'ESCROW LOCKED',
+                            matchedBuyer: currentUser.name,
+                            transporter: 'ByteToBite Logistics · pickup scheduled',
+                            sanctuaryId: currentUser.registration || currentUser.gst || currentUser.mobile
+                        });
+                    }
+                }
+                localStorage.setItem('bytetobite_active_trip', JSON.stringify(trip));
+            } catch (e) { console.warn('Claim failed:', e); }
+
+            closeDrawer();
+            showToast(`✓ ${qty} kg claimed. Escrow locked. Logistics dispatched.`);
+            setTimeout(() => { window.location.href = 'page3.html'; }, 900);
+        }
+
+        // ==========================================
+        // SUBSCRIPTION
+        // ==========================================
+        async function saveSubscription() {
+            const cat = document.getElementById('sub-cat').value;
+            const qty = parseFloat(document.getElementById('sub-qty').value) || 500;
+            const day = document.getElementById('sub-day').value;
+            const cap = parseFloat(document.getElementById('sub-cap').value) || 3;
+
+            try {
+                if (window.ByteToBiteAPI && currentUser) {
+                    await window.ByteToBiteAPI.registerBuyer({
+                        id: 'SUB-' + Date.now().toString().slice(-6),
+                        name: currentUser.name + ' (Weekly)',
+                        lat: currentUser.lat,
+                        lng: currentUser.lng,
+                        accepts: [cat],
+                        demand: `Weekly · ${qty} kg · ${day} · cap ₹${cap}/kg`
+                    });
+                }
+            } catch (e) { }
+
+            closeDrawer();
+            showToast(`Weekly subscription created: ${qty} kg of ${CATEGORY_LABELS[cat] || cat} every ${day}.`);
+        }
+
+        // ==========================================
+        // FEED CALCULATOR
+        // ==========================================
+        function runFeedCalc() {
+            const kgPerMeal = { ELEPHANT: 8, CATTLE: 6, PRIMATE: 0.6, BIGCAT: 4, BIRD: 0.15, REPTILE: 0.4, SMALL: 0.2 };
+            let totalDailyKg = 0;
+            Object.keys(kgPerMeal).forEach(k => {
+                const n = parseFloat(document.getElementById('calc-' + k)?.value) || 0;
+                totalDailyKg += n * kgPerMeal[k];
+            });
+
+            const el = document.getElementById('calc-result');
+            if (totalDailyKg === 0) {
+                el.innerHTML = `<div class="text-xs text-emerald-900">Enter at least one animal count to see daily feed need.</div>`;
+                return;
+            }
+            const daysFor500kg = (500 / totalDailyKg).toFixed(1);
+            const daysFor1000kg = (1000 / totalDailyKg).toFixed(1);
+            el.innerHTML = `
+        <div class="space-y-2">
+          <div>Your estimated daily feed need: <strong class="text-emerald-900">${totalDailyKg.toFixed(1)} kg</strong></div>
+          <div class="pt-2 border-t border-emerald-200">A <strong>500 kg</strong> farm lot covers <strong>${daysFor500kg} days</strong></div>
+          <div>A <strong>1,000 kg</strong> farm lot covers <strong>${daysFor1000kg} days</strong></div>
+        </div>
+      `;
+        }
+
+        // ==========================================
+        // IMPACT DOWNLOAD
+        // ==========================================
+        function downloadImpact() {
+            const rows = [
+                ['Metric', 'Value', 'Period'],
+                ['Kg Rescued', document.getElementById('impact-kg').textContent, 'Current'],
+                ['Animal Meals Served', document.getElementById('impact-animalmeals').textContent, 'Current'],
+                ['Methane Diverted (tCO2e)', document.getElementById('impact-methane').textContent, 'Current'],
+                ['Pickups Completed', document.getElementById('impact-pickups').textContent, 'Current'],
+                ['Sanctuary', currentUser.name, ''],
+                ['Species Under Care', currentUser.species.join(', '), ''],
+                ['Animals', currentUser.animalCount, '']
+            ];
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bytetobite-impact-${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Impact report downloaded.');
+        }
+
+        // ==========================================
+        // LIVE DB SUBSCRIPTION
+        // ==========================================
+        function subscribeToDB() {
+            if (!window.ByteToBiteAPI) return;
+            if (unsubscribeDB) unsubscribeDB();
+            unsubscribeDB = window.ByteToBiteAPI.subscribe(async () => {
+                try { await loadLots(); } catch (e) { }
+            });
+        }
+
+        // ==========================================
+        // URL PARAMS
+        // ==========================================
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const role = params.get('role');
+            const dev = params.get('dev');
+
+            if (dev === '1' || role === 'sanctuary') {
+                completeGateLogin({ ...DEMO_PROFILES.sanctuary });
+            } else if (role === 'zoo') {
+                completeGateLogin({ ...DEMO_PROFILES.zoo });
+            } else if (role === 'volunteer') {
+                completeGateLogin({ ...DEMO_PROFILES.volunteer });
+            } else {
+                (async () => {
+                    try {
+                        if (window.ByteToBiteAPI) {
+                            const saved = await window.ByteToBiteAPI.getProfile('sanctuary-sanctuary')
+                                || await window.ByteToBiteAPI.getProfile('sanctuary-zoo')
+                                || await window.ByteToBiteAPI.getProfile('sanctuary-volunteer');
+                            if (saved) completeGateLogin(saved);
+                        }
+                    } catch (e) { }
+                })();
+            }
+        }
+
+        // ==========================================
+        // BOOT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const v = document.getElementById('bg-video');
+            if (v) {
+                v.muted = true;
+                v.loop = true;
+                const kick = () => { v.play().catch(() => { }); };
+                kick();
+                v.addEventListener('loadeddata', kick, { once: true });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && v.paused) kick();
+                });
+                const onceKick = () => {
+                    if (v.paused) kick();
+                    window.removeEventListener('click', onceKick);
+                    window.removeEventListener('touchstart', onceKick);
+                };
+                window.addEventListener('click', onceKick, { once: true });
+                window.addEventListener('touchstart', onceKick, { once: true });
+            }
+            checkUrlParams();
+        });
+    </script>
+</body>
+
+</html>

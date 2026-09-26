@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite — Seller / Kisan Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="db.js"></script>
+    <script src="ocr.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+    <style>
+        @font-face {
+            font-family: 'TT Norms Pro';
+            src: url('/fonts/tt-norms-pro-regular.woff2') format('woff2');
+            font-weight: 400;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'TT Norms Pro';
+            src: url('/fonts/tt-norms-pro-semibold.woff2') format('woff2');
+            font-weight: 600;
+            font-display: swap;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #F5F5F5;
+            font-family: 'TT Norms Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #000000;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        * {
+            font-family: inherit;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0%);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: marquee 22s linear infinite;
+        }
+
+        .marquee-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes backers-marquee {
+            0% {
+                transform: translateX(0%);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .backers-track {
+            display: flex;
+            width: max-content;
+            animation: backers-marquee 30s linear infinite;
+        }
+
+        .backers-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 0.55;
+            }
+
+            70% {
+                transform: scale(2.6);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(2.6);
+                opacity: 0;
+            }
+        }
+
+        @keyframes drawer-in {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0%);
+            }
+        }
+
+        .drawer-in {
+            animation: drawer-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes kyc-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .kyc-fade-in {
+            animation: kyc-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes pulse-slow {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.9;
+            }
+        }
+
+        .pulse-slow {
+            animation: pulse-slow 2.4s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-top-color: #000;
+            border-radius: 999px;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .leaflet-container {
+            background: #0c0f09;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: #14170e;
+            color: #fff;
+            border-radius: 12px;
+        }
+
+        .leaflet-popup-tip {
+            background: #14170e;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 14px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .leaflet-container a.leaflet-popup-close-button {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .origin-marker {
+            position: relative;
+            width: 18px;
+            height: 18px;
+        }
+
+        .origin-marker .dot {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: #4ade80;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+        }
+
+        .origin-marker .ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: #4ade80;
+            animation: pulse-ring 2.2s ease-out infinite;
+        }
+
+        .buyer-marker {
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 2px solid #14170e;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+
+<body class="bg-[#F5F5F5]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect, useMemo } = React;
+
+        // ==========================================
+        // ICONS
+        // ==========================================
+        const ArrowRight = ({ className = "w-5 h-5 text-black" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+            </svg>
+        );
+
+        const CameraIcon = ({ className = "w-5 h-5" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+            </svg>
+        );
+
+        const GaugeIcon = ({ className = "w-5 h-5" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M12 20a8 8 0 1 0-8-8" />
+                <path d="M12 12 16 8" />
+                <path d="M12 2v2M2 12h2M20 12h2" />
+            </svg>
+        );
+
+        const CloseIcon = ({ className = "w-5 h-5" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+        );
+
+        const CheckIcon = ({ className = "w-4 h-4" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M20 6 9 17l-5-5" />
+            </svg>
+        );
+
+        const HomeIcon = ({ className = "w-4 h-4" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+        );
+
+        const ShieldIcon = ({ className = "w-5 h-5" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+        );
+
+        const PinIcon = ({ className = "w-5 h-5" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+            </svg>
+        );
+
+        const ClockIcon = ({ className = "w-5 h-5" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+        );
+
+        const TrashIcon = ({ className = "w-4 h-4" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+        );
+
+        // ==========================================
+        // CONSTANTS
+        // ==========================================
+        const CATEGORIES = [
+            'MUSHROOM_SUBSTRATE',
+            'CITRUS_POMACE',
+            'SILICA_SAND',
+            'PLANT_FIBER',
+            'COOKED_SURPLUS',
+            'BIO_MASS',
+            'OTHER'
+        ];
+
+        const DEFAULT_ORIGIN = { lat: 30.1453, lng: 74.1994, label: 'Locating you…' };
+
+        const GRADING = {
+            MUSHROOM_SUBSTRATE: { moisture: 22.5, rate: 2.10, subType: 'Spent Substrate Block' },
+            CITRUS_POMACE: { moisture: 14.2, rate: 3.50, subType: 'Orange Peels (Pectin Extraction Grade)' },
+            SILICA_SAND: { moisture: 3.8, rate: 1.40, subType: 'Foundry-Grade Reject Sand' },
+            PLANT_FIBER: { moisture: 11.6, rate: 2.80, subType: 'Sugarcane Bagasse' },
+            COOKED_SURPLUS: { moisture: 68.0, rate: 4.20, subType: 'Mandi Canteen Surplus' },
+            BIO_MASS: { moisture: 26.4, rate: 1.90, subType: 'Mixed Crop Residue' },
+            OTHER: { moisture: 20.0, rate: 2.00, subType: 'Farmer-described waste' }
+        };
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        const money = (n) => `₹${(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        const statusStyle = (status) => {
+            switch (status) {
+                case 'ESCROW LOCKED': return 'bg-black text-white';
+                case 'MATCHED': return 'bg-black/10 text-black';
+                case 'OPEN': return 'bg-amber-100 text-amber-800';
+                default: return 'bg-black/[0.06] text-black/50';
+            }
+        };
+
+        const statusLabel = (status) => {
+            switch (status) {
+                case 'ESCROW LOCKED': return 'Money locked';
+                case 'MATCHED': return 'Buyer matched';
+                case 'OPEN': return 'Waiting for buyer';
+                default: return status;
+            }
+        };
+
+        function haversineKm(a, b) {
+            const R = 6371;
+            const dLat = (b.lat - a.lat) * Math.PI / 180;
+            const dLng = (b.lng - a.lng) * Math.PI / 180;
+            const lat1 = a.lat * Math.PI / 180;
+            const lat2 = b.lat * Math.PI / 180;
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(h));
+        }
+        // ==========================================
+        // NAVBAR
+        // ==========================================
+        const Navbar = ({ onOpenLedger, kycVerified, origin, locating }) => (
+            <nav className="absolute top-0 left-0 right-0 z-20 px-3 sm:px-6 py-3 sm:py-5">
+                <div className="max-w-[88rem] mx-auto flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-6">
+                        <a href="hero.html" className="inline-flex items-center gap-1.5 text-black/80 hover:text-black font-semibold text-xs sm:text-sm bg-white/80 hover:bg-white border border-black/10 px-3 py-1.5 rounded-full shadow-sm transition-all whitespace-nowrap">
+                            <HomeIcon className="w-3.5 h-3.5" />
+                            <span>Back to Main</span>
+                        </a>
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+                        <div className="hidden md:flex items-center gap-2 rounded-full border border-black/10 bg-white/70 backdrop-blur px-3 py-1.5 text-xs sm:text-sm">
+                            <PinIcon className={`w-3.5 h-3.5 ${locating ? 'text-black/40 animate-pulse' : 'text-black/70'}`} />
+                            <span className="text-black/70 truncate max-w-[140px] sm:max-w-[200px]">
+                                {locating ? 'Finding you…' : origin.label}
+                            </span>
+                        </div>
+                        <div className={`flex items-center gap-1.5 sm:gap-2 rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 backdrop-blur text-xs ${kycVerified ? 'border-black/10 bg-white/70' : 'border-red-200 bg-red-50/70'}`}>
+                            <ShieldIcon className={`w-3.5 h-3.5 ${kycVerified ? 'text-black/70' : 'text-red-500'}`} />
+                            <span className="text-black/70">
+                                KYC <span className={`font-medium ${kycVerified ? 'text-black' : 'text-red-600'}`}>
+                                    {kycVerified ? 'Verified' : 'Not Verified'}
+                                </span>
+                            </span>
+                        </div>
+                        <button onClick={onOpenLedger} className="bg-black text-white text-xs sm:text-sm font-medium px-3 sm:px-5 py-1.5 sm:py-2 rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap shadow-sm">
+                            Escrow Ledger
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        // ==========================================
+        // KYC VERIFICATION MODAL
+        // ==========================================
+        const KYCVerification = ({ onVerified }) => {
+            const [aadhaar, setAadhaar] = useState('');
+            const [farmerId, setFarmerId] = useState('');
+            const [landRecord, setLandRecord] = useState('');
+            const [mobile, setMobile] = useState('');
+            const [otp, setOtp] = useState('');
+            const [step, setStep] = useState(1);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+
+            useEffect(() => {
+                const handleKey = (e) => {
+                    if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                        e.preventDefault();
+                        onVerified();
+                    }
+                };
+                window.addEventListener('keydown', handleKey);
+                return () => window.removeEventListener('keydown', handleKey);
+            }, [onVerified]);
+
+            const DEV_BYPASS = aadhaar.trim() === '000000000000' || farmerId.trim().toLowerCase() === 'dev' || mobile.trim() === '0000000000';
+            const validAadhaar = DEV_BYPASS || aadhaar.replace(/\s/g, '').length === 12;
+            const validFarmerId = DEV_BYPASS || farmerId.trim().length >= 8;
+            const validLand = DEV_BYPASS || landRecord.trim().length >= 5;
+            const validMobile = DEV_BYPASS || mobile.replace(/\D/g, '').length === 10;
+            const validOtp = DEV_BYPASS || otp.length === 6;
+
+            const handleSendOtp = () => {
+                if (!validAadhaar || !validFarmerId || !validLand || !validMobile) {
+                    setError('Please fill all details correctly');
+                    return;
+                }
+                setError('');
+                setLoading(true);
+                setTimeout(() => { setLoading(false); setStep(2); }, 1200);
+            };
+
+            const handleVerify = () => {
+                if (!validOtp) {
+                    setError('Please enter the 6-digit code');
+                    return;
+                }
+                setError('');
+                setLoading(true);
+                setTimeout(() => { setLoading(false); onVerified(); }, 1500);
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" style={{ background: 'radial-gradient(circle at 30% 20%, #3a4a2f 0%, #1d2417 45%, #0c0f09 100%)' }}>
+                    <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.4) 0px, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 26px)' }}></div>
+                    <div className="relative w-full max-w-lg kyc-fade-in my-auto py-6">
+                        <div className="flex justify-between items-center mb-3">
+                            <a href="hero.html" className="inline-flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 rounded-full transition-colors">
+                                ← Back to Main
+                            </a>
+                            <button type="button" onClick={() => onVerified()} className="inline-flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors">
+                                ⚡ Login for Demo
+                            </button>
+                        </div>
+                        <div className="rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl p-6 sm:p-10 shadow-2xl">
+                            <div className="text-center mb-6 sm:mb-8">
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                    <ShieldIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white/80" />
+                                </div>
+                                <h2 className="text-white text-2xl sm:text-3xl font-medium mb-2" style={{ letterSpacing: '-0.03em' }}>Verify Your KYC</h2>
+                                <p className="text-white/50 text-xs sm:text-sm leading-relaxed">To sell your farm waste, we need to confirm you are a real farmer. This keeps everyone safe.</p>
+                            </div>
+
+                            {step === 1 && (
+                                <div className="space-y-3.5 sm:space-y-4">
+                                    <div>
+                                        <label className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1.5 block">Aadhaar Number</label>
+                                        <input type="text" value={aadhaar} onChange={(e) => setAadhaar(e.target.value)} placeholder="12-digit Aadhaar number" maxLength={14} className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm sm:text-base focus:outline-none focus:border-white/40 transition-colors" />
+                                    </div>
+                                    <div>
+                                        <label className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1.5 block">Farmer ID (11-digit)</label>
+                                        <input type="text" value={farmerId} onChange={(e) => setFarmerId(e.target.value)} placeholder="From your PM-Kisan registration" className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm sm:text-base focus:outline-none focus:border-white/40 transition-colors" />
+                                    </div>
+                                    <div>
+                                        <label className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1.5 block">Land Record Number</label>
+                                        <input type="text" value={landRecord} onChange={(e) => setLandRecord(e.target.value)} placeholder="From your land papers (7/12, Khatauni)" className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm sm:text-base focus:outline-none focus:border-white/40 transition-colors" />
+                                    </div>
+                                    <div>
+                                        <label className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1.5 block">Mobile Number</label>
+                                        <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="10-digit mobile linked to Aadhaar" maxLength={10} className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm sm:text-base focus:outline-none focus:border-white/40 transition-colors" />
+                                    </div>
+                                    {error && <p className="text-red-300 text-xs sm:text-sm text-center">{error}</p>}
+                                    <button onClick={handleSendOtp} disabled={loading} className="w-full bg-white text-black font-medium rounded-xl py-3.5 sm:py-4 text-sm sm:text-base hover:bg-gray-200 transition-colors disabled:opacity-50">
+                                        {loading ? 'Sending OTP...' : 'Send OTP to Mobile'}
+                                    </button>
+                                    <div className="pt-1">
+                                        <button type="button" onClick={() => onVerified()} className="w-full py-2.5 px-4 rounded-xl border border-emerald-400/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+                                            <span>⚡ Login for Demo (Skip KYC)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 2 && (
+                                <div className="space-y-4">
+                                    <div className="text-center mb-2">
+                                        <p className="text-white/60 text-sm">We sent a 6-digit code to <span className="text-white">+91 {mobile}</span></p>
+                                    </div>
+                                    <div>
+                                        <label className="text-white/60 text-xs font-medium uppercase tracking-wider mb-2 block">Enter OTP</label>
+                                        <input type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" maxLength={6} className="w-full bg-white/[0.06] border border-white/15 rounded-xl px-5 py-3.5 text-white placeholder-white/25 text-base text-center tracking-[0.5em] focus:outline-none focus:border-white/40 transition-colors" />
+                                    </div>
+                                    {error && <p className="text-red-300 text-sm text-center">{error}</p>}
+                                    <button onClick={handleVerify} disabled={loading} className="w-full bg-white text-black font-medium rounded-xl py-4 text-base hover:bg-gray-200 transition-colors disabled:opacity-50">
+                                        {loading ? 'Verifying...' : 'Verify & Start Selling'}
+                                    </button>
+                                    <button type="button" onClick={() => onVerified()} className="w-full py-2.5 px-4 rounded-xl border border-emerald-400/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+                                        <span>⚡ Login for Demo (Skip Verification)</span>
+                                    </button>
+                                    <button onClick={() => { setStep(1); setOtp(''); setError(''); }} className="w-full text-white/40 text-sm hover:text-white/70 transition-colors py-2">
+                                        Go back
+                                    </button>
+                                </div>
+                            )}
+
+                            <p className="text-white/25 text-xs text-center mt-6 leading-relaxed">Your details are safe. We only use them to verify your identity.</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // CATEGORY MARQUEE
+        // ==========================================
+        const CategoryMarquee = () => {
+            const displayCats = CATEGORIES.filter(c => c !== 'OTHER');
+            return (
+                <div className="mt-10 w-full max-w-md overflow-hidden select-none">
+                    <div className="marquee-track flex items-center">
+                        {[...displayCats, ...displayCats].map((c, i) => (
+                            <span key={i} className="mx-7 shrink-0 text-white/50 whitespace-nowrap text-sm tracking-tight">
+                                {c.replaceAll('_', ' ').toLowerCase()}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // STEP FLOW
+        // ==========================================
+        const StepFlow = ({ step }) => {
+            const steps = [
+                { n: 1, label: 'Upload slip' },
+                { n: 2, label: 'Check details' },
+                { n: 3, label: 'Send to buyers' }
+            ];
+            return (
+                <div className="flex items-center gap-3 mb-8">
+                    {steps.map((s, i) => {
+                        const state = step > s.n ? 'done' : step === s.n ? 'active' : 'pending';
+                        return (
+                            <React.Fragment key={s.n}>
+                                <div className="flex items-center gap-2.5">
+                                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium shrink-0 ${state === 'done' ? 'bg-white text-black' : state === 'active' ? 'bg-white/20 text-white border border-white/50' : 'bg-white/10 text-white/40'}`}>
+                                        {state === 'done' ? <CheckIcon className="w-3.5 h-3.5" /> : s.n}
+                                    </span>
+                                    <span className={`text-sm ${state === 'pending' ? 'text-white/40' : 'text-white'}`}>{s.label}</span>
+                                </div>
+                                {i < steps.length - 1 && <span className="w-8 h-px bg-white/20" />}
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+            );
+        };
+
+        // ==========================================
+        // HERO SECTION
+        // ==========================================
+        const HeroSection = ({ lot, step, scanning, onFile, onAutoGrade, onPublish, grading, published, fileRef, origin, locating, ocrProgress, ocrStage }) => (
+            <div className="flex-1 px-3 sm:px-6 pt-16 sm:pt-20 pb-4 sm:pb-6 flex items-end">
+                <div className="relative w-full rounded-2xl overflow-hidden min-h-[calc(100vh-80px)] sm:min-h-[calc(100vh-96px)]" style={{ backgroundImage: 'radial-gradient(circle at 15% 15%, #3a4a2f 0%, #1d2417 45%, #0c0f09 100%)' }}>
+                    <div className="absolute inset-0 opacity-[0.15]" style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.4) 0px, rgba(255,255,255,0.4) 1px, transparent 1px, transparent 26px)' }}></div>
+
+                    <div className="relative z-10 flex flex-col items-start justify-start h-full p-5 sm:p-12 pt-20 sm:pt-32">
+                        <StepFlow step={step} />
+
+                        <h1 className="text-white text-5xl md:text-6xl font-medium leading-tight max-w-xl mb-4" style={{ letterSpacing: '-0.04em' }}>
+                            Your Waste<br />Works Twice
+                        </h1>
+                        <p className="text-white/70 text-base md:text-lg max-w-md mb-4 leading-relaxed" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+                            Take a photo of your slip, we check it, and nearby factories can buy it from you. No middlemen.
+                        </p>
+
+                        <div className="flex items-center gap-2 mb-6">
+                            <PinIcon className={`w-4 h-4 ${locating ? 'text-white/40 animate-pulse' : 'text-green-400'}`} />
+                            <span className="text-white/60 text-sm">
+                                {locating ? 'Getting your location…' : `Pickup: ${origin.label}`}
+                            </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                            <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onFile} />
+                            <button onClick={() => fileRef.current && fileRef.current.click()} disabled={scanning} className="inline-flex items-center gap-3 bg-white text-black text-base font-medium pl-6 pr-2 py-2 rounded-full hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50">
+                                <CameraIcon className="w-4 h-4" />
+                                <span>{lot.photoName ? lot.photoName.slice(0, 18) : 'Take Photo / Upload Slip'}</span>
+                                <span className="bg-black rounded-full p-2 flex items-center justify-center text-white">
+                                    <ArrowRight className="w-4 h-4" />
+                                </span>
+                            </button>
+
+                            <button onClick={onAutoGrade} disabled={!lot.photoName || scanning || grading || lot.graded} className="inline-flex items-center gap-3 bg-white/10 border border-white/30 text-white text-base font-medium pl-6 pr-2 py-2 rounded-full hover:bg-white/20 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <GaugeIcon className="w-4 h-4" />
+                                <span>{grading ? 'Checking…' : lot.graded ? 'Checked ✓' : 'Check Details'}</span>
+                                <span className="bg-white/20 rounded-full p-2 flex items-center justify-center">
+                                    <ArrowRight className="w-4 h-4" />
+                                </span>
+                            </button>
+
+                            <button onClick={onPublish} disabled={!lot.graded || published} className="inline-flex items-center gap-3 bg-black text-white text-base font-medium pl-8 pr-2 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                                <span>{published ? 'Sent ✓' : 'Send to Buyers'}</span>
+                                <span className="bg-white rounded-full p-2 flex items-center justify-center">
+                                    <ArrowRight className="w-5 h-5 text-black" />
+                                </span>
+                            </button>
+                        </div>
+
+                        <div className="h-6">
+                            {scanning && (
+                                <p className="text-white/70 text-sm flex items-center gap-2">
+                                    <span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.2)', borderTopColor: '#fff' }}></span>
+                                    {ocrStage || 'Reading your slip…'}{ocrProgress > 0 ? ` ${ocrProgress}%` : ''}
+                                </p>
+                            )}
+                        </div>
+
+                        <CategoryMarquee />
+                    </div>
+                </div>
+            </div>
+        );
+
+        // ==========================================
+        // TELEMETRY SECTION
+        // ==========================================
+        const TelemetrySection = ({ lot, setLot, canEditCategory, otherText, setOtherText, ocrRaw, ocrConfidence, openForBarter, setOpenForBarter, wantedCategory, setWantedCategory, wantedMassKg, setWantedMassKg }) => (
+            <section className="bg-[#F5F5F5] px-6 py-24">
+                <div className="max-w-[88rem] mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16 items-start">
+                        <div>
+                            <h2 className="text-black text-4xl md:text-5xl font-medium leading-tight mb-8" style={{ letterSpacing: '-0.03em' }}>
+                                What we found in your waste.
+                            </h2>
+                            <p className="text-black/70 text-2xl md:text-3xl leading-relaxed">
+                                The details from your slip are filled in here. Just check if everything looks right.
+                            </p>
+                        </div>
+                        <div className="flex items-end">
+                            <div className="rounded-2xl border border-black/[0.06] bg-white p-7 w-full">
+                                <p className="text-black/50 text-sm mb-4">Payment schedule</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="h-2 rounded-full bg-black" style={{ width: '30%' }}></div>
+                                    <div className="h-2 rounded-full bg-black/10 flex-1"></div>
+                                </div>
+                                <div className="flex justify-between mt-3 text-sm text-black/60">
+                                    <span>30% advance on pickup</span>
+                                    <span>70% on delivery</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="lg:col-span-2 rounded-2xl p-7 min-h-80 flex flex-col justify-between overflow-hidden relative" style={{ backgroundColor: '#e9e6dd' }}>
+                            {!lot.photoName && <div className="absolute inset-0 flex items-center justify-center text-black/20 text-sm">No slip uploaded yet</div>}
+                            {lot.photoName && !lot.graded && <div className="absolute inset-0 flex items-center justify-center text-black/20"><CameraIcon className="w-16 h-16" /></div>}
+                            <h3 className="relative text-black text-2xl font-medium leading-snug" style={{ letterSpacing: '-0.02em' }}>
+                                {lot.category === 'OTHER' ? (otherText || 'Other waste') : lot.category ? lot.category.replaceAll('_', ' ') : 'Waiting for check'}
+                            </h3>
+                            <p className="relative text-black/70 text-base max-w-xs">
+                                {lot.subType || 'Category appears here after we check your slip.'}
+                            </p>
+                        </div>
+
+                        <div className="rounded-2xl p-7 min-h-80 flex flex-col justify-between" style={{ backgroundColor: '#2B2644' }}>
+                            <h3 className="text-white text-2xl font-medium leading-snug">Water</h3>
+                            <div>
+                                <p className="text-white text-5xl font-medium mb-2" style={{ letterSpacing: '-0.03em' }}>
+                                    {lot.moisture !== null ? `${lot.moisture}%` : '—'}
+                                </p>
+                                <p className="text-white/60 text-base">How wet your waste is</p>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl p-7 min-h-80 flex flex-col justify-between" style={{ backgroundColor: '#2B2644' }}>
+                            <h3 className="text-white text-2xl font-medium leading-snug">Weight</h3>
+                            <div>
+                                <p className="text-white text-5xl font-medium mb-2" style={{ letterSpacing: '-0.03em' }}>
+                                    {lot.massKg !== null ? `${lot.massKg.toLocaleString('en-IN')} kg` : '—'}
+                                </p>
+                                {lot.photoName && canEditCategory && (
+                                    <input type="number" value={lot.massKg || ''} onChange={(e) => setLot((l) => ({ ...l, massKg: parseFloat(e.target.value) || null }))} placeholder="Edit weight if wrong" className="mt-2 w-full rounded-lg border border-white/20 bg-white/[0.06] px-3 py-2 text-white text-sm focus:outline-none focus:border-white/50" />
+                                )}
+                                <p className="text-white/60 text-base mt-2">From your slip</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {ocrRaw && (
+                        <div className="mt-4 rounded-2xl border border-black/[0.06] bg-white p-7">
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-black/50 text-sm">Slip text read by OCR {ocrConfidence > 0 && `(${ocrConfidence}% confident)`}</p>
+                                {ocrConfidence > 0 && ocrConfidence < 70 && (
+                                    <span className="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-800">Low confidence — please check numbers</span>
+                                )}
+                            </div>
+                            <pre className="text-xs text-black/60 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto bg-black/[0.02] p-4 rounded-lg">{ocrRaw}</pre>
+                        </div>
+                    )}
+
+                    <div className="mt-4 rounded-2xl border border-black/[0.06] bg-white p-7">
+                        <p className="text-black/50 text-sm mb-4">What kind of waste is it? {!canEditCategory && '· locked after check'}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {CATEGORIES.map((c) => (
+                                <button key={c} disabled={!canEditCategory} onClick={() => setLot((l) => ({ ...l, category: c }))} className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-200 disabled:cursor-not-allowed ${lot.category === c ? 'bg-black text-white border-black' : 'bg-transparent text-black/70 border-black/15 hover:border-black/40 disabled:hover:border-black/15'}`}>
+                                    {c === 'OTHER' ? 'Write your own' : c.replaceAll('_', ' ')}
+                                </button>
+                            ))}
+                        </div>
+                        {lot.category === 'OTHER' && canEditCategory && (
+                            <div className="mt-4">
+                                <input type="text" value={otherText} onChange={(e) => setOtherText(e.target.value)} placeholder="Tell us what it is — leaves, mud, roots, mushroom waste…" className="w-full rounded-xl border border-black/15 px-5 py-3.5 text-base focus:outline-none focus:border-black/40 transition-colors" />
+                            </div>
+                        )}
+                        <div className="mt-6 pt-6 border-t border-black/10">
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={openForBarter} onChange={(e) => setOpenForBarter(e.target.checked)} disabled={!canEditCategory} className="mt-1 w-4 h-4 accent-black" />
+                                <div>
+                                    <div className="font-medium text-sm text-black">Open for barter</div>
+                                    <div className="text-xs text-black/50 mt-0.5">Instead of cash, I'd like to receive other byproducts in trade.</div>
+                                </div>
+                            </label>
+                            {openForBarter && canEditCategory && (
+                                <div className="mt-4 grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs text-black/50 mb-1">What I want in return</label>
+                                        <select value={wantedCategory} onChange={(e) => setWantedCategory(e.target.value)} className="w-full rounded-xl border border-black/15 px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-black/40">
+                                            {CATEGORIES.map(c => (<option key={c} value={c}>{c === 'OTHER' ? 'Other' : c.replaceAll('_', ' ')}</option>))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-black/50 mb-1">How much (kg)</label>
+                                        <input type="number" value={wantedMassKg} onChange={(e) => setWantedMassKg(parseFloat(e.target.value) || 0)} placeholder="e.g. 500" className="w-full rounded-xl border border-black/15 px-4 py-2.5 text-sm focus:outline-none focus:border-black/40" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+        // ==========================================
+        // ACTIVE LOTS TABLE
+        // ==========================================
+        const ActiveLotsTable = ({ lots, onDelete }) => (
+            <section className="bg-[#F5F5F5] px-6 pb-24">
+                <div className="max-w-[88rem] mx-auto">
+                    <div className="flex items-baseline justify-between mb-6">
+                        <h2 className="text-3xl md:text-4xl font-medium" style={{ letterSpacing: '-0.03em' }}>Your active lots</h2>
+                        <span className="text-black/50 text-sm">{lots.length} batch{lots.length !== 1 ? 'es' : ''}</span>
+                    </div>
+
+                    {lots.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-black/15 bg-white/50 p-16 text-center">
+                            <ClockIcon className="w-12 h-12 text-black/20 mx-auto mb-4" />
+                            <p className="text-black/60 text-lg mb-1">You haven't listed any waste yet</p>
+                            <p className="text-black/40 text-sm">Upload your first slip above to get started.</p>
+                        </div>
+                    ) : (
+                        <div className="rounded-2xl border border-black/[0.06] bg-white overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm min-w-[880px]">
+                                    <thead>
+                                        <tr className="border-b border-black/[0.06] text-black/50">
+                                            <th className="px-6 py-4 font-medium">Lot ID</th>
+                                            <th className="px-6 py-4 font-medium">Type</th>
+                                            <th className="px-6 py-4 font-medium">Weight</th>
+                                            <th className="px-6 py-4 font-medium">Water</th>
+                                            <th className="px-6 py-4 font-medium">Rate</th>
+                                            <th className="px-6 py-4 font-medium">Buyer</th>
+                                            <th className="px-6 py-4 font-medium">Truck</th>
+                                            <th className="px-6 py-4 font-medium">Status</th>
+                                            <th className="px-6 py-4 font-medium"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {lots.map((l) => (
+                                            <tr key={l.id} className="border-b border-black/[0.04] last:border-0">
+                                                <td className="px-6 py-4 font-medium">{l.id}</td>
+                                                <td className="px-6 py-4 text-black/70">
+                                                    {l.category === 'OTHER' ? (l.otherText || 'Other') : (l.category || '').replaceAll('_', ' ')}
+                                                </td>
+                                                <td className="px-6 py-4 text-black/70">{l.massKg ? l.massKg.toLocaleString('en-IN') + ' kg' : '—'}</td>
+                                                <td className="px-6 py-4 text-black/70">{l.moisture}%</td>
+                                                <td className="px-6 py-4 text-black/70">₹{l.rate.toFixed(2)}/kg</td>
+                                                <td className="px-6 py-4 text-black/70">
+                                                    {l.matchedBuyer || <span className="text-amber-600 font-medium">Waiting for buyer…</span>}
+                                                </td>
+                                                <td className="px-6 py-4 text-black/70">{l.transporter || '—'}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle(l.status)}`}>
+                                                        {statusLabel(l.status)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <button onClick={() => onDelete(l.id)} className="text-black/30 hover:text-red-500 transition-colors" aria-label="Delete lot">
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </section>
+        );
+
+        // ==========================================
+        // WAITING ROOM (live buyer feed)
+        // ==========================================
+        const WaitingRoom = ({ lots, buyers, origin, locating }) => {
+            const openLots = lots.filter(l => l.status === 'OPEN');
+            const buyersWithDistance = buyers
+                .map(b => ({ ...b, distance: haversineKm(origin, b) }))
+                .sort((a, b) => a.distance - b.distance);
+
+            if (openLots.length === 0 && buyersWithDistance.length === 0) return null;
+
+            return (
+                <section className="bg-[#F5F5F5] px-6 py-12 border-t border-b border-black/[0.06]">
+                    <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
+                        <div className="text-black/70 text-base leading-relaxed">
+                            {openLots.length > 0 && (
+                                <div className="mb-2 flex items-center gap-2">
+                                    <ClockIcon className="w-4 h-4 pulse-slow text-amber-600" />
+                                    <span>{openLots.length} lot{openLots.length !== 1 ? 's' : ''} waiting</span>
+                                </div>
+                            )}
+                            <div className="text-2xl text-black font-medium mb-1">
+                                {buyersWithDistance.length} buyer{buyersWithDistance.length !== 1 ? 's' : ''} live
+                            </div>
+                            <div className="text-sm text-black/50">
+                                {locating ? 'Finding your radius…' : 'within 50 km of you'}
+                            </div>
+                        </div>
+                        <div className="md:col-span-3 overflow-hidden">
+                            {buyersWithDistance.length === 0 ? (
+                                <div className="text-black/40 text-sm py-4">
+                                    No buyers yet. Your lot will be visible the moment a buyer signs up nearby.
+                                </div>
+                            ) : (
+                                <div className="backers-track flex items-center">
+                                    {[...buyersWithDistance, ...buyersWithDistance].map((b, idx) => (
+                                        <span key={idx} className="mx-10 shrink-0 text-black/60 whitespace-nowrap text-base">
+                                            {b.name} · {b.distance.toFixed(0)} km
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // ==========================================
+        // MAP PANEL (real Leaflet + live buyers)
+        // ==========================================
+        const MapPanel = ({ origin, buyersWithDistance, locating }) => {
+            const mapRef = useRef(null);
+            const containerRef = useRef(null);
+            const originRef = useRef(origin);
+            const buyerLayerRef = useRef(null);
+            const originLayerRef = useRef(null);
+
+            useEffect(() => {
+                if (!containerRef.current || !window.L) return;
+                const L = window.L;
+
+                if (!mapRef.current) {
+                    const map = L.map(containerRef.current, { zoomControl: true, attributionControl: true })
+                        .setView([origin.lat, origin.lng], 10);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap &copy; CARTO',
+                        subdomains: 'abcd',
+                        maxZoom: 19
+                    }).addTo(map);
+                    originLayerRef.current = L.layerGroup().addTo(map);
+                    buyerLayerRef.current = L.layerGroup().addTo(map);
+                    mapRef.current = map;
+                    setTimeout(() => map.invalidateSize(), 200);
+                }
+
+                const map = mapRef.current;
+                if (originLayerRef.current) originLayerRef.current.clearLayers();
+                if (buyerLayerRef.current) buyerLayerRef.current.clearLayers();
+
+                // 50km radius circle
+                L.circle([origin.lat, origin.lng], {
+                    radius: 50000,
+                    color: '#4ade80',
+                    weight: 1.5,
+                    fillColor: '#4ade80',
+                    fillOpacity: 0.08,
+                    dashArray: '4 6'
+                }).addTo(originLayerRef.current);
+
+                // Origin marker
+                const originIcon = L.divIcon({
+                    className: '',
+                    html: '<div class="origin-marker"><div class="ring"></div><div class="dot"></div></div>',
+                    iconSize: [18, 18],
+                    iconAnchor: [9, 9]
+                });
+                L.marker([origin.lat, origin.lng], { icon: originIcon })
+                    .addTo(originLayerRef.current)
+                    .bindPopup(`<strong>${origin.label}</strong><br/>Your pickup point`);
+
+                // Buyer markers
+                const buyerIcon = L.divIcon({
+                    className: '',
+                    html: '<div class="buyer-marker"></div>',
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7]
+                });
+                buyersWithDistance.forEach((b) => {
+                    L.marker([b.lat, b.lng], { icon: buyerIcon })
+                        .addTo(buyerLayerRef.current)
+                        .bindPopup(`<strong>${b.name}</strong><br/>${b.distance.toFixed(1)} km away<br/>Buys: ${(b.accepts || []).join(', ')}<br/>Needs: ${b.demand || '—'}`);
+                });
+
+                if (originRef.current.lat !== origin.lat || originRef.current.lng !== origin.lng) {
+                    map.setView([origin.lat, origin.lng], Math.max(map.getZoom(), 10));
+                    originRef.current = origin;
+                }
+            }, [origin, buyersWithDistance]);
+
+            return (
+                <section className="bg-[#F5F5F5] px-6 py-24">
+                    <div className="max-w-[88rem] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        <div className="md:pr-12 md:pt-2">
+                            <p className="text-black/60 text-sm mb-2 flex items-center gap-2">
+                                <PinIcon className={`w-4 h-4 ${locating ? 'animate-pulse' : ''}`} />
+                                {locating ? 'Finding your location…' : 'Your location'}
+                            </p>
+                            <h2 className="text-5xl md:text-6xl font-medium leading-none mb-6" style={{ letterSpacing: '-0.04em' }}>
+                                50 km around you
+                            </h2>
+                            <p className="text-black/60 text-base leading-relaxed max-w-sm mb-6">
+                                When you send your waste, we find the closest factory to <span className="text-black/80">{origin.label}</span>. Shorter trips mean faster payment and less cost.
+                            </p>
+
+                            {buyersWithDistance.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-black/15 bg-white/40 p-6 text-center">
+                                    <p className="text-black/50 text-sm">No buyers in your area yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {buyersWithDistance.map((b) => (
+                                        <div key={b.name} className="flex items-center justify-between rounded-xl border border-black/[0.06] px-4 py-3 text-sm">
+                                            <span className="text-black/80">{b.name}</span>
+                                            <span className="text-black/50">{b.distance.toFixed(1)} km</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="rounded-3xl overflow-hidden" style={{ height: 520 }}>
+                            <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // ==========================================
+        // ESCROW DRAWER
+        // ==========================================
+        const EscrowDrawer = ({ open, onClose, lots }) => {
+            if (!open) return null;
+
+            const locked = lots.filter((l) => l.status === 'ESCROW LOCKED');
+            const totalValue = locked.reduce((s, l) => s + (l.massKg || 0) * (l.rate || 0), 0);
+            const advance = totalValue * 0.3;
+            const balance = totalValue * 0.7;
+
+            return (
+                <div className="fixed inset-0 z-30 pointer-events-none">
+                    <div className="drawer-in pointer-events-auto absolute top-0 right-0 h-full w-full max-w-md bg-white border-l border-black/10 shadow-2xl flex flex-col">
+                        <div className="flex items-center justify-between px-7 py-6 border-b border-black/[0.06]">
+                            <h3 className="text-xl font-medium" style={{ letterSpacing: '-0.02em' }}>Money held safely</h3>
+                            <button onClick={onClose} className="w-9 h-9 rounded-full bg-black/[0.06] flex items-center justify-center hover:bg-black/10 transition-colors">
+                                <CloseIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
+                            <div className="rounded-2xl p-6" style={{ backgroundColor: '#2B2644' }}>
+                                <p className="text-white/60 text-sm mb-2">Total money locked</p>
+                                <p className="text-white text-4xl font-medium" style={{ letterSpacing: '-0.03em' }}>{money(totalValue)}</p>
+                            </div>
+
+                            <div className="rounded-2xl border border-black/[0.06] p-5">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium">30% advance</span>
+                                    <span className="font-medium">{money(advance)}</span>
+                                </div>
+                                <p className="text-black/50 text-sm">Paid when truck picks up your waste</p>
+                            </div>
+
+                            <div className="rounded-2xl border border-black/[0.06] p-5">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium">70% balance</span>
+                                    <span className="font-medium">{money(balance)}</span>
+                                </div>
+                                <p className="text-black/50 text-sm">Paid when factory checks the weight</p>
+                            </div>
+
+                            <div>
+                                <p className="text-black/50 text-sm mb-3">Each lot breakdown</p>
+                                {lots.length === 0 ? (
+                                    <p className="text-black/40 text-sm">No lots yet.</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {lots.map((l) => (
+                                            <div key={l.id} className="rounded-2xl border border-black/[0.06] p-5">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="font-medium text-base">{l.id}</span>
+                                                    <span className="text-black/50 text-sm">
+                                                        {l.category === 'OTHER' ? (l.otherText || 'Other') : (l.category || '').replaceAll('_', ' ')}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle(l.status)}`}>
+                                                        {statusLabel(l.status)}
+                                                    </span>
+                                                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/[0.06] text-black/60">
+                                                        {money((l.massKg || 0) * (l.rate || 0) * 0.3)} advance
+                                                    </span>
+                                                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-black/[0.06] text-black/60">
+                                                        {money((l.massKg || 0) * (l.rate || 0) * 0.7)} balance
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ==========================================
+        // MAIN APP
+        // ==========================================
+        const App = () => {
+            const [kycVerified, setKycVerified] = useState(() => new URLSearchParams(window.location.search).get('dev') === '1');
+            const [origin, setOrigin] = useState(DEFAULT_ORIGIN);
+            const [locating, setLocating] = useState(true);
+            const [lot, setLot] = useState({ photoName: null, moisture: null, massKg: null, category: null, subType: null, rate: null, graded: false });
+            const [otherText, setOtherText] = useState('');
+            const [openForBarter, setOpenForBarter] = useState(false);
+            const [wantedCategory, setWantedCategory] = useState('BIO_MASS');
+            const [wantedMassKg, setWantedMassKg] = useState(0);
+            const [scanning, setScanning] = useState(false);
+            const [grading, setGrading] = useState(false);
+            const [published, setPublished] = useState(false);
+            const [ledgerOpen, setLedgerOpen] = useState(false);
+            const [activeLots, setActiveLots] = useState([]);
+            const [allBuyers, setAllBuyers] = useState([]);
+            const [ocrRaw, setOcrRaw] = useState('');
+            const [ocrConfidence, setOcrConfidence] = useState(0);
+            const [ocrProgress, setOcrProgress] = useState(0);
+            const [ocrStage, setOcrStage] = useState('');
+            const fileRef = useRef(null);
+
+            // ---- GPS ----
+            useEffect(() => {
+                if (!navigator.geolocation) { setLocating(false); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        setOrigin({ lat: latitude, lng: longitude, label: `Lat ${latitude.toFixed(3)}, Lng ${longitude.toFixed(3)}` });
+                        setLocating(false);
+                    },
+                    (err) => { console.warn('Geolocation error:', err.message); setLocating(false); },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+                );
+                const watchId = navigator.geolocation.watchPosition(
+                    (pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        setOrigin({ lat: latitude, lng: longitude, label: `Lat ${latitude.toFixed(3)}, Lng ${longitude.toFixed(3)}` });
+                    },
+                    () => { },
+                    { enableHighAccuracy: true, maximumAge: 30000 }
+                );
+                return () => { if (watchId !== undefined) navigator.geolocation.clearWatch(watchId); };
+            }, []);
+
+            // ---- Live subscription to DB ----
+            useEffect(() => {
+                (async () => {
+                    try {
+                        if (window.ByteToBiteAPI) {
+                            const lots = await window.ByteToBiteAPI.getLots();
+                            setActiveLots(lots.sort((a, b) => b.createdAt - a.createdAt));
+                            const buyers = await window.ByteToBiteAPI.getAllBuyers();
+                            setAllBuyers(buyers);
+                        }
+                    } catch (e) { console.warn('Initial load failed:', e); }
+                })();
+
+                let unsub = () => { };
+                if (window.ByteToBiteAPI) {
+                    unsub = window.ByteToBiteAPI.subscribe(async () => {
+                        try {
+                            const lots = await window.ByteToBiteAPI.getLots();
+                            setActiveLots(lots.sort((a, b) => b.createdAt - a.createdAt));
+                            const buyers = await window.ByteToBiteAPI.getAllBuyers();
+                            setAllBuyers(buyers);
+                        } catch (e) { console.warn('Refresh failed:', e); }
+                    });
+                }
+                return () => unsub();
+            }, []);
+
+            // ---- Step derivation ----
+            const step = !lot.photoName ? 1 : !lot.graded ? 2 : 3;
+
+            // ---- File upload → real OCR ----
+            const onFile = async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                setPublished(false);
+                setLot((l) => ({ ...l, photoName: file.name, graded: false, moisture: null, massKg: null, rate: null }));
+                setScanning(true);
+                setOcrProgress(0);
+                setOcrStage('Opening slip…');
+                try {
+                    if (!window.ByteToBiteOCR) throw new Error('OCR module not loaded');
+                    setOcrStage('Reading text from slip…');
+                    const result = await window.ByteToBiteOCR.readSlip(file);
+                    setOcrRaw(result.rawText || '');
+                    setOcrConfidence(result.confidence || 0);
+                    setLot((l) => ({
+                        ...l,
+                        massKg: result.weightKg || l.massKg,
+                        ocrDate: result.date,
+                        ocrMandi: result.mandiName,
+                        ocrTrader: result.traderName,
+                        ocrReady: true
+                    }));
+                    setOcrStage('Done reading');
+                } catch (err) {
+                    console.warn('OCR failed:', err);
+                    setOcrRaw('Slip could not be read. Please enter weight manually.');
+                    setOcrConfidence(0);
+                } finally {
+                    setScanning(false);
+                    setOcrStage('');
+                }
+            };
+
+            // ---- Auto-grade (apply deterministic grading to detected category) ----
+            const onAutoGrade = () => {
+                if (!lot.photoName || scanning) return;
+                setGrading(true);
+                setTimeout(() => {
+                    const category = lot.category || 'CITRUS_POMACE';
+                    const g = GRADING[category];
+                    const finalMass = lot.massKg || Math.round(400 + Math.random() * 900);
+                    setLot((l) => ({ ...l, category, moisture: g.moisture, massKg: finalMass, rate: g.rate, subType: g.subType, graded: true }));
+                    setGrading(false);
+                }, 600);
+            };
+
+            // ---- Publish (real save to IndexedDB) ----
+            const onPublish = async () => {
+                if (!lot.graded || published) return;
+                setPublished(true);
+
+                const nearbyBuyers = allBuyers
+                    .map(b => ({ ...b, distance: haversineKm(origin, b) }))
+                    .filter(b => b.distance <= 50 && (!b.accepts || b.accepts.includes(lot.category) || lot.category === 'OTHER'))
+                    .sort((a, b) => a.distance - b.distance);
+                const buyer = nearbyBuyers[0] || null;
+
+                const newLotRecord = {
+                    id: 'LOT-' + Date.now().toString().slice(-6),
+                    category: lot.category,
+                    otherText: lot.category === 'OTHER' ? otherText : null,
+                    massKg: lot.massKg,
+                    moisture: lot.moisture,
+                    rate: lot.rate,
+                    origin: origin.label,
+                    lat: origin.lat,
+                    lng: origin.lng,
+                    matchedBuyer: buyer ? buyer.name : null,
+                    transporter: buyer ? 'Truck assigned · pickup code sent' : null,
+                    status: buyer ? 'ESCROW LOCKED' : 'OPEN',
+                    createdAt: Date.now(),
+                    openForBarter: openForBarter,
+                    wantedCategory: openForBarter ? wantedCategory : null,
+                    wantedMassKg: openForBarter ? wantedMassKg : null
+                };
+
+                try {
+                    if (window.ByteToBiteAPI) await window.ByteToBiteAPI.publishLot(newLotRecord);
+                } catch (err) { console.warn('Save failed:', err); }
+
+                setActiveLots((prev) => [newLotRecord, ...prev]);
+
+                // Reset form after publish
+                setTimeout(() => {
+                    setLot({ photoName: null, moisture: null, massKg: null, category: null, subType: null, rate: null, graded: false });
+                    setOtherText('');
+                    setOcrRaw('');
+                    setOcrConfidence(0);
+                    setPublished(false);
+                    setOpenForBarter(false);
+                    setWantedCategory('BIO_MASS');
+                    setWantedMassKg(0);
+                }, 1500);
+            };
+
+            // ---- Delete lot ----
+            const onDelete = async (id) => {
+                setActiveLots((prev) => prev.filter((l) => l.id !== id));
+                try {
+                    if (window.ByteToBiteAPI && window.ByteToBiteAPI.deleteLot) {
+                        await window.ByteToBiteAPI.deleteLot(id);
+                    }
+                } catch (e) { console.warn('Delete failed:', e); }
+            };
+
+            const buyersWithDistance = useMemo(
+                () => allBuyers.map(b => ({ ...b, distance: haversineKm(origin, b) })).sort((a, b) => a.distance - b.distance),
+                [allBuyers, origin]
+            );
+
+            return (
+                <div className="flex flex-col bg-[#F5F5F5] min-h-screen relative">
+                    <div className={`transition-all duration-500 ${!kycVerified ? 'blur-2xl pointer-events-none select-none' : ''}`}>
+                        <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+                            <Navbar onOpenLedger={() => setLedgerOpen(true)} kycVerified={kycVerified} origin={origin} locating={locating} />
+                            <HeroSection
+                                lot={lot}
+                                step={step}
+                                scanning={scanning}
+                                onFile={onFile}
+                                onAutoGrade={onAutoGrade}
+                                onPublish={onPublish}
+                                grading={grading}
+                                published={published}
+                                fileRef={fileRef}
+                                origin={origin}
+                                locating={locating}
+                                ocrProgress={ocrProgress}
+                                ocrStage={ocrStage}
+                            />
+                        </div>
+
+                        <TelemetrySection
+                            lot={lot}
+                            setLot={setLot}
+                            canEditCategory={!lot.graded}
+                            otherText={otherText}
+                            setOtherText={setOtherText}
+                            ocrRaw={ocrRaw}
+                            ocrConfidence={ocrConfidence}
+                            openForBarter={openForBarter}
+                            setOpenForBarter={setOpenForBarter}
+                            wantedCategory={wantedCategory}
+                            setWantedCategory={setWantedCategory}
+                            wantedMassKg={wantedMassKg}
+                            setWantedMassKg={setWantedMassKg}
+                        />
+
+                        <ActiveLotsTable lots={activeLots} onDelete={onDelete} />
+
+                        <WaitingRoom lots={activeLots} buyers={allBuyers} origin={origin} locating={locating} />
+
+                        <MapPanel origin={origin} buyersWithDistance={buyersWithDistance} locating={locating} />
+                    </div>
+
+                    {!kycVerified && <KYCVerification onVerified={() => setKycVerified(true)} />}
+
+                    <EscrowDrawer open={ledgerOpen} onClose={() => setLedgerOpen(false)} lots={activeLots} />
+                </div>
+            );
+        };
+
+        // ==========================================
+        // RENDER
+        // ==========================================
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

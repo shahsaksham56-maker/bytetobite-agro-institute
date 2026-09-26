@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteToBite Circular Agritech — Buyer Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="db.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-instrument {
+            font-family: 'Instrument Serif', serif;
+        }
+
+        .leaflet-layer,
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out,
+        .leaflet-attribution-flag {
+            filter: brightness(1.05) contrast(1.05);
+        }
+
+        @keyframes gateway-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .gateway-fade-in {
+            animation: gateway-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-in {
+            animation: modal-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.4);
+            }
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 1.8s ease-in-out infinite;
+        }
+
+        .transport-pill {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1.5px solid #e5e5e5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .transport-pill:hover {
+            border-color: #999;
+            background: #fafafa;
+        }
+
+        .transport-pill.active {
+            border-color: #ef4d23;
+            background: #fff5f0;
+        }
+
+        .transport-pill input {
+            margin-top: 3px;
+            accent-color: #ef4d23;
+        }
+
+        .pay-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1.5px solid #e5e5e5;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pay-pill:hover {
+            border-color: #999;
+            background: #fafafa;
+        }
+
+        .pay-pill.active {
+            border-color: #ef4d23;
+            background: #fff5f0;
+        }
+
+        .pay-pill input {
+            accent-color: #ef4d23;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen w-full m-0 overflow-x-hidden relative bg-[#d9d9d9]">
+
+    <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <video autoplay loop muted playsinline preload="auto" disableRemotePlayback webkit-playsinline="true"
+            x5-playsinline="true" poster="https://images.unsplash.com/photo-1557683316-973673baf926?w=1600&q=60"
+            class="absolute inset-0 w-full h-full object-cover pointer-events-none">
+            <source
+                src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260424_064411_9e9d7f84-9277-41f4-ab10-59172d89e6be.mp4"
+                type="video/mp4">
+        </video>
+        <div class="absolute inset-0 bg-white/10"></div>
+    </div>
+
+    <!-- GATEWAY -->
+    <div id="role-gateway"
+        class="fixed inset-0 z-40 flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-10 overflow-y-auto">
+        <div class="absolute inset-0 bg-white/40 backdrop-blur-md"></div>
+        <div class="relative z-10 w-full max-w-5xl gateway-fade-in my-auto py-6">
+            <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-2 bg-white/90 hover:bg-white text-neutral-800 text-xs font-semibold px-4 py-2 rounded-full shadow-sm border border-neutral-200/80 transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to Main Hub</span>
+                </a>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="quickDemoLogin('industry')" class="inline-flex items-center gap-1.5 bg-[#ef4d23] hover:bg-[#d8421e] text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Industry
+                    </button>
+                    <button onclick="quickDemoLogin('farmer')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Farmer
+                    </button>
+                    <button onclick="quickDemoLogin('consumer')" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo User
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mb-8 sm:mb-10">
+                <div
+                    class="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 shadow-sm text-[13px] font-medium text-neutral-800 border border-neutral-200/60 mb-4 sm:mb-5">
+                    <span class="w-2 h-2 rounded-full bg-[#ef4d23]"></span>
+                    <span>ByteToBite Circular Agritech · Choose Your Gateway</span>
+                </div>
+                <h1 class="font-medium tracking-tight text-neutral-900"
+                    style="font-size: clamp(30px, 6vw, 56px); line-height: 1.05; letter-spacing: -0.02em;">
+                    Who are <span class="font-instrument italic font-normal">you</span>?
+                </h1>
+                <p class="mt-3 text-neutral-700 max-w-lg mx-auto text-sm sm:text-base">Select your role to enter the
+                    Circular Grid. Each role has its own verified workspace.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="group text-left bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-neutral-200/60 hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-[#ef4d23]/10 flex items-center justify-center group-hover:bg-[#ef4d23] transition-colors">
+                            <i data-lucide="factory"
+                                class="w-7 h-7 text-[#ef4d23] group-hover:text-white transition-colors"></i>
+                        </div>
+                        <button onclick="quickDemoLogin('industry')" class="text-[11px] font-semibold text-[#ef4d23] bg-[#ef4d23]/10 hover:bg-[#ef4d23] hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">I'm an Industry</h3>
+                    <p class="text-sm text-neutral-600 leading-relaxed mb-5 flex-grow">Factory, converter, bio-digester,
+                        or compost unit. Buy verified byproduct lots in bulk through milestone escrow.</p>
+                    <button onclick="openRoleModal('industry')" class="w-full flex items-center justify-center gap-2 bg-[#ef4d23] text-white py-2.5 rounded-xl font-medium text-sm hover:bg-[#d8421e] transition-colors">
+                        <span>Enter as Industry</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="group text-left bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-neutral-200/60 hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                            <i data-lucide="sprout"
+                                class="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <button onclick="quickDemoLogin('farmer')" class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">I'm a Farmer / Kisan</h3>
+                    <p class="text-sm text-neutral-600 leading-relaxed mb-5 flex-grow">Sell your farm waste, or trade it
+                        via barter for compost, mulch, or other byproducts you need.</p>
+                    <button onclick="openRoleModal('farmer')" class="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-emerald-500 transition-colors">
+                        <span>Enter as Farmer</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="group text-left bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-neutral-200/60 hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
+                            <i data-lucide="shopping-bag"
+                                class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <button onclick="quickDemoLogin('consumer')" class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">I'm a User / Buyer</h3>
+                    <p class="text-sm text-neutral-600 leading-relaxed mb-5 flex-grow">Craftsperson, artist, or
+                        household. Browse the Eco-Store, add to cart, checkout with delivery.</p>
+                    <button onclick="openRoleModal('consumer')" class="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl font-medium text-sm hover:bg-indigo-500 transition-colors">
+                        <span>Enter as User</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROLE MODAL -->
+    <div id="role-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeRoleModal()"></div>
+        <div class="relative modal-in w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+                <h3 id="modal-title" class="font-semibold text-neutral-900 text-base">Login</h3>
+                <button onclick="closeRoleModal()"
+                    class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="p-6 max-h-[70vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-wrapper" class="relative z-10 min-h-screen w-full p-3 sm:p-4 flex-col justify-between hidden">
+        <div
+            class="relative w-full min-h-[calc(100vh-24px)] sm:min-h-[calc(100vh-32px)] flex flex-col justify-between overflow-y-auto overflow-x-hidden">
+            <div class="relative z-10 flex flex-col flex-grow min-h-full">
+
+                <!-- NAVBAR -->
+                <div class="flex justify-center pt-3 sm:pt-6 px-2 sm:px-4 relative z-50">
+                    <nav
+                        class="bg-white rounded-full shadow-sm border border-neutral-200 pl-3 sm:pl-4 pr-2 py-1.5 sm:py-2 w-full max-w-[860px] relative flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+                            <a href="hero.html" class="inline-flex items-center gap-1.5 text-neutral-800 hover:text-black font-semibold text-xs bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 rounded-full transition-colors shrink-0">
+                                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                                <span>Back to Main</span>
+                            </a>
+                            <span id="nav-role-label"
+                                class="font-semibold text-neutral-900 text-xs sm:text-sm tracking-tight hidden sm:inline">Buyer
+                                Hub</span>
+                            <a href="page1.html"
+                                class="hidden md:inline text-[13px] text-neutral-600 hover:text-[#ef4d23] font-medium transition-colors">Seller
+                                Portal</a>
+                        </div>
+                        <div class="flex items-center gap-2 ml-auto md:ml-0">
+                            <div id="nav-user-pill"
+                                class="hidden sm:flex items-center gap-2 rounded-full border border-neutral-200 bg-white/80 px-3 py-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span id="nav-user-name" class="text-[12px] text-neutral-700 font-medium">User</span>
+                            </div>
+                            <button onclick="openCartDrawer()" id="cart-btn"
+                                class="hidden relative w-9 h-9 rounded-full hover:bg-neutral-100 flex items-center justify-center transition-colors">
+                                <i data-lucide="shopping-cart" class="w-4 h-4 text-neutral-700"></i>
+                                <span id="cart-count"
+                                    class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#ef4d23] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">0</span>
+                            </button>
+                            <button onclick="logoutRole()"
+                                class="text-[12px] text-neutral-500 hover:text-[#ef4d23] font-medium px-2 transition-colors">Logout</button>
+                            <button onclick="toggleStandingOrderDrawer(true)" id="standing-order-btn"
+                                class="inline-flex items-center gap-2 bg-[#ef4d23] text-white rounded-full pl-4 pr-1.5 py-1.5 text-[13px] font-medium hover:bg-[#d8421e] transition-colors shadow-sm">
+                                <span class="hidden sm:inline" id="so-btn-label">Create Demand Standing Order</span>
+                                <span class="sm:hidden" id="so-btn-label-mobile">New Order</span>
+                                <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5 text-white"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+
+                <!-- HERO -->
+                <div class="flex flex-col items-center px-4 pt-10 sm:pt-14 pb-8 text-center max-w-5xl mx-auto">
+                    <div
+                        class="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 shadow-sm text-[13px] font-medium text-neutral-800 border border-neutral-200/60">
+                        <span class="w-2 h-2 rounded-full bg-[#ef4d23] pulse-dot"></span>
+                        <span id="hero-node-label">Connecting to Circular Grid…</span>
+                    </div>
+                    <h1 id="hero-title" class="mt-5 sm:mt-6 max-w-4xl font-medium tracking-tight text-neutral-900"
+                        style="font-size: clamp(36px, 8vw, 72px); line-height: 1.05; letter-spacing: -0.02em;">
+                        Reverse Bidding & <span class="font-instrument italic font-normal">Procurement</span> Portal
+                    </h1>
+                    <p id="hero-subtitle" class="mt-4 sm:mt-6 text-neutral-700 px-2 max-w-xl font-normal"
+                        style="font-size: clamp(13px, 3.5vw, 16px);">
+                        Acquire verified raw agricultural byproducts within your economic transit radius.
+                    </p>
+                    <div id="taxonomy-filters" class="flex flex-wrap items-center justify-center gap-2 mt-8"></div>
+                </div>
+
+                <!-- DASHBOARD -->
+                <div class="px-3 sm:px-4 pb-12 w-full max-w-[1100px] mx-auto relative z-10 mt-auto grid grid-cols-1 lg:grid-cols-12 gap-4"
+                    id="discovery">
+                    <div
+                        class="lg:col-span-5 bg-[#f5f2ee]/95 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-white/40 flex flex-col h-[420px]">
+                        <div class="flex items-center justify-between mb-3 px-1">
+                            <span class="text-xs font-semibold text-neutral-700 flex items-center gap-1.5">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-[#ef4d23]"></i> PostGIS Radius Map
+                            </span>
+                            <span id="radius-label"
+                                class="text-[11px] bg-red-50 text-[#ef4d23] px-2 py-0.5 rounded-full font-medium">50 km
+                                · ST_DWithin</span>
+                        </div>
+                        <div id="leaflet-map"
+                            class="w-full flex-grow rounded-2xl overflow-hidden border border-neutral-200"></div>
+                    </div>
+                    <div class="lg:col-span-7 bg-[#f5f2ee]/95 backdrop-blur-md rounded-3xl p-5 shadow-2xl border border-white/40 flex flex-col justify-between"
+                        id="catalog">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-neutral-700" id="catalog-title">Discovered
+                                    Byproduct Lots</span>
+                                <span
+                                    class="text-xs font-mono bg-white text-neutral-700 px-2.5 py-0.5 rounded-full border border-neutral-200">Sorted
+                                    by distance</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr
+                                            class="border-b border-neutral-200 text-[11px] text-neutral-500 uppercase font-medium">
+                                            <th class="py-2 px-2">Lot ID & Origin</th>
+                                            <th class="py-2 px-2">Mass / Moisture</th>
+                                            <th class="py-2 px-2">Rate</th>
+                                            <th class="py-2 px-2">Distance</th>
+                                            <th class="py-2 px-2 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-xs divide-y divide-neutral-200" id="lots-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div
+                            class="mt-3 pt-3 border-t border-neutral-200 flex items-center justify-between text-[11px] text-neutral-500">
+                            <span id="footer-note">Escrow Split: <strong>30% Advance / 70% QC</strong></span>
+                            <span id="db-status" class="text-emerald-600 font-medium">IndexedDB Connected</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAWER -->
+    <div id="sliding-drawer"
+        class="fixed inset-y-0 right-0 w-full sm:w-[440px] bg-white border-l border-neutral-200 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-5 border-b border-neutral-100 flex items-center justify-between">
+            <h3 id="drawer-title" class="font-semibold text-neutral-900 text-base">Drawer</h3>
+            <button onclick="closeDrawer()"
+                class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div id="drawer-content" class="p-5 flex-grow overflow-y-auto space-y-4 text-sm text-neutral-700"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // STATE
+        // ==========================================
+        let currentRole = null;
+        let currentProfile = null;
+        let currentCategory = 'ALL';
+        let activeRadiusKm = 50;
+        let map = null;
+        let circleLayer = null;
+        let markerLayers = [];
+        let allLots = [];
+        let allBuyers = [];
+        let cart = [];
+        let unsubscribeDB = null;
+
+        const DEFAULT_FACILITY = { lat: 30.2110, lng: 74.9455 };
+
+        const CATEGORY_LABELS = {
+            MUSHROOM_SUBSTRATE: 'Mushroom Substrate',
+            CITRUS_POMACE: 'Citrus Pomace',
+            SILICA_SAND: 'Silica Sand',
+            PLANT_FIBER: 'Plant Fiber',
+            COOKED_SURPLUS: 'Cooked Surplus',
+            BIO_MASS: 'Bio Mass',
+            OTHER: 'Other'
+        };
+
+        const PERISHABLE_CATEGORIES = ['COOKED_SURPLUS', 'CITRUS_POMACE', 'VEGETABLE_WASTE'];
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function haversineKm(a, b) {
+            const R = 6371;
+            const dLat = (b.lat - a.lat) * Math.PI / 180;
+            const dLng = (b.lng - a.lng) * Math.PI / 180;
+            const lat1 = a.lat * Math.PI / 180, lat2 = b.lat * Math.PI / 180;
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(h));
+        }
+        function money(n) {
+            return '₹' + (n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function showFormError(msg) {
+            const err = document.getElementById('f-error');
+            if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+        }
+        function tomorrowISO() {
+            const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            return d.toISOString().split('T')[0];
+        }
+
+        // ==========================================
+        // ROLE MODAL
+        // ==========================================
+        function openRoleModal(role) {
+            const modal = document.getElementById('role-modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            const configs = {
+                industry: {
+                    title: 'Industry Verification',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Company Name</label>
+                <input id="f-company" type="text" placeholder="e.g. Malwa Mycelium Ltd" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">GST Number (15 chars)</label>
+                <input id="f-gst" type="text" placeholder="22AAAAA0000A1Z5" maxlength="15" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm uppercase focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Udyam / Factory License</label>
+                <input id="f-udyam" type="text" placeholder="UDYAM-PB-00-0000000" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Authorized Signatory</label>
+                <input id="f-signatory" type="text" placeholder="Full name" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="f-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+              <p id="f-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitIndustryLogin()" class="w-full py-3 bg-[#ef4d23] hover:bg-[#d8421e] text-white rounded-xl text-sm font-semibold">Send OTP & Verify</button>
+              <button type="button" onclick="quickDemoLogin('industry')" class="w-full mt-2 py-2.5 border border-orange-200 bg-orange-50 hover:bg-orange-100 text-[#ef4d23] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">⚡ Login for Demo (Malwa Mycelium Ltd)</button>
+            </div>
+          `
+                },
+                farmer: {
+                    title: 'Farmer / Kisan Login',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Full Name</label>
+                <input id="f-name" type="text" placeholder="Your name" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Aadhaar Number</label>
+                <input id="f-aadhaar" type="text" placeholder="12-digit Aadhaar" maxlength="14" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Farmer ID (PM-Kisan)</label>
+                <input id="f-farmer-id" type="text" placeholder="11-digit ID" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Land Record Number</label>
+                <input id="f-land" type="text" placeholder="7/12 or Khatauni" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="f-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <p id="f-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitFarmerLogin()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold">Send OTP & Verify</button>
+              <button type="button" onclick="quickDemoLogin('farmer')" class="w-full mt-2 py-2.5 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">⚡ Login for Demo (Kisan Demo)</button>
+            </div>
+          `
+                },
+                consumer: {
+                    title: 'User / Buyer Login',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Your Name</label>
+                <input id="f-name" type="text" placeholder="Full name" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="f-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Delivery Address</label>
+                <textarea id="f-address" rows="2" placeholder="House, street, city, PIN" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea></div>
+              <p id="f-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitConsumerLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold">Send OTP & Verify</button>
+              <button type="button" onclick="quickDemoLogin('consumer')" class="w-full mt-2 py-2.5 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">⚡ Login for Demo (User Demo)</button>
+            </div>
+          `
+                }
+            };
+            title.textContent = configs[role].title;
+            body.innerHTML = configs[role].html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            currentRole = role;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeRoleModal() {
+            document.getElementById('role-modal').classList.add('hidden');
+            document.getElementById('role-modal').classList.remove('flex');
+        }
+
+        // ==========================================
+        // LOGIN SUBMITS
+        // ==========================================
+        function submitIndustryLogin() {
+            const company = document.getElementById('f-company').value.trim();
+            const gst = document.getElementById('f-gst').value.trim().toUpperCase();
+            const udyam = document.getElementById('f-udyam').value.trim();
+            const signatory = document.getElementById('f-signatory').value.trim();
+            const mobile = document.getElementById('f-mobile').value.trim();
+            if (company.length < 3) return showFormError('Enter company name');
+            if (gst.length !== 15) return showFormError('GST must be 15 characters');
+            if (udyam.length < 8) return showFormError('Enter valid Udyam');
+            if (signatory.length < 3) return showFormError('Enter signatory name');
+            if (mobile.replace(/\D/g, '').length !== 10) return showFormError('Enter 10-digit mobile');
+            runOtpFlow({ role: 'industry', company, gst, udyam, signatory, mobile, displayName: company });
+        }
+
+        function submitFarmerLogin() {
+            const name = document.getElementById('f-name').value.trim();
+            const aadhaar = document.getElementById('f-aadhaar').value.replace(/\s/g, '');
+            const farmerId = document.getElementById('f-farmer-id').value.trim();
+            const land = document.getElementById('f-land').value.trim();
+            const mobile = document.getElementById('f-mobile').value.trim();
+            if (name.length < 3) return showFormError('Enter full name');
+            if (aadhaar.length !== 12) return showFormError('Aadhaar must be 12 digits');
+            if (farmerId.length < 8) return showFormError('Enter valid Farmer ID');
+            if (land.length < 5) return showFormError('Enter Land Record number');
+            if (mobile.replace(/\D/g, '').length !== 10) return showFormError('Enter 10-digit mobile');
+            runOtpFlow({ role: 'farmer', name, aadhaar, farmerId, land, mobile, displayName: name });
+        }
+
+        function submitConsumerLogin() {
+            const name = document.getElementById('f-name').value.trim();
+            const mobile = document.getElementById('f-mobile').value.trim();
+            const address = document.getElementById('f-address').value.trim();
+            if (name.length < 3) return showFormError('Enter full name');
+            if (mobile.replace(/\D/g, '').length !== 10) return showFormError('Enter 10-digit mobile');
+            if (address.length < 10) return showFormError('Enter complete address');
+            runOtpFlow({ role: 'consumer', name, mobile, address, displayName: name });
+        }
+
+        function runOtpFlow(profile) {
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+        <div class="space-y-4">
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <i data-lucide="shield-check" class="w-6 h-6 text-emerald-600"></i>
+            </div>
+            <p class="text-sm text-neutral-700">We sent a 6-digit code to <strong>+91 ${profile.mobile}</strong></p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-neutral-700 mb-1">OTP</label>
+            <input id="f-otp" type="text" maxlength="6" placeholder="000000" class="w-full border border-neutral-200 rounded-xl px-3 py-3 text-center tracking-[0.5em] text-lg font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          </div>
+          <p id="f-error" class="text-xs text-red-500 hidden"></p>
+          <button onclick="verifyOtp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold">Verify & Enter</button>
+          <button onclick="openRoleModal('${profile.role}')" class="w-full text-xs text-neutral-500 hover:text-neutral-900 py-2">Go back</button>
+        </div>
+      `;
+            window._pendingProfile = profile;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function verifyOtp() {
+            const otp = document.getElementById('f-otp').value.trim();
+            if (otp.length !== 6) return showFormError('Enter the 6-digit code');
+            const profile = window._pendingProfile;
+            if (!profile) return showFormError('Session expired');
+
+            if (profile.role === 'industry' || profile.role === 'farmer') {
+                try {
+                    const pos = await new Promise((resolve, reject) => {
+                        if (!navigator.geolocation) return reject(new Error('no gps'));
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 });
+                    });
+                    profile.lat = pos.coords.latitude;
+                    profile.lng = pos.coords.longitude;
+                } catch (e) {
+                    profile.lat = DEFAULT_FACILITY.lat;
+                    profile.lng = DEFAULT_FACILITY.lng;
+                }
+            }
+
+            try {
+                if (window.ByteToBiteAPI) await window.ByteToBiteAPI.saveProfile(profile.role, profile);
+            } catch (e) { console.warn('Profile save failed:', e); }
+
+            completeLogin(profile.role, profile);
+        }
+
+        // ==========================================
+        // COMPLETE LOGIN
+        // ==========================================
+        function completeLogin(role, profile) {
+            currentRole = role;
+            currentProfile = profile;
+
+            document.getElementById('role-gateway').style.display = 'none';
+            document.getElementById('app-wrapper').classList.remove('hidden');
+            document.getElementById('app-wrapper').classList.add('flex');
+
+            const navLabel = document.getElementById('nav-role-label');
+            const navName = document.getElementById('nav-user-name');
+            const heroNode = document.getElementById('hero-node-label');
+            const heroTitle = document.getElementById('hero-title');
+            const heroSubtitle = document.getElementById('hero-subtitle');
+            const catalogTitle = document.getElementById('catalog-title');
+            const footerNote = document.getElementById('footer-note');
+            const soBtn = document.getElementById('standing-order-btn');
+            const soLabel = document.getElementById('so-btn-label');
+            const soLabelMobile = document.getElementById('so-btn-label-mobile');
+            const cartBtn = document.getElementById('cart-btn');
+            const radiusLabel = document.getElementById('radius-label');
+
+            if (role === 'industry') {
+                navLabel.textContent = 'Buyer Hub · Industry';
+                heroNode.textContent = `${profile.company} · GST verified`;
+                heroTitle.innerHTML = 'Reverse Bidding & <span class="font-instrument italic font-normal">Procurement</span> Portal';
+                heroSubtitle.textContent = 'Acquire verified raw agricultural byproducts within your economic transit radius via PostGIS discovery and milestone escrow.';
+                catalogTitle.textContent = 'Discovered Byproduct Lots';
+                footerNote.innerHTML = 'Escrow Split: <strong>30% Advance / 70% QC</strong>';
+                soBtn.style.display = 'inline-flex';
+                soLabel.textContent = 'Create Demand Standing Order';
+                soLabelMobile.textContent = 'New Order';
+                cartBtn.classList.add('hidden');
+                radiusLabel.textContent = '50 km · ST_DWithin';
+            } else if (role === 'farmer') {
+                navLabel.textContent = 'Buyer Hub · Farmer / Barter';
+                heroNode.textContent = `${profile.name} · Kisan verified`;
+                heroTitle.innerHTML = 'Trade & <span class="font-instrument italic font-normal">Barter</span> Marketplace';
+                heroSubtitle.textContent = 'Buy byproduct lots outright, or offer your own farm waste in trade. Barter keeps value circulating in the farming community.';
+                catalogTitle.textContent = 'Lots & Barter Opportunities';
+                footerNote.innerHTML = 'Trade mode: <strong>Cash or Barter</strong>';
+                soBtn.style.display = 'inline-flex';
+                soLabel.textContent = 'Post My Barter Demand';
+                soLabelMobile.textContent = 'New Trade';
+                cartBtn.classList.add('hidden');
+                radiusLabel.textContent = '50 km · Barter Enabled';
+            } else {
+                navLabel.textContent = 'Eco-Store · User';
+                heroNode.textContent = `${profile.name} · Small-lot buyer`;
+                heroTitle.innerHTML = 'Eco-Store <span class="font-instrument italic font-normal">Marketplace</span>';
+                heroSubtitle.textContent = 'Browse small quantities of raw byproducts for your crafts, garden, or personal projects. Add to cart, checkout, and we deliver.';
+                catalogTitle.textContent = 'Available Small Lots (≤ 50 kg)';
+                footerNote.innerHTML = 'Free delivery on orders over <strong>₹500</strong>';
+                soBtn.classList.add('hidden');
+                cartBtn.classList.remove('hidden');
+                radiusLabel.textContent = '50 km · Delivers to you';
+            }
+            navName.textContent = profile.displayName || profile.name || 'User';
+            closeRoleModal();
+
+            requestAnimationFrame(() => {
+                initMap();
+                initTaxonomy();
+                loadLots();
+                subscribeToDB();
+                updateCartCount();
+            });
+        }
+
+        async function logoutRole() {
+            if (unsubscribeDB) { unsubscribeDB(); unsubscribeDB = null; }
+            try {
+                if (window.ByteToBiteAPI && currentRole) {
+                    const saved = await window.ByteToBiteAPI.getProfile(currentRole);
+                    if (saved) await window.ByteToBiteAPI.saveProfile(currentRole, { ...saved, _loggedOut: true });
+                }
+            } catch (e) { }
+            currentRole = null;
+            currentProfile = null;
+            allLots = [];
+            allBuyers = [];
+            cart = [];
+            if (map) { map.remove(); map = null; }
+            markerLayers = [];
+            circleLayer = null;
+            document.getElementById('app-wrapper').classList.add('hidden');
+            document.getElementById('app-wrapper').classList.remove('flex');
+            document.getElementById('role-gateway').style.display = 'flex';
+        }
+
+        const quickProfiles = {
+            industry: { role: 'industry', company: 'Malwa Mycelium Ltd', gst: '03AAAAA0000A1Z5', udyam: 'UDYAM-PB-00-DEMO001', signatory: 'Signatory', mobile: '9876543210', displayName: 'Malwa Mycelium', lat: DEFAULT_FACILITY.lat, lng: DEFAULT_FACILITY.lng },
+            farmer: { role: 'farmer', name: 'Kisan', aadhaar: '000000000000', farmerId: 'PMK001', land: 'LR001', mobile: '9876543210', displayName: 'Kisan', lat: DEFAULT_FACILITY.lat, lng: DEFAULT_FACILITY.lng },
+            consumer: { role: 'consumer', name: 'User', mobile: '9876543210', address: 'Default Address', displayName: 'User' }
+        };
+
+        function quickDemoLogin(role = 'industry') {
+            closeRoleModal();
+            if (currentRole) {
+                if (unsubscribeDB) { unsubscribeDB(); unsubscribeDB = null; }
+                if (map) { map.remove(); map = null; }
+                markerLayers = []; circleLayer = null;
+                allLots = []; allBuyers = []; cart = [];
+            }
+            setTimeout(() => completeLogin(role, { ...quickProfiles[role] }), 50);
+        }
+        window.quickDemoLogin = quickDemoLogin;
+
+        // Shift+D shortcut fallback
+        window.addEventListener('keydown', (e) => {
+            if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                e.preventDefault();
+                const next = !currentRole ? 'industry'
+                    : currentRole === 'industry' ? 'farmer'
+                        : currentRole === 'farmer' ? 'consumer'
+                            : 'industry';
+                quickDemoLogin(next);
+            }
+        });
+
+        // ==========================================
+        // TAXONOMY
+        // ==========================================
+        function initTaxonomy() {
+            const bar = document.getElementById('taxonomy-filters');
+            const cats = ['ALL', 'MUSHROOM_SUBSTRATE', 'CITRUS_POMACE', 'SILICA_SAND', 'PLANT_FIBER', 'COOKED_SURPLUS', 'BIO_MASS'];
+            bar.innerHTML = cats.map(c => `
+        <button onclick="filterCategory('${c}')" data-cat="${c}"
+          class="cat-btn px-4 py-2 rounded-full text-xs font-medium transition-all shadow-sm
+          ${c === currentCategory ? 'bg-[#ef4d23] text-white' : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'}">
+          ${c === 'ALL' ? 'All Categories' : (CATEGORY_LABELS[c] || c)}
+        </button>
+      `).join('');
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                const isActive = btn.dataset.cat === cat;
+                btn.className = 'cat-btn px-4 py-2 rounded-full text-xs font-medium transition-all shadow-sm ' +
+                    (isActive ? 'bg-[#ef4d23] text-white' : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200');
+            });
+            renderLotsTable();
+            renderMapMarkers();
+        }
+
+        // ==========================================
+        // MAP
+        // ==========================================
+        function initMap() {
+            if (map) { map.remove(); map = null; }
+            const lat = currentProfile?.lat || DEFAULT_FACILITY.lat;
+            const lng = currentProfile?.lng || DEFAULT_FACILITY.lng;
+            map = L.map('leaflet-map', { zoomControl: false, attributionControl: false }).setView([lat, lng], 10);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+            const facilityIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: #ef4d23; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px rgba(239,77,35,0.5);"></div>`,
+                iconSize: [14, 14], iconAnchor: [7, 7]
+            });
+            L.marker([lat, lng], { icon: facilityIcon }).addTo(map)
+                .bindPopup(`<b>${escapeHtml(currentProfile?.company || currentProfile?.name || 'Your Location')}</b>`);
+            circleLayer = L.circle([lat, lng], {
+                color: '#ef4d23', fillColor: '#ef4d23', fillOpacity: 0.1,
+                radius: activeRadiusKm * 1000, weight: 1.5, dashArray: '4, 4'
+            }).addTo(map);
+            renderMapMarkers();
+        }
+
+        function renderMapMarkers() {
+            if (!map) return;
+            markerLayers.forEach(m => map.removeLayer(m));
+            markerLayers = [];
+            getVisibleLots().forEach(lot => {
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background-color: #0b0f1a; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff;"></div>`,
+                    iconSize: [12, 12], iconAnchor: [6, 6]
+                });
+                const m = L.marker([lot.lat, lot.lng], { icon }).addTo(map)
+                    .bindPopup(`<b>${escapeHtml(lot.id)}</b><br>${escapeHtml(lot.origin)}<br>${lot.massKg} kg | ${money(lot.rate)}/kg<br>${lot.distance.toFixed(1)} km away`);
+                markerLayers.push(m);
+            });
+        }
+
+        // ==========================================
+        // LOT DATA
+        // ==========================================
+        function getVisibleLots() {
+            const centerLat = currentProfile?.lat || DEFAULT_FACILITY.lat;
+            const centerLng = currentProfile?.lng || DEFAULT_FACILITY.lng;
+            const center = { lat: centerLat, lng: centerLng };
+            let filtered = allLots
+                .filter(l => l.status === 'OPEN' || l.status === 'MATCHED')
+                .map(l => ({ ...l, distance: haversineKm(center, { lat: l.lat, lng: l.lng }) }))
+                .filter(l => l.distance <= activeRadiusKm);
+            if (currentCategory !== 'ALL') filtered = filtered.filter(l => l.category === currentCategory);
+            if (currentRole === 'consumer') filtered = filtered.filter(l => (l.massKg || 0) <= 50);
+            return filtered.sort((a, b) => a.distance - b.distance);
+        }
+
+        async function loadLots() {
+            try {
+                if (!window.ByteToBiteAPI) return;
+                const lots = await window.ByteToBiteAPI.getLots();
+                allLots = lots.filter(l => !l._isBarter);
+                allBuyers = await window.ByteToBiteAPI.getAllBuyers();
+                renderLotsTable();
+                renderMapMarkers();
+                document.getElementById('db-status').textContent = 'IndexedDB Connected · Live';
+            } catch (e) {
+                console.warn('Load failed:', e);
+            }
+        }
+
+        function subscribeToDB() {
+            if (!window.ByteToBiteAPI) return;
+            if (unsubscribeDB) unsubscribeDB();
+            unsubscribeDB = window.ByteToBiteAPI.subscribe(async () => {
+                try {
+                    const lots = await window.ByteToBiteAPI.getLots();
+                    allLots = lots.filter(l => !l._isBarter);
+                    renderLotsTable();
+                    renderMapMarkers();
+                } catch (e) { }
+            });
+        }
+
+        function renderLotsTable() {
+            const tbody = document.getElementById('lots-table-body');
+            if (!tbody) return;
+            const visible = getVisibleLots();
+            if (visible.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-neutral-400 text-xs">
+          No active lots discovered for this filter within the ${activeRadiusKm} km radius.
+        </td></tr>`;
+                return;
+            }
+            tbody.innerHTML = visible.map(lot => {
+                const categoryLabel = lot.category === 'OTHER'
+                    ? (lot.otherText || 'Other')
+                    : (CATEGORY_LABELS[lot.category] || lot.category);
+                const total = (lot.massKg || 0) * (lot.rate || 0);
+                let actionButtons = '';
+
+                if (currentRole === 'consumer') {
+                    actionButtons = `<button onclick="addToCart('${lot.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-medium transition-colors shadow-sm inline-flex items-center gap-1">
+            <i data-lucide="shopping-cart" class="w-3 h-3"></i> Add to Cart
+          </button>`;
+                } else if (currentRole === 'farmer') {
+                    actionButtons = `
+            <button onclick="acceptContract('${lot.id}', ${total})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-medium transition-colors shadow-sm">Buy</button>
+            <button onclick="proposeBarter('${lot.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-white rounded-lg text-[11px] font-medium transition-colors shadow-sm">Barter</button>
+          `;
+                } else {
+                    actionButtons = `
+            <button onclick="acceptContract('${lot.id}', ${total})" class="px-2.5 py-1 bg-[#ef4d23] hover:bg-[#d8421e] text-white rounded-lg text-[11px] font-medium transition-colors shadow-sm">Match</button>
+            <button onclick="openQCWorkflow('${lot.id}')" class="px-2.5 py-1 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-lg text-[11px] font-medium transition-colors">QC</button>
+          `;
+                }
+
+                return `
+          <tr class="hover:bg-neutral-100/60 transition-colors">
+            <td class="py-2.5 px-2">
+              <div class="font-semibold text-neutral-900">${escapeHtml(lot.id)}</div>
+              <div class="text-[11px] text-neutral-500">${escapeHtml(lot.origin || 'Unknown origin')}</div>
+              <div class="text-[10px] text-neutral-400 mt-0.5">${escapeHtml(categoryLabel)}</div>
+            </td>
+            <td class="py-2.5 px-2">
+              <div class="text-neutral-900 font-medium">${(lot.massKg || 0).toLocaleString()} kg</div>
+              <div class="text-[11px] text-neutral-500">${lot.moisture ?? '—'}% moisture</div>
+            </td>
+            <td class="py-2.5 px-2 font-mono text-[#ef4d23] font-semibold">${money(lot.rate)}/kg</td>
+            <td class="py-2.5 px-2 text-neutral-600">${lot.distance.toFixed(1)} km</td>
+            <td class="py-2.5 px-2 text-right space-x-1">${actionButtons}</td>
+          </tr>
+        `;
+            }).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // ==========================================
+        // DRAWER
+        // ==========================================
+        function openDrawer(title, html) {
+            document.getElementById('drawer-title').textContent = title;
+            document.getElementById('drawer-content').innerHTML = html;
+            document.getElementById('sliding-drawer').classList.remove('translate-x-full');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeDrawer() {
+            document.getElementById('sliding-drawer').classList.add('translate-x-full');
+        }
+        // ==========================================
+        // DRAWER: STANDING ORDER / CONTRACT / BARTER / CART
+        // ==========================================
+        function toggleStandingOrderDrawer(open, mode = 'standing-order', data = null) {
+            if (!open) return closeDrawer();
+
+            // ---------- STANDING ORDER ----------
+            if (mode === 'standing-order') {
+                const isFarmer = currentRole === 'farmer';
+                openDrawer(isFarmer ? 'Post Barter Demand' : 'Create Demand Standing Order', `
+          <div class="space-y-4">
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">${isFarmer ? 'Category I want in trade' : 'Target Waste Category'}</label>
+              <select id="so-cat" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]">
+                ${Object.keys(CATEGORY_LABELS).filter(k => k !== 'OTHER').map(k => `<option value="${k}">${CATEGORY_LABELS[k]}</option>`).join('')}
+              </select></div>
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">Max Acceptable Moisture %</label>
+              <input id="so-moisture" type="number" value="20" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+            ${!isFarmer ? `<div><label class="block text-xs font-medium text-neutral-700 mb-1">Price Cap per kg (₹)</label>
+              <input id="so-rate" type="number" step="0.1" value="2.50" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>` : `
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">What I will offer in trade</label>
+                <input id="so-offer" type="text" placeholder="e.g. 500 kg mushroom substrate" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></div>`}
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">Max Radius (km)</label>
+              <input id="so-radius" type="number" value="50" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]"></div>
+            <button onclick="saveStandingOrder()" class="w-full mt-4 py-2.5 bg-[#ef4d23] hover:bg-[#d8421e] text-white rounded-xl text-sm font-medium">${isFarmer ? 'Deploy Trade Demand' : 'Save & Deploy Standing Order'}</button>
+          </div>
+        `);
+            }
+
+            // ---------- CONTRACT (the big one — new fields) ----------
+            else if (mode === 'contract') {
+                const lot = allLots.find(l => l.id === data.id) || {};
+                const isPerishable = PERISHABLE_CATEGORIES.includes(lot.category);
+                const maxQty = lot.massKg || 0;
+                const defaultQty = Math.min(maxQty, 500);
+                const total = defaultQty * (lot.rate || 0);
+                const advance = total * 0.30;
+                const balance = total * 0.70;
+
+                openDrawer(`Match · ${data.id}`, `
+          <div class="space-y-4">
+
+            <!-- Lot summary -->
+            <div class="p-3 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2">
+              <div class="flex justify-between text-xs"><span class="text-neutral-500">Lot:</span><strong>${escapeHtml(data.id)}</strong></div>
+              <div class="flex justify-between text-xs"><span class="text-neutral-500">Category:</span><strong>${escapeHtml(lot.category || '—')}</strong></div>
+              <div class="flex justify-between text-xs"><span class="text-neutral-500">Available mass:</span><strong id="lot-max">${maxQty.toLocaleString()} kg</strong></div>
+              <div class="flex justify-between text-xs"><span class="text-neutral-500">Rate:</span><strong>${money(lot.rate)}/kg</strong></div>
+            </div>
+
+            <!-- Partial quantity -->
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 mb-1">Quantity to buy (kg)</label>
+              <input id="co-qty" type="number" min="1" max="${maxQty}" value="${defaultQty}" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]">
+              <div class="text-[11px] text-neutral-500 mt-1">Partial lots are allowed — remaining mass stays listed for other buyers.</div>
+            </div>
+
+            <!-- Delivery date -->
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 mb-1">Preferred pickup date</label>
+              <input id="co-date" type="date" value="${tomorrowISO()}" min="${tomorrowISO()}" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]">
+            </div>
+
+            <!-- Temperature QC (contextual) -->
+            ${isPerishable ? `
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50 cursor-pointer">
+              <input id="co-temp-qc" type="checkbox" class="mt-0.5 accent-amber-600" checked>
+              <div>
+                <div class="text-xs font-semibold text-amber-900">Insist on temperature QC at gate</div>
+                <div class="text-[11px] text-amber-800 mt-0.5">Perishable lot — a photo + core temp reading will be required before balance release.</div>
+              </div>
+            </label>
+            ` : ''}
+
+            <!-- Transport mode -->
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 mb-2">Transport mode</label>
+              <div class="space-y-2">
+                <label class="transport-pill active" data-mode="fleet">
+                  <input type="radio" name="transport" value="fleet" checked onchange="onTransportChange()">
+                  <div>
+                    <div class="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
+                      <i data-lucide="truck" class="w-3.5 h-3.5 text-[#ef4d23]"></i> Use ByteToBite Logistics
+                    </div>
+                    <div class="text-[11px] text-neutral-600 mt-0.5">A verified driver from the Logistics Console is dispatched. Dual-OTP chain of custody.</div>
+                  </div>
+                </label>
+                <label class="transport-pill" data-mode="self">
+                  <input type="radio" name="transport" value="self" onchange="onTransportChange()">
+                  <div>
+                    <div class="text-sm font-semibold text-neutral-900 flex items-center gap-1.5">
+                      <i data-lucide="factory" class="w-3.5 h-3.5 text-neutral-700"></i> My own truck / company fleet
+                    </div>
+                    <div class="text-[11px] text-neutral-600 mt-0.5">Send your own vehicle. ByteToBite still logs the trip for audit and escrow release.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Self-transport fields -->
+            <div id="self-transport-fields" class="hidden space-y-3 p-3 rounded-xl border border-neutral-200 bg-neutral-50">
+              <div>
+                <label class="block text-xs font-medium text-neutral-700 mb-1">Vehicle number</label>
+                <input id="co-vehicle" type="text" placeholder="e.g. PB-03-AB-1234" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-neutral-700 mb-1">Driver name & mobile</label>
+                <input id="co-driver" type="text" placeholder="e.g. Gurpreet Singh, 9876543210" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#ef4d23]">
+              </div>
+            </div>
+
+            <!-- Payment method -->
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 mb-2">Payment method</label>
+              <div class="space-y-2">
+                <label class="pay-pill active" data-pay="neft">
+                  <input type="radio" name="payment" value="neft" checked>
+                  <i data-lucide="landmark" class="w-4 h-4 text-neutral-700"></i>
+                  <div>
+                    <div class="text-sm font-semibold text-neutral-900">Bank transfer (NEFT / RTGS)</div>
+                    <div class="text-[11px] text-neutral-500">Best for orders above ₹50,000. No card fees.</div>
+                  </div>
+                </label>
+                <label class="pay-pill" data-pay="upi">
+                  <input type="radio" name="payment" value="upi">
+                  <i data-lucide="smartphone" class="w-4 h-4 text-neutral-700"></i>
+                  <div>
+                    <div class="text-sm font-semibold text-neutral-900">Corporate UPI</div>
+                    <div class="text-[11px] text-neutral-500">Instant confirmation for small & mid orders.</div>
+                  </div>
+                </label>
+                <label class="pay-pill" data-pay="credit">
+                  <input type="radio" name="payment" value="credit">
+                  <i data-lucide="calendar-clock" class="w-4 h-4 text-neutral-700"></i>
+                  <div>
+                    <div class="text-sm font-semibold text-neutral-900">Credit terms (30 days)</div>
+                    <div class="text-[11px] text-neutral-500">Buy now, pay in 30 days. Escrow still protects the farmer.</div>
+                  </div>
+                </label>
+                <label class="pay-pill" data-pay="razorpay">
+                  <input type="radio" name="payment" value="razorpay">
+                  <i data-lucide="credit-card" class="w-4 h-4 text-neutral-700"></i>
+                  <div>
+                    <div class="text-sm font-semibold text-neutral-900">Card via Razorpay</div>
+                    <div class="text-[11px] text-neutral-500">Secure gateway — ready for backend integration.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Payment preview (updates live) -->
+            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5 text-xs">
+              <div class="flex justify-between"><span class="text-emerald-800">Order total (<span id="co-qty-display">${defaultQty}</span> kg):</span><strong id="co-total" class="text-emerald-900">${money(total)}</strong></div>
+              <div class="flex justify-between"><span class="text-emerald-800">30% escrow advance:</span><strong id="co-advance" class="text-emerald-900">${money(advance)}</strong></div>
+              <div class="flex justify-between"><span class="text-emerald-800">70% balance on QC:</span><strong id="co-balance" class="text-emerald-900">${money(balance)}</strong></div>
+            </div>
+
+            <button onclick="confirmMatch('${data.id}')" class="w-full py-3 bg-[#ef4d23] hover:bg-[#d8421e] text-white rounded-xl text-sm font-semibold">Lock escrow & confirm match</button>
+            <button onclick="closeDrawer()" class="w-full py-2 text-xs text-neutral-500 hover:text-neutral-900">Cancel</button>
+          </div>
+        `);
+
+                // Live updates
+                const qtyInput = document.getElementById('co-qty');
+                qtyInput.addEventListener('input', () => {
+                    const q = Math.max(1, Math.min(parseFloat(qtyInput.value) || 1, maxQty));
+                    const t = q * (lot.rate || 0);
+                    document.getElementById('co-qty-display').textContent = q;
+                    document.getElementById('co-total').textContent = money(t);
+                    document.getElementById('co-advance').textContent = money(t * 0.30);
+                    document.getElementById('co-balance').textContent = money(t * 0.70);
+                });
+
+                // Transport pill styling
+                document.querySelectorAll('.transport-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        document.querySelectorAll('.transport-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                        pill.querySelector('input').checked = true;
+                        onTransportChange();
+                    });
+                });
+
+                // Payment pill styling
+                document.querySelectorAll('.pay-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        document.querySelectorAll('.pay-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                        pill.querySelector('input').checked = true;
+                    });
+                });
+            }
+
+            // ---------- QC ----------
+            else if (mode === 'qc') {
+                openDrawer(`Gate QC Inspection · ${data.id}`, `
+          <div class="space-y-4">
+            <p class="text-xs text-neutral-600">Perform weighbridge and moisture verification at the factory gate.</p>
+            <button onclick="approveQCRelease('${data.id}')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-medium">Approve QC & Release 70%</button>
+            <button onclick="flagContamination('${data.id}')" class="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-medium">Flag Contamination → Compost</button>
+          </div>
+        `);
+            }
+
+            // ---------- BARTER ----------
+            else if (mode === 'barter') {
+                openDrawer(`Propose Barter · ${data.id}`, `
+          <div class="space-y-4">
+            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+              Offer your own farm waste in trade for lot <strong>${escapeHtml(data.id)}</strong>.
+            </div>
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">My Waste Category</label>
+              <select id="bt-cat" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
+                ${Object.keys(CATEGORY_LABELS).map(k => `<option value="${k}">${CATEGORY_LABELS[k]}</option>`).join('')}
+              </select></div>
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">My Mass (kg)</label>
+              <input id="bt-mass" type="number" value="500" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></div>
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">Moisture %</label>
+              <input id="bt-moisture" type="number" value="18" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></div>
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">Message to Seller</label>
+              <textarea id="bt-note" rows="3" placeholder="Optional message" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"></textarea></div>
+            <button onclick="confirmBarter('${data.id}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-sm font-medium">Send Barter Proposal</button>
+          </div>
+        `);
+            }
+
+            // ---------- CART ----------
+            else if (mode === 'cart') {
+                if (cart.length === 0) {
+                    openDrawer('Your Cart', `
+            <div class="text-center py-12">
+              <i data-lucide="shopping-cart" class="w-12 h-12 text-neutral-300 mx-auto mb-4"></i>
+              <p class="text-neutral-500 text-sm">Your cart is empty</p>
+              <p class="text-neutral-400 text-xs mt-1">Add small lots from the table to get started</p>
+            </div>
+          `);
+                    return;
+                }
+                const subtotal = cart.reduce((s, i) => s + i.qty * i.rate, 0);
+                const delivery = subtotal >= 500 ? 0 : 40;
+                const total = subtotal + delivery;
+                openDrawer('Your Cart', `
+          <div class="space-y-4">
+            <div class="space-y-2">
+              ${cart.map(item => `
+                <div class="flex items-start gap-3 p-3 rounded-xl border border-neutral-200">
+                  <div class="flex-grow">
+                    <div class="font-semibold text-neutral-900 text-sm">${escapeHtml(item.id)}</div>
+                    <div class="text-xs text-neutral-500">${escapeHtml(item.origin)}</div>
+                    <div class="text-xs text-neutral-600 mt-1">${item.qty} kg × ${money(item.rate)}/kg</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-semibold text-sm">${money(item.qty * item.rate)}</div>
+                    <button onclick="removeFromCart('${item.id}')" class="text-xs text-red-500 hover:text-red-700 mt-1">Remove</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="border-t border-neutral-200 pt-3 space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-neutral-500">Subtotal</span><span>${money(subtotal)}</span></div>
+              <div class="flex justify-between"><span class="text-neutral-500">Delivery</span><span>${delivery === 0 ? '<span class="text-emerald-600 font-medium">FREE</span>' : money(delivery)}</span></div>
+              <div class="flex justify-between font-semibold text-base pt-2 border-t"><span>Total</span><span>${money(total)}</span></div>
+            </div>
+            <button onclick="openCheckout()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold">Proceed to Checkout</button>
+          </div>
+        `);
+            }
+
+            // ---------- CHECKOUT (consumer) ----------
+            else if (mode === 'checkout') {
+                const subtotal = cart.reduce((s, i) => s + i.qty * i.rate, 0);
+                const delivery = subtotal >= 500 ? 0 : 40;
+                const total = subtotal + delivery;
+                openDrawer('Checkout', `
+          <div class="space-y-4">
+            <div><label class="block text-xs font-medium text-neutral-700 mb-1">Delivery Address</label>
+              <textarea id="co-address" rows="3" placeholder="House, street, city, PIN" class="w-full border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">${escapeHtml(currentProfile?.address || '')}</textarea></div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 mb-2">Payment Method</label>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 cursor-pointer hover:bg-neutral-50">
+                  <input type="radio" name="pay" value="UPI" checked class="accent-indigo-600">
+                  <i data-lucide="smartphone" class="w-4 h-4 text-indigo-600"></i>
+                  <span class="text-sm font-medium">UPI / GPay / PhonePe</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 cursor-pointer hover:bg-neutral-50">
+                  <input type="radio" name="pay" value="CARD" class="accent-indigo-600">
+                  <i data-lucide="credit-card" class="w-4 h-4 text-indigo-600"></i>
+                  <span class="text-sm font-medium">Credit / Debit Card</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-neutral-200 cursor-pointer hover:bg-neutral-50">
+                  <input type="radio" name="pay" value="COD" class="accent-indigo-600">
+                  <i data-lucide="banknote" class="w-4 h-4 text-indigo-600"></i>
+                  <span class="text-sm font-medium">Cash on Delivery</span>
+                </label>
+              </div>
+            </div>
+            <div class="rounded-xl bg-neutral-50 p-3 space-y-1 text-sm">
+              <div class="flex justify-between"><span class="text-neutral-500">Subtotal</span><span>${money(subtotal)}</span></div>
+              <div class="flex justify-between"><span class="text-neutral-500">Delivery</span><span>${delivery === 0 ? 'FREE' : money(delivery)}</span></div>
+              <div class="flex justify-between font-semibold pt-2 border-t"><span>Total</span><span>${money(total)}</span></div>
+            </div>
+            <button onclick="placeOrder()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold">Place Order · ${money(total)}</button>
+          </div>
+        `);
+            }
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // ==========================================
+        // TRANSPORT SWITCH
+        // ==========================================
+        function onTransportChange() {
+            const mode = document.querySelector('input[name="transport"]:checked')?.value || 'fleet';
+            const selfFields = document.getElementById('self-transport-fields');
+            if (selfFields) selfFields.classList.toggle('hidden', mode !== 'self');
+        }
+
+        // ==========================================
+        // ACTIONS
+        // ==========================================
+        function acceptContract(id, total) { toggleStandingOrderDrawer(true, 'contract', { id, total }); }
+        function openQCWorkflow(id) { toggleStandingOrderDrawer(true, 'qc', { id }); }
+        function proposeBarter(id) { toggleStandingOrderDrawer(true, 'barter', { id }); }
+
+        async function saveStandingOrder() {
+            const cat = document.getElementById('so-cat').value;
+            const moisture = parseFloat(document.getElementById('so-moisture').value);
+            const radius = parseFloat(document.getElementById('so-radius').value);
+            const isFarmer = currentRole === 'farmer';
+            const rate = isFarmer ? 0 : parseFloat(document.getElementById('so-rate').value);
+            const offer = isFarmer ? document.getElementById('so-offer').value : null;
+            try {
+                if (window.ByteToBiteAPI && currentProfile) {
+                    await window.ByteToBiteAPI.registerBuyer({
+                        id: 'STO-' + Date.now().toString().slice(-6),
+                        name: currentProfile.company || currentProfile.name || 'Buyer',
+                        lat: currentProfile.lat,
+                        lng: currentProfile.lng,
+                        accepts: [cat],
+                        demand: isFarmer ? `Barter · offers: ${offer}` : `Cap ₹${rate}/kg · ≤${moisture}% · ${radius} km`
+                    });
+                }
+            } catch (e) { console.warn('Standing order save failed:', e); }
+            alert(isFarmer ? 'Trade demand deployed.' : 'Standing Order deployed.');
+            closeDrawer();
+        }
+
+        // ---------- THE NEW MATCH CONFIRM ----------
+        async function confirmMatch(lotId) {
+            const lot = allLots.find(l => l.id === lotId);
+            if (!lot) return;
+
+            // Read all new fields
+            const qty = Math.max(1, Math.min(parseFloat(document.getElementById('co-qty')?.value) || 1, lot.massKg));
+            const pickupDate = document.getElementById('co-date')?.value || tomorrowISO();
+            const transportMode = document.querySelector('input[name="transport"]:checked')?.value || 'fleet';
+            const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'neft';
+            const tempQC = !!document.getElementById('co-temp-qc')?.checked;
+
+            let vehicleNo = '', driverInfo = '';
+            if (transportMode === 'self') {
+                vehicleNo = (document.getElementById('co-vehicle')?.value || '').trim();
+                driverInfo = (document.getElementById('co-driver')?.value || '').trim();
+                if (!vehicleNo) { alert('Enter your vehicle number'); return; }
+                if (!driverInfo) { alert('Enter driver name and mobile'); return; }
+            }
+
+            const subtotal = qty * (lot.rate || 0);
+            const advance = subtotal * 0.30;
+            const balance = subtotal * 0.70;
+            const isPartial = qty < lot.massKg;
+
+            const trip = {
+                contractId: `B2B-${lotId}`,
+                lotId,
+                qty,
+                agreedPriceTotal: subtotal,
+                advanceAmount: advance,
+                balanceAmount: balance,
+                status: 'DISPATCHED',
+                destination: currentProfile?.company || 'Buyer Facility',
+                createdBy: currentRole,
+                transportMode,
+                vehicleNo: transportMode === 'self' ? vehicleNo : null,
+                driverInfo: transportMode === 'self' ? driverInfo : null,
+                paymentMethod,
+                pickupDate,
+                tempQC,
+                createdAt: Date.now()
+            };
+
+            try {
+                localStorage.setItem('bytetobite_active_trip', JSON.stringify(trip));
+
+                if (window.ByteToBiteAPI) {
+                    // Escrow record
+                    await window.ByteToBiteAPI.recordEscrow({
+                        listingId: lotId,
+                        milestone: 'ADVANCE_30',
+                        amount: advance,
+                        releasedBy: 'BUYER',
+                        notes: `Payment: ${paymentMethod.toUpperCase()} · Transport: ${transportMode}`
+                    });
+
+                    // Update lot
+                    const current = await window.ByteToBiteAPI.getLot(lotId);
+                    if (current) {
+                        const update = {
+                            ...current,
+                            status: isPartial ? 'OPEN' : 'ESCROW LOCKED',
+                            massKg: isPartial ? (current.massKg - qty) : current.massKg,
+                            matchedBuyer: currentProfile?.company || currentProfile?.name || 'Buyer',
+                            transporter: transportMode === 'self'
+                                ? `Self-transport · ${vehicleNo}`
+                                : 'ByteToBite Logistics · pickup scheduled',
+                            tripStatus: 'DISPATCHED',
+                            transportMode,
+                            vehicleNo: transportMode === 'self' ? vehicleNo : null,
+                            driverInfo: transportMode === 'self' ? driverInfo : null,
+                            paymentMethod,
+                            pickupDate,
+                            tempQC
+                        };
+                        await window.ByteToBiteAPI.publishLot(update);
+                    }
+                }
+            } catch (e) { console.warn('Match failed:', e); }
+
+            closeDrawer();
+
+            // Toast instead of alert for smoother UX
+            const toastMsg = document.createElement('div');
+            toastMsg.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-emerald-600 text-white px-5 py-3 rounded-full text-sm font-medium shadow-xl';
+            toastMsg.textContent = `✓ Matched ${qty} kg · ${paymentMethod.toUpperCase()} · ${transportMode === 'self' ? 'Self-transport' : 'Fleet'}`;
+            document.body.appendChild(toastMsg);
+            setTimeout(() => toastMsg.remove(), 3200);
+
+            // Industry with fleet → go to Logistics. Self-transport → stay here.
+            if (transportMode === 'fleet') {
+                setTimeout(() => { window.location.href = 'page3.html'; }, 900);
+            } else {
+                setTimeout(() => { loadLots(); }, 500);
+            }
+        }
+
+        async function approveQCRelease(lotId) {
+            const lot = allLots.find(l => l.id === lotId);
+            if (lot && window.ByteToBiteAPI) {
+                try {
+                    await window.ByteToBiteAPI.recordEscrow({
+                        listingId: lotId, milestone: 'BALANCE_70', amount: (lot.massKg || 0) * (lot.rate || 0) * 0.7, releasedBy: 'BUYER'
+                    });
+                } catch (e) { }
+            }
+            alert(`QC Approved for ${lotId}. 70% balance released.`);
+            closeDrawer();
+            loadLots();
+        }
+
+        function flagContamination(lotId) {
+            window.location.href = `page5.html?divertReason=BUYER_CONTAMINATION&lot=${lotId}`;
+        }
+
+        async function confirmBarter(targetLotId) {
+            const cat = document.getElementById('bt-cat').value;
+            const mass = parseFloat(document.getElementById('bt-mass').value);
+            const moisture = parseFloat(document.getElementById('bt-moisture').value);
+            const note = (document.getElementById('bt-note')?.value || '').trim();
+            if (!mass || mass <= 0) { alert('Enter a valid mass'); return; }
+            try {
+                if (window.ByteToBiteAPI) {
+                    await window.ByteToBiteAPI.publishBarter({
+                        offeringCategory: cat, offeringMassKg: mass, offeringMoisture: moisture,
+                        targetLotId, note,
+                        fromProfileId: currentProfile?.id,
+                        fromName: currentProfile?.name || 'Farmer'
+                    });
+                }
+            } catch (e) { console.warn('Barter publish failed:', e); }
+            alert('Barter proposal sent.');
+            closeDrawer();
+        }
+
+        // ==========================================
+        // CART
+        // ==========================================
+        function addToCart(lotId) {
+            const lot = allLots.find(l => l.id === lotId);
+            if (!lot) return;
+            const maxQty = Math.min(lot.massKg || 0, 50);
+            const qtyInput = prompt(`How many kg of ${lotId}? (max ${maxQty} kg)`, Math.min(5, maxQty));
+            if (qtyInput === null) return;
+            const qty = parseFloat(qtyInput);
+            if (!qty || qty <= 0 || qty > maxQty) { alert(`Enter a quantity between 1 and ${maxQty} kg`); return; }
+            const existing = cart.find(i => i.id === lotId);
+            if (existing) existing.qty = Math.min(existing.qty + qty, maxQty);
+            else cart.push({ id: lotId, origin: lot.origin, qty, rate: lot.rate });
+            updateCartCount();
+            alert(`${qty} kg of ${lotId} added to cart`);
+        }
+
+        function removeFromCart(lotId) {
+            cart = cart.filter(i => i.id !== lotId);
+            updateCartCount();
+            toggleStandingOrderDrawer(true, 'cart');
+        }
+
+        function updateCartCount() {
+            const el = document.getElementById('cart-count');
+            if (el) el.textContent = cart.length;
+        }
+
+        function openCartDrawer() { toggleStandingOrderDrawer(true, 'cart'); }
+        function openCheckout() { toggleStandingOrderDrawer(true, 'checkout'); }
+
+        async function placeOrder() {
+            const address = document.getElementById('co-address').value.trim();
+            if (address.length < 10) { alert('Enter complete delivery address'); return; }
+            const payMethod = document.querySelector('input[name="pay"]:checked')?.value || 'UPI';
+            const subtotal = cart.reduce((s, i) => s + i.qty * i.rate, 0);
+            const delivery = subtotal >= 500 ? 0 : 40;
+            const total = subtotal + delivery;
+            const order = {
+                orderId: 'ORD-' + Date.now().toString().slice(-6),
+                items: cart,
+                consumerName: currentProfile?.name,
+                consumerMobile: currentProfile?.mobile,
+                address, payMethod, subtotal, delivery, total,
+                status: 'CONFIRMED', createdAt: Date.now()
+            };
+            try {
+                localStorage.setItem('bytetobite_consumer_order', JSON.stringify(order));
+                const stored = JSON.parse(localStorage.getItem('bytetobite_all_orders') || '[]');
+                localStorage.setItem('bytetobite_all_orders', JSON.stringify([order, ...stored]));
+                for (const item of cart) {
+                    const lot = await window.ByteToBiteAPI.getLot(item.id);
+                    if (lot) {
+                        const remaining = (lot.massKg || 0) - item.qty;
+                        if (remaining <= 0) await window.ByteToBiteAPI.publishLot({ ...lot, status: 'MATCHED', matchedBuyer: `Consumer · ${currentProfile?.name}` });
+                        else await window.ByteToBiteAPI.publishLot({ ...lot, massKg: remaining });
+                    }
+                }
+            } catch (e) { console.warn('Order save failed:', e); }
+            cart = [];
+            updateCartCount();
+            closeDrawer();
+            alert(`Order ${order.orderId} placed!\nTotal: ${money(total)}\nPayment: ${payMethod}\n\nDelivery to:\n${address}`);
+        }
+
+        // ==========================================
+        // AUTO-LOGIN
+        // ==========================================
+        function checkAutoLogin() {
+            (async () => {
+                try {
+                    if (!window.ByteToBiteAPI) return;
+                    const saved = await window.ByteToBiteAPI.getProfile('industry')
+                        || await window.ByteToBiteAPI.getProfile('farmer')
+                        || await window.ByteToBiteAPI.getProfile('consumer');
+                    if (saved && !saved._loggedOut) completeLogin(saved.role, saved);
+                } catch (e) { }
+            })();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+            checkAutoLogin();
+        });
+    </script>
+</body>
+
+</html>

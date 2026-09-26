@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite — Node 01 · Kitchen Planning</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100%;
+        }
+
+        /* ─── Liquid Glass — exact VEX recipe ─── */
+        .liquid-glass {
+            background: rgba(0, 0, 0, 0.4);
+            background-blend-mode: luminosity;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: none;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 20%,
+                    rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 60%,
+                    rgba(255, 255, 255, 0.1) 80%, rgba(255, 255, 255, 0.3) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .liquid-glass>* {
+            position: relative;
+            z-index: 2;
+        }
+
+        .liquid-glass-soft {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .liquid-glass-soft::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(180deg,
+                    rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 40%,
+                    rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.18) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .liquid-glass-soft>* {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ─── Character cascade — VEX pattern ─── */
+        .char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateX(-18px);
+            transition: opacity 500ms ease-out, transform 500ms ease-out;
+        }
+
+        .char.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .char-space {
+            display: inline-block;
+        }
+
+        /* ─── FadeIn — VEX pattern ─── */
+        .fade-in {
+            opacity: 0;
+            transition: opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+        }
+
+        /* ─── Count-up ─── */
+        .count-up {
+            font-variant-numeric: tabular-nums;
+            transition: color 400ms ease;
+        }
+
+        .count-up.flash {
+            color: #FF724C;
+        }
+
+        /* ─── Inputs ─── */
+        .field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 10px 13px;
+            color: #fff;
+            font-size: 13.5px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+            font-family: inherit;
+            color-scheme: dark;
+        }
+
+        .field:focus {
+            border-color: rgba(255, 255, 255, 0.35);
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        .field:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            margin-bottom: 8px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.28);
+        }
+
+        /* ─── Buttons ─── */
+        .btn-primary {
+            background: #fff;
+            color: #000;
+            font-weight: 500;
+            border-radius: 10px;
+            padding: 11px 22px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13.5px;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .btn-primary .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #FF724C;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #fff;
+            font-weight: 500;
+            border-radius: 10px;
+            padding: 10px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 13px;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .btn-ghost:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .btn-ghost:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .btn-ghost:disabled:hover {
+            background: transparent;
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.20);
+        }
+
+        /* ─── Chips ─── */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 1px solid;
+        }
+
+        .chip-live {
+            background: rgba(94, 234, 212, 0.10);
+            color: #5EEAD4;
+            border-color: rgba(94, 234, 212, 0.30);
+        }
+
+        .chip-warm {
+            background: rgba(252, 211, 77, 0.10);
+            color: #FCD34D;
+            border-color: rgba(252, 211, 77, 0.30);
+        }
+
+        .chip-accent {
+            background: rgba(255, 114, 76, 0.10);
+            color: #FF724C;
+            border-color: rgba(255, 114, 76, 0.30);
+        }
+
+        .chip-muted {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .chip-danger {
+            background: rgba(248, 113, 113, 0.10);
+            color: #F87171;
+            border-color: rgba(248, 113, 113, 0.30);
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 1.8s ease-in-out infinite;
+        }
+
+        /* ─── Day pills ─── */
+        .day-pill {
+            flex: 1;
+            min-width: 56px;
+            padding: 9px 4px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .day-pill:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .day-pill.active {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .day-pill.active .dow {
+            color: rgba(0, 0, 0, 0.55);
+        }
+
+        .day-pill.active .dnum {
+            color: #000;
+        }
+
+        .day-pill .dow {
+            font-size: 9px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .day-pill .dnum {
+            font-size: 19px;
+            color: #fff;
+            line-height: 1.1;
+            margin-top: 3px;
+            font-weight: 400;
+        }
+
+        /* ─── Meal tabs ─── */
+        .meal-tab {
+            padding: 9px 15px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .meal-tab:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .meal-tab.active {
+            background: #fff;
+            border-color: #fff;
+            color: #000;
+        }
+
+        /* ─── Menu rows ─── */
+        .menu-row {
+            display: grid;
+            grid-template-columns: 1fr 82px 118px 30px;
+            gap: 8px;
+            align-items: center;
+            padding: 9px 12px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            margin-bottom: 6px;
+            transition: border-color 0.2s;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .menu-row:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .menu-row input,
+        .menu-row select {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .menu-row select {
+            color-scheme: dark;
+        }
+
+        .menu-row input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .menu-row .remove-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .menu-row .remove-btn:hover {
+            background: rgba(248, 113, 113, 0.15);
+            border-color: rgba(248, 113, 113, 0.4);
+            color: #F87171;
+        }
+
+        /* ─── Risk gauge ─── */
+        .risk-gauge {
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .risk-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s;
+        }
+
+        /* ─── Factor chips ─── */
+        .factor-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 500;
+            background: rgba(94, 234, 212, 0.10);
+            color: #5EEAD4;
+            border: 1px solid rgba(94, 234, 212, 0.25);
+        }
+
+        .factor-chip.neg {
+            background: rgba(252, 211, 77, 0.10);
+            color: #FCD34D;
+            border-color: rgba(252, 211, 77, 0.25);
+        }
+
+        /* ─── Activity feed ─── */
+        .activity-item {
+            display: flex;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-time {
+            color: rgba(255, 255, 255, 0.35);
+            flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ─── Variance table ─── */
+        .var-row {
+            display: grid;
+            grid-template-columns: 92px 66px 1fr 74px 74px 64px;
+            gap: 12px;
+            padding: 11px 20px;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+        }
+
+        .var-row:last-child {
+            border-bottom: none;
+        }
+
+        .var-head {
+            font-size: 9.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 500;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* ─── Suggestion buttons ─── */
+        .suggestion-btn {
+            width: 100%;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .suggestion-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(94, 234, 212, 0.35);
+        }
+
+        /* ─── Toast ─── */
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .toast-item {
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        /* ─── Headcount ─── */
+        .headcount-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: clamp(52px, 7vw, 84px);
+            line-height: 1;
+            color: #fff;
+            letter-spacing: -0.045em;
+            padding: 0;
+            font-weight: 300;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .headcount-input::-webkit-outer-spin-button,
+        .headcount-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .headcount-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* ─── Anomaly ─── */
+        @keyframes anomalyIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .anomaly-enter {
+            animation: anomalyIn 0.3s ease-out both;
+        }
+
+        /* ─── Layout ─── */
+        .node-layout {
+            display: grid;
+            grid-template-columns: 224px 1fr 320px;
+            gap: 14px;
+            align-items: start;
+        }
+
+        @media (max-width: 1180px) {
+            .node-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white min-h-screen">
+
+    <!-- ═══ RAW VIDEO BACKGROUND — exact VEX treatment ═══ -->
+    <!-- For SIH demo safety: download this mp4 locally and change src to "./vex-bg.mp4" -->
+    <video autoplay loop muted playsinline class="fixed inset-0 w-full h-full object-cover z-0" style="opacity:1;">
+        <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4"
+            type="video/mp4">
+    </video>
+
+    <div id="app" class="relative z-10 min-h-screen flex flex-col">
+
+        <!-- ═══ NAV ═══ -->
+        <header class="relative z-10 px-6 md:px-12 lg:px-16 pt-6 w-full">
+            <nav class="liquid-glass rounded-xl px-4 py-2 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="hub.html"
+                        class="text-2xl font-semibold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity">ByteToBite</a>
+                    <div class="hidden md:block w-px h-5 bg-white/20"></div>
+                    <div class="hidden md:flex items-center gap-2 text-xs">
+                        <span class="text-white/50" style="font-size:11px;">NODE 01</span>
+                        <span class="text-white/30">/</span>
+                        <span class="text-white font-medium" style="font-size:12.5px;">Kitchen Planning</span>
+                    </div>
+                </div>
+
+                <div class="hidden lg:flex items-center gap-6 text-sm font-light text-gray-200">
+                    <span id="hdr-institute-name" class="text-gray-200">—</span>
+                    <span id="hdr-institute-code" class="text-white/40" style="font-size:11px;">—</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:flex items-center gap-2 liquid-glass-soft rounded-lg px-3 py-1.5 text-xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#5EEAD4] pulse-dot"></span>
+                        <span id="hdr-role" class="text-white/80 font-medium" style="font-size:11.5px;">Admin</span>
+                    </div>
+                    <a href="hub.html"
+                        class="liquid-glass border border-white/20 text-white rounded-lg px-5 py-2 text-xs font-medium hover:bg-white hover:text-black transition-all"
+                        style="backdrop-filter:blur(4px);">← Hub</a>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Read-only banner -->
+        <div id="readonly-banner"
+            class="hidden mx-6 md:mx-12 lg:mx-16 mt-3 liquid-glass rounded-lg px-4 py-2.5 text-[12px] text-[#FCD34D]">
+            <span style="color:#FCD34D;">●</span> Read-only mode — your role cannot publish plans.
+        </div>
+
+        <!-- ═══ MAIN ═══ -->
+        <main class="relative z-10 flex-1 px-6 md:px-12 lg:px-16 py-8 max-w-[1560px] w-full mx-auto">
+
+            <!-- HERO — character cascade -->
+            <div class="mb-8">
+                <h1 id="hero-heading" class="font-normal tracking-tight text-white text-4xl md:text-5xl lg:text-6xl"
+                    style="letter-spacing:-0.04em;">
+                    <!-- filled by JS -->
+                </h1>
+                <p class="text-base md:text-lg text-gray-300 mt-3 font-normal max-w-xl fade-in" data-fade-delay="1400">
+                    Forecast tomorrow's meals, and let the grid handle the rest.
+                </p>
+            </div>
+
+            <div class="node-layout">
+
+                <!-- ═══ LEFT RAIL ═══ -->
+                <aside class="space-y-3">
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="200">
+                        <div class="field-label">Planning window</div>
+                        <div class="flex gap-1.5 mb-3" id="day-strip"></div>
+                        <input id="date-picker" type="date" class="field mt-1 text-xs" />
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="280">
+                        <div class="field-label">Meal slot</div>
+                        <div class="flex flex-col gap-1.5" id="meal-tabs"></div>
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="360">
+                        <div class="field-label">Plan status</div>
+                        <div id="status-chip" class="chip chip-muted">Draft</div>
+                        <div class="text-[11px] text-white/45 leading-relaxed mt-3" id="status-meta">
+                            Not saved yet
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="440">
+                        <div class="field-label">Weather · auto</div>
+                        <div class="flex items-baseline gap-2">
+                            <div class="text-3xl text-white font-light" id="wx-temp">—°</div>
+                            <div class="text-xs text-gray-300" id="wx-desc">loading…</div>
+                        </div>
+                        <div class="text-[10.5px] text-white/40 mt-2" id="wx-loc">—</div>
+                    </div>
+
+                </aside>
+
+                <!-- ═══ CENTER ═══ -->
+                <section class="space-y-3">
+
+                    <div class="liquid-glass rounded-2xl p-6 fade-in" data-fade-delay="200">
+                        <div class="flex items-start justify-between flex-wrap gap-4">
+                            <div class="flex-1 min-w-[260px]">
+                                <div class="field-label mb-3">Planned headcount</div>
+                                <div class="flex items-baseline gap-3">
+                                    <input id="headcount" type="number" min="0" step="10" class="headcount-input"
+                                        value="0" />
+                                    <span class="text-white/35 text-sm font-light">plates</span>
+                                </div>
+                                <div id="agent-hint" class="text-[11.5px] text-white/55 mt-3">
+                                    Agent is thinking…
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2 min-w-[160px]">
+                                <button id="btn-reset-agent" class="btn-ghost text-xs" style="padding:9px 14px;">
+                                    ⟲ Reset to agent
+                                </button>
+                                <div class="liquid-glass-soft rounded-lg px-3 py-2 text-[11px]">
+                                    <div class="text-white/45 uppercase tracking-wider" style="font-size:9.5px;">
+                                        confidence</div>
+                                    <div class="text-white font-semibold text-sm mt-0.5" id="agent-confidence">—</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="anomaly" class="hidden mt-4"></div>
+                    </div>
+
+                    <div class="liquid-glass rounded-2xl p-6 fade-in" data-fade-delay="280">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="field-label" style="margin-bottom:0;">Menu items</div>
+                            <button onclick="addMenuRow()"
+                                class="text-xs text-white/60 hover:text-white transition-colors flex items-center gap-1.5 font-medium">
+                                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                                Add item
+                            </button>
+                        </div>
+                        <div id="menu-list"></div>
+                        <div id="menu-empty" class="text-center py-6 text-white/40 text-xs">
+                            No items yet — add one, or pick from agent suggestions
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass rounded-2xl p-6 fade-in" data-fade-delay="360">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <div class="field-label">Expected waste</div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-4xl text-white font-light count-up" id="waste-kg">0</span>
+                                    <span class="text-white/40 text-xs">kg</span>
+                                </div>
+                                <div class="text-[10.5px] text-white/45 mt-2" id="waste-delta">—</div>
+                            </div>
+                            <div>
+                                <div class="field-label">Waste-risk score</div>
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-4xl font-light" id="risk-num">0</span>
+                                    <span class="text-white/40 text-xs">/100</span>
+                                </div>
+                                <div class="risk-gauge mt-3">
+                                    <div id="risk-fill" class="risk-fill" style="width:0%; background:#5EEAD4;"></div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col justify-end">
+                                <div class="text-[10.5px] text-white/45 mb-3" id="autosave-status">Autosave off</div>
+                                <div class="flex gap-2">
+                                    <button id="btn-save" class="btn-ghost flex-1 text-xs"
+                                        style="padding:11px 14px;">Save draft</button>
+                                    <button id="btn-publish" class="btn-primary flex-1">
+                                        <span class="dot"></span> Publish
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass rounded-2xl overflow-hidden fade-in" data-fade-delay="440">
+                        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                            <div>
+                                <div class="text-white font-medium text-base">7-day variance</div>
+                                <div class="text-[11px] text-white/45 mt-0.5">planned vs actually served</div>
+                            </div>
+                            <button onclick="refreshVariance()"
+                                class="text-xs text-white/50 hover:text-white transition-colors">refresh</button>
+                        </div>
+                        <div class="var-row var-head">
+                            <span>Date</span>
+                            <span>Slot</span>
+                            <span>Fill</span>
+                            <span style="text-align:right;">Planned</span>
+                            <span style="text-align:right;">Served</span>
+                            <span style="text-align:right;">Waste</span>
+                        </div>
+                        <div id="var-rows"></div>
+                    </div>
+
+                </section>
+
+                <!-- ═══ RIGHT RAIL — AGENT ═══ -->
+                <aside class="space-y-3">
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="200">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-9 h-9 rounded-lg bg-[#FCD34D]/10 border border-[#FCD34D]/25 flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" class="w-4 h-4 text-[#FCD34D]" fill="none"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="text-white font-medium text-sm">Forecast Agent</div>
+                                <div class="text-[10px] text-[#FCD34D] tracking-wider uppercase">on shift · live</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="280">
+                        <div class="field-label">Why this number</div>
+                        <div id="factors" class="flex flex-wrap gap-1.5">
+                            <span class="text-white/35 text-xs">Waiting…</span>
+                        </div>
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="360">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="field-label" style="margin-bottom:0;">Menu suggestions</div>
+                            <button onclick="loadSuggestions()"
+                                class="text-[10.5px] text-white/50 hover:text-white transition-colors">refresh</button>
+                        </div>
+                        <div id="suggestions" class="space-y-2"></div>
+                    </div>
+
+                    <div class="liquid-glass rounded-xl p-4 fade-in" data-fade-delay="440">
+                        <div class="field-label">Grid activity</div>
+                        <div id="activity" class="max-h-64 overflow-y-auto pr-1">
+                            <div class="text-white/35 text-xs py-2">Listening…</div>
+                        </div>
+                    </div>
+
+                </aside>
+            </div>
+        </main>
+
+        <footer class="relative z-10 text-center text-[10.5px] text-white/30 py-6 px-6">
+            ByteToBite Institutional · Node 01 · writes stream to the shared grid
+        </footer>
+    </div>
+
+    <div id="toasts" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+
+    <script src="institutional-db.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════
+        const state = {
+            institute: null,
+            session: null,
+            role: 'registrar',
+            readOnly: false,
+            planId: null,
+            date: todayStr(),
+            slot: 'lunch',
+            headcount: 0,
+            menu: [],
+            agentSuggestion: null,
+            wasteRisk: 0,
+            autosaveTimer: null,
+            dirty: false,
+            unsubscribe: null,
+            weather: null
+        };
+
+        const MEALS = [
+            { key: 'breakfast', label: 'Breakfast', icon: '☀' },
+            { key: 'lunch', label: 'Lunch', icon: '☼' },
+            { key: 'dinner', label: 'Dinner', icon: '☾' }
+        ];
+        const MENU_CATS = [
+            { key: 'staple', label: 'Staple', perish: 0.35 },
+            { key: 'protein', label: 'Protein', perish: 0.55 },
+            { key: 'light', label: 'Light', perish: 0.30 },
+            { key: 'nonveg', label: 'Non-veg', perish: 0.72 },
+            { key: 'dessert', label: 'Dessert', perish: 0.78 },
+            { key: 'breakfast', label: 'Breakfast', perish: 0.22 },
+            { key: 'festive', label: 'Festive', perish: 0.55 }
+        ];
+
+        // ═══════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════
+        function todayStr(d = new Date()) {
+            const dt = new Date(d);
+            return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        }
+        function fmt(n) { return Number(n || 0).toLocaleString('en-IN'); }
+        function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+        function timeAgo(ts) {
+            if (!ts) return '';
+            const s = Math.floor((Date.now() - ts) / 1000);
+            if (s < 60) return s + 's';
+            if (s < 3600) return Math.floor(s / 60) + 'm';
+            if (s < 86400) return Math.floor(s / 3600) + 'h';
+            return Math.floor(s / 86400) + 'd';
+        }
+
+        function toast(msg, type = 'info') {
+            const colors = {
+                info: 'color:#fff;',
+                warn: 'color:#FCD34D;',
+                error: 'color:#F87171;',
+                success: 'color:#5EEAD4;'
+            };
+            const el = document.createElement('div');
+            el.className = 'toast-item liquid-glass rounded-xl px-4 py-3 text-xs font-medium max-w-xs';
+            el.style.cssText = colors[type] || colors.info;
+            el.textContent = msg;
+            document.getElementById('toasts').appendChild(el);
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.35s, transform 0.35s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                setTimeout(() => el.remove(), 400);
+            }, 3200);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CHARACTER CASCADE — VEX pattern verbatim
+        // ═══════════════════════════════════════════════════════════════
+        function animateHeading(text) {
+            const el = document.getElementById('hero-heading');
+            const lines = text.split('\n');
+            let globalCharIndex = 0;
+            const charDelay = 30;
+
+            el.innerHTML = lines.map((line) => {
+                const chars = line.split('');
+                return `<span class="block">${chars.map((char) => {
+                    const delay = globalCharIndex * charDelay;
+                    globalCharIndex++;
+                    return `<span class="char ${char === ' ' ? 'char-space' : ''}" style="transition-delay:${delay}ms">${char === ' ' ? '&nbsp;' : esc(char)}</span>`;
+                }).join('')
+                    }</span>`;
+            }).join('');
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    el.querySelectorAll('.char').forEach(c => c.classList.add('visible'));
+                });
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FADE-IN — VEX pattern
+        // ═══════════════════════════════════════════════════════════════
+        function initFadeIns() {
+            document.querySelectorAll('.fade-in').forEach(el => {
+                const delay = parseInt(el.dataset.fadeDelay || '0', 10);
+                setTimeout(() => el.classList.add('visible'), delay);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // COUNT-UP
+        // ═══════════════════════════════════════════════════════════════
+        function countUp(inputEl, from, to, duration = 800) {
+            if (from === to) { inputEl.value = to; return; }
+            const start = performance.now();
+            const delta = to - from;
+            inputEl.classList.add('flash');
+            setTimeout(() => inputEl.classList.remove('flash'), 400);
+
+            function tick(now) {
+                const t = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - t, 3);
+                const val = Math.round(from + delta * eased);
+                inputEl.value = val;
+                if (t < 1) requestAnimationFrame(tick);
+                else inputEl.value = to;
+            }
+            requestAnimationFrame(tick);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // BOOT
+        // ═══════════════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', boot);
+
+        async function boot() {
+            animateHeading('Kitchen Planning.');
+            initFadeIns();
+
+            try {
+                const url = new URL(window.location.href);
+                const devMode = url.searchParams.get('dev') === '1';
+
+                state.session = await window.InstitutionalAPI.getCurrentSession();
+                if (!state.session || !state.session.institute_id) {
+                    if (devMode) {
+                        await autoSeedAndSignIn();
+                    } else {
+                        window.location.href = 'institutional.html';
+                        return;
+                    }
+                }
+
+                state.institute = await window.InstitutionalAPI.getInstitute(state.session.institute_id);
+                if (!state.institute) { window.location.href = 'institutional.html'; return; }
+
+                const role = state.institute.admin_designation || 'registrar';
+                state.role = role;
+                state.readOnly = (role === 'auditor');
+
+                document.getElementById('hdr-institute-name').textContent = state.institute.name || '—';
+                document.getElementById('hdr-institute-code').textContent = state.institute.code || '—';
+                const roleLabel = { registrar: 'Registrar', dean: 'Dean', warden: 'Chief Warden', mess_manager: 'Mess Manager', estate_officer: 'Estate Officer', auditor: 'Auditor', other: 'Admin' }[role] || 'Admin';
+                document.getElementById('hdr-role').textContent = roleLabel;
+
+                if (state.readOnly) document.getElementById('readonly-banner').classList.remove('hidden');
+
+                renderDayStrip();
+                renderMealTabs();
+                bindInputs();
+                bindButtons();
+                applyReadOnly();
+
+                document.getElementById('date-picker').value = state.date;
+
+                await loadWeather();
+                await loadPlanForSelection();
+                await refreshVariance();
+                await loadSuggestions();
+                subscribeLive();
+                startAutosave();
+
+            } catch (e) {
+                console.error('Node 01 boot failed:', e);
+                toast('Could not initialise the node', 'error');
+            }
+        }
+
+        async function autoSeedAndSignIn() {
+            let inst = await window.InstitutionalAPI.getInstituteByCode('ITER-BBSR-DEMO');
+            if (!inst) {
+                inst = await window.InstitutionalAPI.registerInstitute({
+                    code: 'ITER-BBSR-DEMO', name: 'ITER SOA University', type: 'university',
+                    established_year: 2006, aishe_code: 'C-45678',
+                    recognition: 'multiple', naac_grade: 'A',
+                    city: 'Bhubaneswar', state: 'Odisha', pin_code: '751024',
+                    student_count: 4500, mess_name: 'Central Mess ITER',
+                    admin_designation: 'registrar', admin_name: 'Campus Registrar',
+                    admin_email: 'registrar@iter.soa.ac.in',
+                    password_hash: 'demo', verified: true
+                });
+                await window.InstitutionalAPI._seedDemoFor(inst.id);
+            }
+            await window.InstitutionalAPI.saveSession({ institute_id: inst.id, code: inst.code, name: inst.name });
+            state.session = await window.InstitutionalAPI.getCurrentSession();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // DAY STRIP + MEAL TABS
+        // ═══════════════════════════════════════════════════════════════
+        function renderDayStrip() {
+            const el = document.getElementById('day-strip');
+            const now = new Date();
+            const days = [];
+            for (let i = 0; i < 7; i++) days.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i));
+            el.innerHTML = days.map(d => {
+                const ds = todayStr(d);
+                const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+                const active = ds === state.date;
+                return `<div class="day-pill ${active ? 'active' : ''}" onclick="pickDate('${ds}')">
+            <div class="dow">${dow}</div>
+            <div class="dnum">${d.getDate()}</div>
+        </div>`;
+            }).join('');
+        }
+
+        function renderMealTabs() {
+            const el = document.getElementById('meal-tabs');
+            el.innerHTML = MEALS.map(m => `
+        <div class="meal-tab ${m.key === state.slot ? 'active' : ''}" onclick="pickSlot('${m.key}')">
+            <span style="opacity:.75">${m.icon}</span>
+            <span>${m.label}</span>
+        </div>
+    `).join('');
+        }
+
+        window.pickDate = async (ds) => {
+            if (!ds) { document.getElementById('date-picker').showPicker?.(); return; }
+            state.date = ds;
+            document.getElementById('date-picker').value = ds;
+            renderDayStrip();
+            await loadWeather();
+            await loadPlanForSelection();
+        };
+
+        window.pickSlot = async (slot) => {
+            state.slot = slot;
+            renderMealTabs();
+            await loadPlanForSelection();
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // WEATHER
+        // ═══════════════════════════════════════════════════════════════
+        async function loadWeather() {
+            const loc = state.institute.location || { lat: 20.2961, lng: 85.8245 };
+            const key = `wx:${loc.lat.toFixed(2)},${loc.lng.toFixed(2)}`;
+            try {
+                const cached = JSON.parse(localStorage.getItem(key) || 'null');
+                if (cached && Date.now() - cached.at < 30 * 60 * 1000) {
+                    state.weather = cached.data;
+                    renderWeather();
+                    return;
+                }
+            } catch { }
+
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lng}&current=temperature_2m,weather_code,precipitation&timezone=auto`;
+                const res = await fetch(url);
+                const j = await res.json();
+                const data = {
+                    temp_c: j.current?.temperature_2m ?? null,
+                    precip: j.current?.precipitation ?? 0,
+                    code: j.current?.weather_code ?? 0
+                };
+                state.weather = data;
+                try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), data })); } catch { }
+                renderWeather();
+            } catch (e) {
+                document.getElementById('wx-desc').textContent = 'unavailable';
+            }
+        }
+
+        function renderWeather() {
+            const w = state.weather;
+            if (!w) return;
+            document.getElementById('wx-temp').textContent = (w.temp_c != null ? Math.round(w.temp_c) : '—') + '°';
+            document.getElementById('wx-desc').textContent = weatherDesc(w.code, w.precip);
+            document.getElementById('wx-loc').textContent = `${state.institute.city || '—'}, ${state.institute.state || '—'}`;
+        }
+        function weatherDesc(code, precip) {
+            if (precip > 0.5) return 'Rain';
+            if (code === 0) return 'Clear';
+            if (code <= 3) return 'Partly cloudy';
+            if (code <= 48) return 'Fog';
+            if (code <= 67) return 'Rain';
+            if (code <= 77) return 'Snow';
+            if (code <= 82) return 'Showers';
+            return 'Cloudy';
+        }
+        function weatherFactor() {
+            const w = state.weather;
+            if (!w) return 0;
+            if (w.precip > 0.5) return -0.03;
+            if (w.temp_c > 38) return 0.02;
+            if (w.temp_c < 12) return -0.01;
+            return 0;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // LOAD PLAN
+        // ═══════════════════════════════════════════════════════════════
+        async function loadPlanForSelection() {
+            try {
+                const plan = await window.InstitutionalAPI.getMealPlanFor(state.institute.id, state.date, state.slot);
+                if (plan) {
+                    state.planId = plan.id;
+                    state.headcount = plan.predicted_demand || 0;
+                    state.menu = Array.isArray(plan.menu_items) ? [...plan.menu_items] : [];
+                    state.dirty = false;
+                    renderPlanHeader(plan);
+                } else {
+                    state.planId = null;
+                    state.headcount = 0;
+                    state.menu = [];
+                    state.dirty = false;
+                    renderPlanHeader(null);
+                }
+
+                document.getElementById('headcount').value = 0;
+                renderMenu();
+
+                const suggestion = await window.InstitutionalAPI.agents.forecast(
+                    state.institute.id, state.date, state.slot,
+                    { weather_factor: weatherFactor() }
+                );
+                state.agentSuggestion = suggestion;
+                renderAgentPanel();
+
+                const target = state.headcount || suggestion.suggested_headcount;
+                countUp(document.getElementById('headcount'), 0, target, 900);
+                state.headcount = target;
+
+                await recomputeDerived();
+            } catch (e) {
+                console.error(e);
+                toast('Could not load plan', 'error');
+            }
+        }
+
+        function renderPlanHeader(plan) {
+            const chip = document.getElementById('status-chip');
+            const meta = document.getElementById('status-meta');
+            const publishBtn = document.getElementById('btn-publish');
+            const saveBtn = document.getElementById('btn-save');
+            if (!plan) {
+                chip.className = 'chip chip-muted';
+                chip.textContent = 'New draft';
+                meta.textContent = 'Not saved yet';
+                publishBtn.innerHTML = '<span class="dot"></span> Publish';
+                saveBtn.textContent = 'Save draft';
+            } else {
+                const st = (plan.status || 'DRAFT').toUpperCase();
+                chip.className = 'chip ' + (st === 'PUBLISHED' ? 'chip-live' : st === 'COMPLETED' ? 'chip-warm' : 'chip-muted');
+                chip.textContent = st.charAt(0) + st.slice(1).toLowerCase();
+                meta.textContent = plan.published_at
+                    ? `Published ${timeAgo(plan.published_at)} ago`
+                    : `Saved ${timeAgo(plan.updated_at || plan.created_at)} ago`;
+                publishBtn.innerHTML = st === 'PUBLISHED' ? '<span class="dot"></span> Republish' : '<span class="dot"></span> Publish';
+                saveBtn.textContent = 'Update draft';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MENU
+        // ═══════════════════════════════════════════════════════════════
+        function renderMenu() {
+            const el = document.getElementById('menu-list');
+            const empty = document.getElementById('menu-empty');
+            if (!state.menu.length) {
+                el.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            el.innerHTML = state.menu.map((item, i) => `
+        <div class="menu-row">
+            <input value="${esc(item.name || '')}" placeholder="Item name" oninput="updateMenu(${i}, 'name', this.value)" />
+            <input type="number" min="1" value="${item.qty || ''}" placeholder="Qty" oninput="updateMenu(${i}, 'qty', this.value)" style="text-align:center; font-variant-numeric:tabular-nums;" />
+            <select onchange="updateMenu(${i}, 'category', this.value)">
+                ${MENU_CATS.map(c => `<option value="${c.key}" ${item.category === c.key ? 'selected' : ''}>${c.label}</option>`).join('')}
+            </select>
+            <button class="remove-btn" onclick="removeMenuRow(${i})" title="Remove">
+                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+    `).join('');
+        }
+
+        window.addMenuRow = (item = null) => {
+            if (state.readOnly) return;
+            state.menu.push(item || { name: '', qty: 1, category: 'staple', perishability: 0.35 });
+            state.dirty = true;
+            renderMenu();
+            recomputeDerived();
+        };
+        window.removeMenuRow = (i) => {
+            if (state.readOnly) return;
+            state.menu.splice(i, 1);
+            state.dirty = true;
+            renderMenu();
+            recomputeDerived();
+        };
+        window.updateMenu = (i, field, val) => {
+            if (state.readOnly) return;
+            const item = state.menu[i];
+            if (!item) return;
+            if (field === 'qty') item.qty = Math.max(1, parseInt(val, 10) || 1);
+            else item[field] = val;
+            if (field === 'category') {
+                const cat = MENU_CATS.find(c => c.key === val);
+                item.perishability = cat ? cat.perish : 0.4;
+            }
+            state.dirty = true;
+            recomputeDerived();
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // DERIVED
+        // ═══════════════════════════════════════════════════════════════
+        async function recomputeDerived() {
+            const hc = state.headcount || 0;
+            const suggestion = state.agentSuggestion;
+            const agentN = suggestion?.suggested_headcount || 0;
+
+            const hint = document.getElementById('agent-hint');
+            if (agentN) {
+                const delta = hc - agentN;
+                const dpct = Math.round((delta / agentN) * 100);
+                hint.innerHTML = `Agent suggests <span style="color:#FCD34D; font-weight:600;">${fmt(agentN)}</span> · you are <span style="color:${Math.abs(dpct) > 15 ? '#F87171' : '#5EEAD4'}; font-weight:600;">${dpct > 0 ? '+' : ''}${dpct}%</span>`;
+            } else {
+                hint.textContent = 'Agent is thinking…';
+            }
+
+            document.getElementById('agent-confidence').textContent = suggestion
+                ? Math.round(suggestion.confidence * 100) + '%'
+                : '—';
+
+            const perishAvg = state.menu.length
+                ? state.menu.reduce((s, it) => s + (it.perishability ?? 0.4), 0) / state.menu.length
+                : 0.4;
+            const expectedWaste = Math.round(hc * 0.12 * perishAvg * 0.35);
+            document.getElementById('waste-kg').textContent = fmt(expectedWaste);
+            const delta = hc - agentN;
+            document.getElementById('waste-delta').innerHTML = agentN
+                ? `${delta > 0 ? '+' : ''}${fmt(Math.round(delta * 0.12 * 0.35))} kg vs agent baseline`
+                : '—';
+
+            const risk = await window.InstitutionalAPI.agents.wasteRisk(
+                state.institute.id, state.date, state.slot, hc, state.menu
+            );
+            state.wasteRisk = risk;
+            document.getElementById('risk-num').textContent = risk;
+            const fill = document.getElementById('risk-fill');
+            const color = risk < 35 ? '#5EEAD4' : risk < 65 ? '#FCD34D' : '#F87171';
+            fill.style.width = Math.min(100, risk) + '%';
+            fill.style.background = color;
+            document.getElementById('risk-num').style.color = color;
+
+            const anomaly = window.InstitutionalAPI.agents.anomaly(hc, agentN);
+            const aEl = document.getElementById('anomaly');
+            if (anomaly) {
+                aEl.classList.remove('hidden');
+                aEl.className = 'mt-4 liquid-glass rounded-xl px-4 py-3 text-xs leading-relaxed anomaly-enter';
+                const col = anomaly.severity === 'high' ? '#F87171' : '#FCD34D';
+                aEl.innerHTML = `<div style="color:${col}; font-weight:600;">⚠ ${anomaly.severity === 'high' ? 'High' : 'Medium'} deviation · ${anomaly.delta_pct > 0 ? '+' : ''}${anomaly.delta_pct}%</div><div style="color:rgba(255,255,255,0.75); margin-top:4px;">${esc(anomaly.message)}</div>`;
+            } else {
+                aEl.classList.add('hidden');
+            }
+
+            document.getElementById('autosave-status').textContent = state.dirty
+                ? 'Unsaved · autosaves every 20s'
+                : 'All changes saved';
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // AGENT PANEL
+        // ═══════════════════════════════════════════════════════════════
+        function renderAgentPanel() {
+            const s = state.agentSuggestion;
+            const fEl = document.getElementById('factors');
+            if (!s) {
+                fEl.innerHTML = `<span class="text-white/35 text-xs">Waiting…</span>`;
+                return;
+            }
+            fEl.innerHTML = s.factors.map(f => {
+                const neg = f.delta_pct < 0;
+                return `<span class="factor-chip ${neg ? 'neg' : ''}">${esc(f.label)} · ${f.delta_pct > 0 ? '+' : ''}${f.delta_pct}%</span>`;
+            }).join('');
+        }
+
+        async function loadSuggestions() {
+            const el = document.getElementById('suggestions');
+            const inventory = state.menu.filter(m => m.name).map(m => ({ name: m.name, qty: m.qty }));
+            const suggestions = window.InstitutionalAPI.agents.suggestMenu(inventory, 4);
+            el.innerHTML = suggestions.map(s => `
+        <button onclick='addFromSuggestion(${JSON.stringify(JSON.stringify(s))})' class="suggestion-btn">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="text-white text-[12.5px] font-medium truncate">${esc(s.name)}</div>
+                    <div class="text-[10px] text-white/45 mt-0.5">
+                        ${s.category} · ₹${s.cost_inr} · ${s.kcal} kcal
+                        ${s.reuse ? ' · <span style="color:#5EEAD4">reuses stock</span>' : ''}
+                    </div>
+                </div>
+                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+        </button>
+    `).join('');
+        }
+
+        window.addFromSuggestion = (raw) => {
+            if (state.readOnly) return;
+            try {
+                const s = JSON.parse(raw);
+                state.menu.push({ name: s.name, qty: 1, category: s.category, perishability: s.perishability });
+                state.dirty = true;
+                renderMenu();
+                recomputeDerived();
+                toast(`Added ${s.name}`, 'success');
+            } catch { }
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // INPUTS + BUTTONS
+        // ═══════════════════════════════════════════════════════════════
+        function bindInputs() {
+            const hcEl = document.getElementById('headcount');
+            hcEl.addEventListener('input', () => {
+                state.headcount = parseInt(hcEl.value, 10) || 0;
+                state.dirty = true;
+                clearTimeout(hcEl._t);
+                hcEl._t = setTimeout(recomputeDerived, 350);
+            });
+
+            document.getElementById('date-picker').addEventListener('change', (e) => pickDate(e.target.value));
+
+            window.addEventListener('keydown', async (e) => {
+                if (e.shiftKey && (e.key === 'D' || e.key === 'd') && state.institute) {
+                    e.preventDefault();
+                    try {
+                        await window.InstitutionalAPI._seedDemoFor(state.institute.id);
+                        toast('Demo data seeded', 'success');
+                        await loadPlanForSelection();
+                        await refreshVariance();
+                    } catch (err) { console.warn(err); }
+                }
+            });
+        }
+
+        function bindButtons() {
+            document.getElementById('btn-reset-agent').addEventListener('click', () => {
+                if (state.readOnly || !state.agentSuggestion) return;
+                const from = state.headcount;
+                const to = state.agentSuggestion.suggested_headcount;
+                state.headcount = to;
+                state.dirty = true;
+                countUp(document.getElementById('headcount'), from, to, 600);
+                recomputeDerived();
+                toast('Reset to agent suggestion', 'info');
+            });
+            document.getElementById('btn-save').addEventListener('click', () => savePlan(false));
+            document.getElementById('btn-publish').addEventListener('click', () => savePlan(true));
+        }
+
+        function applyReadOnly() {
+            if (!state.readOnly) return;
+            ['headcount', 'date-picker'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+            ['btn-save', 'btn-publish', 'btn-reset-agent'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = true;
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SAVE / PUBLISH
+        // ═══════════════════════════════════════════════════════════════
+        async function savePlan(publish) {
+            if (state.readOnly) return;
+            if (!state.headcount || state.headcount < 1) {
+                toast('Enter a headcount first', 'warn');
+                return;
+            }
+            try {
+                const menuClean = state.menu.filter(m => (m.name || '').trim().length > 0);
+                const plan = {
+                    id: state.planId,
+                    institute_id: state.institute.id,
+                    date: state.date,
+                    meal_slot: state.slot,
+                    predicted_demand: state.headcount,
+                    menu_items: menuClean,
+                    expected_waste_kg: Math.round(state.headcount * 0.12 * (menuClean.length ? menuClean.reduce((s, it) => s + (it.perishability || 0.4), 0) / menuClean.length : 0.4) * 0.35),
+                    waste_risk_score: state.wasteRisk,
+                    agent_suggested: !!state.agentSuggestion,
+                    agent_headcount: state.agentSuggestion?.suggested_headcount || null,
+                    agent_factors: state.agentSuggestion?.factors || [],
+                    weather_snapshot: state.weather || null,
+                    status: publish ? 'PUBLISHED' : 'DRAFT'
+                };
+
+                const saved = await window.InstitutionalAPI.saveMealPlan(plan);
+                state.planId = saved.id;
+                state.dirty = false;
+
+                if (publish) {
+                    await window.InstitutionalAPI.publishMealPlan(saved.id);
+                    toast('Plan published — grid updated', 'success');
+                } else {
+                    toast('Draft saved', 'success');
+                }
+
+                renderPlanHeader(await window.InstitutionalAPI.getMealPlan(saved.id));
+                await recomputeDerived();
+                await refreshVariance();
+            } catch (e) {
+                console.error(e);
+                toast('Save failed: ' + (e.message || 'unknown'), 'error');
+            }
+        }
+
+        function startAutosave() {
+            if (state.autosaveTimer) clearInterval(state.autosaveTimer);
+            state.autosaveTimer = setInterval(async () => {
+                if (state.readOnly || !state.dirty || !state.headcount) return;
+                await savePlan(false);
+            }, 20000);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // VARIANCE
+        // ═══════════════════════════════════════════════════════════════
+        async function refreshVariance() {
+            const el = document.getElementById('var-rows');
+            try {
+                const rows = await window.InstitutionalAPI.getMealPlanVariance(state.institute.id, 7);
+                if (!rows.length) {
+                    el.innerHTML = `<div class="px-6 py-8 text-center text-white/35 text-xs">No history yet — publish a plan to start the log.</div>`;
+                    return;
+                }
+                el.innerHTML = rows.slice(0, 10).map(r => {
+                    const served = r.served || 0;
+                    const planned = r.planned || 0;
+                    const pct = planned ? Math.min(100, Math.round((served / planned) * 100)) : 0;
+                    const wastePct = r.waste_pct ?? null;
+                    const wasteColor = wastePct == null ? 'rgba(255,255,255,0.4)' : wastePct < 8 ? '#5EEAD4' : wastePct < 15 ? '#FCD34D' : '#F87171';
+                    return `<div class="var-row">
+                <span style="color:rgba(255,255,255,0.75); font-size:11.5px; font-variant-numeric:tabular-nums;">${esc(r.date || '—')}</span>
+                <span style="color:rgba(255,255,255,0.55); font-size:10.5px; text-transform:uppercase;">${esc(r.meal_slot || '—')}</span>
+                <div style="height:3px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden;">
+                    <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,#5EEAD4,#FF724C); border-radius:999px;"></div>
+                </div>
+                <span style="color:rgba(255,255,255,0.9); font-size:11.5px; text-align:right; font-variant-numeric:tabular-nums;">${fmt(planned)}</span>
+                <span style="color:rgba(255,255,255,0.9); font-size:11.5px; text-align:right; font-variant-numeric:tabular-nums;">${served ? fmt(served) : '—'}</span>
+                <span style="font-size:11.5px; text-align:right; color:${wasteColor}; font-variant-numeric:tabular-nums;">${wastePct == null ? '—' : wastePct + '%'}</span>
+            </div>`;
+                }).join('');
+            } catch (e) {
+                el.innerHTML = `<div class="px-6 py-8 text-center text-red-300/60 text-xs">Could not load variance</div>`;
+            }
+        }
+        window.refreshVariance = refreshVariance;
+
+        // ═══════════════════════════════════════════════════════════════
+        // SUBSCRIBE
+        // ═══════════════════════════════════════════════════════════════
+        function subscribeLive() {
+            if (state.unsubscribe) state.unsubscribe();
+            const actEl = document.getElementById('activity');
+            const events = [];
+
+            state.unsubscribe = window.InstitutionalAPI.subscribe((type) => {
+                const label = (type || '').replace('bytetobite:', '').replace('-changed', '');
+                events.unshift({ type: label, ts: Date.now() });
+                if (events.length > 30) events.length = 30;
+
+                actEl.innerHTML = events.map(e => `
+            <div class="activity-item">
+                <span class="activity-time">${timeAgo(e.ts)}</span>
+                <span><span style="color:#5EEAD4">●</span> ${esc(e.type)} event</span>
+            </div>
+        `).join('');
+
+                if (label === 'tallies' || label === 'meal-preps' || label === 'meal-plans') {
+                    refreshVariance();
+                }
+            });
+
+            actEl.innerHTML = `<div class="activity-item"><span class="activity-time">now</span><span><span style="color:#5EEAD4">●</span> listening for grid events</span></div>`;
+        }
+    </script>
+</body>
+
+</html>

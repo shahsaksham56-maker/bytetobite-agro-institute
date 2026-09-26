@@ -1,0 +1,100 @@
+version: "3.9"
+
+# ═══════════════════════════════════════════════════════════════
+# ByteToBite — Local development stack
+#
+#   docker compose up --build
+#
+# Services:
+#   db    → PostGIS (agro + institutional schemas auto-loaded)
+#   redis → pub/sub for WebSocket fan-out (optional today, used later)
+#   api   → FastAPI backend on http://localhost:8000
+#
+# Health probe:  curl http://localhost:8000/health
+# ═══════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────────
+  # POSTGRES + POSTGIS
+  # ─────────────────────────────────────────────
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: bytetobite_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: bytetobite
+    ports:
+      - "5432:5432"
+    volumes:
+      # Load the two SQL schemas in order. Each file runs once on first boot.
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-agro.sql:ro
+      - ./institutional-schema.sql:/docker-entrypoint-initdb.d/02-institutional.sql:ro
+      # Persistent storage — survives container restarts
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d bytetobite" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ─────────────────────────────────────────────
+  # REDIS (pub/sub for WS fan-out)
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: bytetobite_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # FASTAPI BACKEND
+  # ─────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bytetobite_api
+    restart: unless-stopped
+    environment:
+      # Database
+      DATABASE_URL: postgresql://user:pass@db:5432/bytetobite
+      # Redis
+      REDIS_URL: redis://redis:6379
+      # JWT
+      JWT_SECRET: dev-secret-change-me-in-production
+      JWT_EXPIRES_DAYS: "7"
+      # OTP
+      OTP_PEPPER: dev-otp-pepper
+      # Razorpay (test keys — replace via shell env for real keys)
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-rzp_test_replace_me}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-replace_me}
+      # CORS
+      ALLOWED_ORIGINS: "*"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      # Live-mount backend for hot reload during development
+      - ./backend:/app:ro
+    command: [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
+
+# ─────────────────────────────────────────────
+# PERSISTENT VOLUMES
+# ─────────────────────────────────────────────
+volumes:
+  pgdata:
+    driver: local

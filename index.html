@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite — Loading…</title>
+    <meta http-equiv="refresh" content="0; url=bytetobite/agro/hero.html" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            background: #0C0C0C;
+            color: #D7E2EA;
+            font-family: Inter, system-ui, sans-serif;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .box {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid rgba(215, 226, 234, 0.2);
+            border-top-color: #F5D547;
+            border-radius: 999px;
+            margin: 0 auto 16px;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 24px;
+            background: #fff;
+            color: #000;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="spinner"></div>
+        <div>Loading ByteToBite…</div>
+        <a href="bytetobite/agro/hero.html">Enter manually if not redirected →</a>
+    </div>
+    <script>
+        window.location.replace('bytetobite/agro/hero.html');
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite Institutional — Sign In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Instrument Serif"', 'serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: { ink: '#0A1628', accent: '#FF724C', warm: '#FCD34D', teal: '#5EEAD4' },
+                },
+            },
+        };
+    </script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background: #0A1628;
+            color: #F7F5F2;
+            font-family: 'Inter', system-ui, sans-serif;
+            overflow-x: hidden;
+            min-height: 100%;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-soft {
+            background: rgba(7, 16, 39, 0.38);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(180, 205, 255, 0.12);
+        }
+
+        .glass-card {
+            background: rgba(7, 16, 39, 0.62);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(180, 205, 255, 0.14);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 1.8s ease-in-out infinite;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-up-1 {
+            animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+        }
+
+        .fade-up-2 {
+            animation: fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-in {
+            animation: modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        input,
+        select {
+            font-family: inherit;
+            color-scheme: dark;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.28);
+        }
+
+        .field {
+            width: 100%;
+            background: rgba(10, 22, 48, 0.6);
+            border: 1px solid rgba(180, 205, 255, 0.20);
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .field:focus {
+            border-color: #FF724C;
+            background: rgba(10, 22, 48, 0.85);
+        }
+
+        .field-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .field-help {
+            font-size: 10.5px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 5px;
+            line-height: 1.45;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #FF8159 0%, #FF5C30 100%);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 14px 28px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, filter 0.15s ease;
+            box-shadow: 0 8px 24px rgba(255, 92, 48, 0.35);
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: none;
+            transform: none;
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 12px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .chip-live {
+            background: rgba(94, 234, 212, 0.15);
+            color: #5EEAD4;
+            border: 1px solid rgba(94, 234, 212, 0.35);
+        }
+
+        .chip-warm {
+            background: rgba(252, 211, 77, 0.15);
+            color: #FCD34D;
+            border: 1px solid rgba(252, 211, 77, 0.35);
+        }
+
+        .bg-hero {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: radial-gradient(ellipse 80% 60% at 30% 0%, rgba(255, 114, 76, 0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 100%, rgba(94, 234, 212, 0.10) 0%, transparent 60%), radial-gradient(ellipse 100% 80% at 50% 50%, #0A1628 0%, #050C18 100%);
+            pointer-events: none;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+            background-size: 56px 56px;
+            pointer-events: none;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 0%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 0%, transparent 100%);
+        }
+
+        .modal-scroll {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        @media (min-height: 700px) {
+            .modal-scroll {
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-hero"></div>
+    <div class="bg-grid"></div>
+
+    <div id="gateway" class="relative z-10 min-h-screen flex flex-col">
+        <header class="flex items-center justify-between px-6 md:px-12 lg:px-16 py-6">
+            <a href="../agro/hero.html" class="flex items-center gap-3 group">
+                <svg viewBox="0 0 32 32" class="w-8 h-8 text-[#FF724C]" fill="currentColor">
+                    <circle cx="16" cy="16" r="3.5" />
+                    <circle cx="16" cy="6" r="3.5" />
+                    <circle cx="23.07" cy="8.93" r="3.5" />
+                    <circle cx="26" cy="16" r="3.5" />
+                    <circle cx="23.07" cy="23.07" r="3.5" />
+                    <circle cx="16" cy="26" r="3.5" />
+                    <circle cx="8.93" cy="23.07" r="3.5" />
+                    <circle cx="6" cy="16" r="3.5" />
+                    <circle cx="8.93" cy="8.93" r="3.5" />
+                </svg>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-white font-bold text-base tracking-tight">ByteToBite</span>
+                    <span class="text-white/40 text-base">/</span>
+                    <span class="text-[#FF724C] font-semibold text-base tracking-tight">Institutional</span>
+                </div>
+            </a>
+            <a href="../agro/hero.html" class="text-xs font-medium text-white/60 hover:text-white transition-colors">
+                ← Back to Agro
+            </a>
+        </header>
+
+        <main class="flex-1 flex items-center justify-center px-6 py-10">
+            <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-6 space-y-6">
+                    <div class="chip chip-warm">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#FCD34D] pulse-dot"></span>
+                        Campus Grid · Autonomous
+                    </div>
+                    <h1 class="font-serif text-5xl md:text-6xl leading-[0.98] tracking-tight text-white">
+                        Zero waste in every<br />
+                        campus mess.
+                    </h1>
+                    <p class="text-white/65 text-sm md:text-base leading-relaxed max-w-md">
+                        Every campus — university, hospital, corporate — signs in once. Four autonomous agents forecast
+                        demand, watch thermal decay, dispatch surplus to nearby NGOs, and log every plate rescued.
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 pt-2">
+                        <div class="glass-soft rounded-full px-3.5 py-1.5 text-xs text-white/75 font-mono">
+                            <span class="text-[#5EEAD4]">●</span> 4 autonomous agents
+                        </div>
+                        <div class="glass-soft rounded-full px-3.5 py-1.5 text-xs text-white/75 font-mono">
+                            <span class="text-[#5EEAD4]">●</span> FSSAI + AISHE aligned
+                        </div>
+                        <div class="glass-soft rounded-full px-3.5 py-1.5 text-xs text-white/75 font-mono">
+                            <span class="text-[#5EEAD4]">●</span> Live cross-campus board
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-6 space-y-4">
+                    <button onclick="openLogin('login')"
+                        class="w-full text-left glass-card rounded-3xl p-7 hover:border-[#FF724C]/40 transition-all fade-up-1"
+                        style="border-width: 1px;">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <span class="chip chip-live mb-3">Registered institute</span>
+                                <h3 class="font-display text-2xl text-white font-bold tracking-tight mb-2">Sign in with
+                                    institute code</h3>
+                                <p class="text-white/60 text-sm leading-relaxed">Use your AISHE code or the code issued
+                                    by ByteToBite, plus your admin password.</p>
+                            </div>
+                            <div
+                                class="shrink-0 w-12 h-12 rounded-2xl bg-[#FF724C]/15 border border-[#FF724C]/30 flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6 text-[#FF724C]" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                                    <polyline points="10 17 15 12 10 7" />
+                                    <line x1="15" y1="12" x2="3" y2="12" />
+                                </svg>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button onclick="openLogin('signup')"
+                        class="w-full text-left glass-card rounded-3xl p-7 hover:border-[#5EEAD4]/40 transition-all fade-up-2"
+                        style="border-width: 1px;">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <span class="chip chip-warm mb-3">New institute</span>
+                                <h3 class="font-display text-2xl text-white font-bold tracking-tight mb-2">Register your
+                                    campus</h3>
+                                <p class="text-white/60 text-sm leading-relaxed">Get your institution on the grid in
+                                    under two minutes. Requires AISHE / UGC / NAAC details.</p>
+                            </div>
+                            <div
+                                class="shrink-0 w-12 h-12 rounded-2xl bg-[#5EEAD4]/15 border border-[#5EEAD4]/30 flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6 text-[#5EEAD4]" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                            </div>
+                        </div>
+                    </button>
+
+                    <p class="text-[11px] text-white/35 text-center pt-2 font-mono">
+                        All actions are logged. Only verified institutes get leaderboard access.
+                    </p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="auth-modal" class="modal-scroll hidden bg-black/70 backdrop-blur-sm">
+        <div class="relative modal-in w-full max-w-lg glass-card rounded-3xl overflow-hidden my-auto">
+            <div
+                class="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-[#0A1628]/95 backdrop-blur-md z-10">
+                <h3 id="auth-title" class="font-display text-white font-bold text-base">Sign in</h3>
+                <button onclick="closeLogin()"
+                    class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/70 transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="auth-body" class="p-6"></div>
+        </div>
+    </div>
+
+    <script src="institutional-db.js"></script>
+    <script>
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        async function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                    () => resolve(null),
+                    { enableHighAccuracy: true, timeout: 6000 }
+                );
+            });
+        }
+
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            return '0x' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function openLogin(mode) {
+            const modal = document.getElementById('auth-modal');
+            const title = document.getElementById('auth-title');
+            const body = document.getElementById('auth-body');
+
+            if (mode === 'login') {
+                title.textContent = 'Sign in to your institute';
+                body.innerHTML = `
+                  <div id="err" class="hidden mb-4 px-4 py-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs"></div>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="field-label">Institute code</label>
+                      <input id="lg-code" type="text" class="field font-mono uppercase" placeholder="AISHE code or ByteToBite code" autocomplete="off" />
+                      <p class="field-help">Example: C-45678 (AISHE) or ITER-BBSR-DEMO (ByteToBite-issued).</p>
+                    </div>
+                    <div>
+                      <label class="field-label">Admin password</label>
+                      <input id="lg-password" type="password" class="field" placeholder="••••••••••••" autocomplete="current-password" />
+                      <p class="field-help">The password you set when registering your institute.</p>
+                    </div>
+                    <button onclick="submitLogin()" class="btn-primary w-full">Sign in</button>
+                    <div class="relative flex py-1 items-center">
+                      <div class="flex-grow border-t border-white/10"></div>
+                      <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-white/40">or demo</span>
+                      <div class="flex-grow border-t border-white/10"></div>
+                    </div>
+                    <button type="button" onclick="devQuickLogin()" class="w-full py-2.5 bg-white/10 hover:bg-white/15 text-[#5EEAD4] border border-[#5EEAD4]/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                      ⚡ Login for Demo (Instant Access)
+                    </button>
+                  </div>
+                `;
+            } else {
+                title.textContent = 'Register a new institute';
+                body.innerHTML = `
+                  <div id="err" class="hidden mb-4 px-4 py-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs"></div>
+                  <div class="space-y-3.5">
+                    <div><label class="field-label">Institute name</label><input id="su-name" type="text" class="field" placeholder="e.g. Institute of Technical Education and Research, SOA" /></div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div><label class="field-label">Institute type</label>
+                        <select id="su-type" class="field">
+                          <option value="university">University</option><option value="college">College / Institute</option>
+                          <option value="hospital">Hospital</option><option value="corporate">Corporate campus</option>
+                          <option value="hostel">Standalone hostel / mess</option><option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div><label class="field-label">Established year</label><input id="su-year" type="number" min="1800" max="2030" class="field font-mono" placeholder="e.g. 2006" /></div>
+                    </div>
+                    <div><label class="field-label">AISHE code (optional)</label><input id="su-aishe" type="text" class="field font-mono uppercase" placeholder="e.g. C-45678" /></div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div><label class="field-label">City</label><input id="su-city" type="text" class="field" placeholder="Bhubaneswar" /></div>
+                      <div><label class="field-label">State</label><input id="su-state" type="text" class="field" placeholder="Odisha" /></div>
+                    </div>
+                    <div><label class="field-label">Pin code</label><input id="su-pin" type="text" maxlength="6" class="field font-mono" placeholder="6-digit PIN" /></div>
+                    <div><label class="field-label">Total students / employees</label><input id="su-count" type="number" min="50" class="field font-mono" placeholder="e.g. 4500" /></div>
+                    <div><label class="field-label">Campus mess / canteen name</label><input id="su-mess" type="text" class="field" placeholder="e.g. Central Mess ITER" /></div>
+                    <div><label class="field-label">Admin designation</label>
+                      <select id="su-desig" class="field">
+                        <option value="registrar">Registrar</option><option value="dean">Dean / Director</option>
+                        <option value="warden">Chief Warden</option><option value="mess_manager">Mess Manager</option>
+                        <option value="estate_officer">Estate Officer</option><option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div><label class="field-label">Admin full name</label><input id="su-admin" type="text" class="field" placeholder="e.g. Dr. Rajesh Mohapatra" /></div>
+                    <div><label class="field-label">Official email</label><input id="su-email" type="email" class="field" placeholder="registrar@yourinstitute.edu.in" /></div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div><label class="field-label">Admin password</label><input id="su-password" type="password" class="field" placeholder="Min 8 characters" /></div>
+                      <div><label class="field-label">Confirm password</label><input id="su-password2" type="password" class="field" placeholder="Repeat password" /></div>
+                    </div>
+                    <div class="rounded-xl bg-white/5 border border-white/10 p-3.5">
+                      <div class="text-[10.5px] uppercase tracking-wider text-white/50 font-semibold mb-1">Auto-generated ByteToBite code</div>
+                      <div id="su-code-preview" class="font-mono text-white text-base font-bold">— pending —</div>
+                    </div>
+                    <button onclick="submitSignup()" class="btn-primary w-full">Create institute account</button>
+                  </div>
+                `;
+                const nEl = document.getElementById('su-name');
+                const cEl = document.getElementById('su-city');
+                const codeEl = document.getElementById('su-code-preview');
+                const updateCode = async () => {
+                    const v = (nEl.value || '').trim() || (cEl.value || '').trim();
+                    if (!v) { codeEl.textContent = '— pending —'; return; }
+                    try { codeEl.textContent = await window.InstitutionalAPI._generateCode(nEl.value, cEl.value); }
+                    catch { codeEl.textContent = '— error —'; }
+                };
+                nEl.addEventListener('input', updateCode);
+                cEl.addEventListener('input', updateCode);
+            }
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => {
+                const first = modal.querySelector('input, select');
+                if (first) first.focus();
+            }, 80);
+        }
+
+        function closeLogin() {
+            const modal = document.getElementById('auth-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('err');
+            if (el) {
+                el.textContent = msg;
+                el.classList.remove('hidden');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        async function devQuickLogin() {
+            try {
+                let inst = null;
+                try {
+                    inst = await window.InstitutionalAPI.getInstituteByCode('ITER-BBSR-DEMO');
+                } catch (e) {
+                    console.warn('[DevQuickLogin] getInstituteByCode error:', e);
+                }
+                if (!inst) {
+                    try {
+                        inst = await window.InstitutionalAPI.registerInstitute({
+                            code: 'ITER-BBSR-DEMO',
+                            name: 'ITER SOA University',
+                            type: 'university',
+                            established_year: 2006,
+                            aishe_code: 'C-45678',
+                            recognition: 'multiple',
+                            naac_grade: 'A',
+                            city: 'Bhubaneswar',
+                            state: 'Odisha',
+                            pin_code: '751024',
+                            student_count: 4500,
+                            mess_name: 'Central Mess ITER',
+                            admin_designation: 'registrar',
+                            admin_name: 'Campus Registrar',
+                            admin_email: 'registrar@iter.soa.ac.in',
+                            admin_mobile: '9876543210',
+                            password_hash: await sha256('demo1234'),
+                            verified: true,
+                        });
+                    } catch (regErr) {
+                        console.warn('[DevQuickLogin] Register error:', regErr);
+                    }
+                    if (inst && inst.id && window.InstitutionalAPI._seedDemoFor) {
+                        try {
+                            await window.InstitutionalAPI._seedDemoFor(inst.id);
+                        } catch (seedErr) {
+                            console.warn('[DevQuickLogin] Seed demo error:', seedErr);
+                        }
+                    }
+                }
+                if (!inst || !inst.id) {
+                    inst = {
+                        id: 'INST-DEMO-ITER',
+                        code: 'ITER-BBSR-DEMO',
+                        name: 'ITER SOA University',
+                        admin_designation: 'registrar',
+                        admin_name: 'Campus Registrar'
+                    };
+                }
+                try {
+                    await window.InstitutionalAPI.saveSession({
+                        institute_id: inst.id,
+                        code: inst.code,
+                        name: inst.name,
+                    });
+                } catch (sessErr) {
+                    console.warn('[DevQuickLogin] saveSession API error:', sessErr);
+                }
+                // Guarantee direct localStorage save so hub.html immediately sees the session
+                try {
+                    localStorage.setItem('bytetobite:institutional:session', JSON.stringify({
+                        id: 'SESS-' + Date.now(),
+                        institute_id: inst.id,
+                        code: inst.code,
+                        name: inst.name,
+                        role: inst.admin_designation || 'registrar',
+                        at: Date.now()
+                    }));
+                } catch {}
+                window.location.href = 'hub.html';
+            } catch (e) {
+                console.error(e);
+                showError('Dev bypass failed: ' + (e.message || 'unknown'));
+            }
+        }
+
+        async function submitLogin() {
+            const code = document.getElementById('lg-code').value.trim().toUpperCase();
+            const password = document.getElementById('lg-password').value;
+            if (!code) return showError('Enter your institute code');
+            if (password.length < 4) return showError('Enter your password');
+
+            let inst = null;
+            try { inst = await window.InstitutionalAPI.getInstituteByCode(code); } catch { }
+            if (!inst) { try { inst = await window.InstitutionalAPI.getInstituteByAishe(code); } catch { } }
+            if (!inst) return showError('No institute found with that code');
+
+            const hash = await sha256(password);
+            if (!inst.password_hash || inst.password_hash !== hash) return showError('Incorrect password');
+
+            await window.InstitutionalAPI.saveSession({ institute_id: inst.id, code: inst.code, name: inst.name });
+            window.location.href = 'hub.html';
+        }
+
+        async function submitSignup() {
+            const name = document.getElementById('su-name').value.trim();
+            const type = document.getElementById('su-type').value;
+            const year = parseInt(document.getElementById('su-year').value, 10) || null;
+            const aishe = document.getElementById('su-aishe').value.trim().toUpperCase();
+            const city = document.getElementById('su-city').value.trim();
+            const state = document.getElementById('su-state').value.trim();
+            const pin = document.getElementById('su-pin').value.trim();
+            const count = parseInt(document.getElementById('su-count').value, 10) || 0;
+            const mess = document.getElementById('su-mess').value.trim();
+            const desig = document.getElementById('su-desig').value;
+            const admin = document.getElementById('su-admin').value.trim();
+            const email = document.getElementById('su-email').value.trim();
+            const password = document.getElementById('su-password').value;
+            const password2 = document.getElementById('su-password2').value;
+
+            if (name.length < 5) return showError('Enter the full official institute name');
+            if (!year || year < 1800 || year > 2030) return showError('Enter a valid established year');
+            if (city.length < 2) return showError('Enter your city');
+            if (pin.length !== 6) return showError('Enter a valid 6-digit PIN code');
+            if (count < 50) return showError('Enter total students (min 50)');
+            if (mess.length < 3) return showError('Enter your mess or canteen name');
+            if (admin.length < 3) return showError('Enter the admin full name');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Enter a valid official email');
+            if (password.length < 8) return showError('Password must be at least 8 characters');
+            if (password !== password2) return showError('Passwords do not match');
+
+            const code = await window.InstitutionalAPI._generateCode(name, city);
+            const password_hash = await sha256(password);
+            const loc = await getLocation();
+
+            try {
+                const inst = await window.InstitutionalAPI.registerInstitute({
+                    name, type, established_year: year,
+                    aishe_code: aishe || null, recognition: 'multiple',
+                    city, state, pin_code: pin, student_count: count,
+                    mess_name: mess, admin_designation: desig,
+                    admin_name: admin, admin_email: email, password_hash, code,
+                    location: loc || undefined, verified: true,
+                });
+                await window.InstitutionalAPI.saveSession({ institute_id: inst.id, code: inst.code, name: inst.name });
+                closeLogin();
+                window.location.href = 'hub.html';
+            } catch (e) {
+                console.error(e);
+                showError('Could not register — try again');
+            }
+        }
+
+        async function tryRestoreSession() {
+            try {
+                const session = await window.InstitutionalAPI.getCurrentSession();
+                if (!session || !session.institute_id) return;
+                const inst = await window.InstitutionalAPI.getInstitute(session.institute_id);
+                if (!inst) return;
+                window.location.href = 'hub.html';
+            } catch { }
+        }
+
+        window.addEventListener('keydown', async (e) => {
+            if (e.shiftKey && (e.key === 'D' || e.key === 'd')) { e.preventDefault(); await devQuickLogin(); }
+            if (e.key === 'Escape') closeLogin();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => { tryRestoreSession(); });
+    </script>
+</body>
+
+</html>

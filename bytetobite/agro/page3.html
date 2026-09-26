@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LOGISTICS CONSOLE — ByteToBite Circular Agritech</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        barlow: ['"Barlow Condensed"', 'sans-serif'],
+                        sans: ['"Plus Jakarta Sans"', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: { yellow: '#ffda00', yellowHover: '#ffe84d', dark: '#002a35', night: '#0a1f2b', muted: '#b0b8bc', subtle: '#6b7a80' },
+                    },
+                }
+            },
+        };
+    </script>
+    <style>
+        body {
+            background-color: #111111;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(10, 31, 43, 0.45);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .glass-card-dark {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.2;
+            }
+
+            100% {
+                transform: scale(0.9);
+                opacity: 0.9;
+            }
+        }
+
+        .animate-pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+        }
+
+        .ease-expo {
+            transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .leaflet-container {
+            background: #090e11 !important;
+            font-family: inherit;
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-in {
+            animation: modal-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link:hover::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -4px;
+            height: 2px;
+            background: #ffda00;
+            border-radius: 2px;
+        }
+
+        .truck-marker {
+            font-size: 34px;
+            line-height: 34px;
+            width: 34px;
+            height: 34px;
+            text-align: center;
+            user-select: none;
+        }
+    </style>
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+    <script src="db.js"></script>
+</head>
+
+<body class="bg-[#111111] text-white selection:bg-[#ffda00] selection:text-[#002a35]">
+
+    <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <video id="bg-video" autoplay loop muted playsinline preload="auto" webkit-playsinline="true"
+            x5-playsinline="true" class="absolute inset-0 w-full h-full object-cover brightness-[0.55] contrast-[1.05]">
+            <source
+                src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260620_185230_f7f71ef4-6655-469f-b9c6-efbdc1f7684a.mp4"
+                type="video/mp4" />
+        </video>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#111111]"></div>
+    </div>
+
+    <div id="root"></div>
+
+    <div id="driver-gateway"
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-10 overflow-y-auto">
+        <div class="relative z-10 w-full max-w-5xl my-auto py-6">
+            <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-4 py-2 rounded-full border border-white/20 backdrop-blur transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to Main Hub</span>
+                </a>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="quickDemoDriverLogin('driver')" class="inline-flex items-center gap-1.5 bg-[#ffda00] hover:bg-[#ffe84d] text-[#002a35] text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Driver
+                    </button>
+                    <button onclick="quickDemoDriverLogin('company')" class="inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Fleet
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mb-8 sm:mb-10">
+                <div
+                    class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-[13px] font-medium text-white mb-4 sm:mb-5 backdrop-blur">
+                    <span class="w-2 h-2 rounded-full bg-[#ffda00] animate-pulse"></span>
+                    <span>ByteToBite Logistics · Choose Your Gateway</span>
+                </div>
+                <h1 class="font-barlow uppercase font-black tracking-tight text-white"
+                    style="font-size: clamp(34px, 7vw, 72px); line-height: 0.95;">
+                    MOVE <span class="text-[#ffda00]">THE GRID</span>
+                </h1>
+                <p class="mt-3 text-white/70 max-w-lg mx-auto text-sm sm:text-base">Skilled drivers and truck companies
+                    connect to farm-gate pickups and factory deliveries in real time.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="group text-left bg-white/[0.06] border border-white/15 rounded-3xl p-6 sm:p-7 hover:bg-white/[0.12] transition-all duration-300 flex flex-col h-full backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-[#ffda00]/15 flex items-center justify-center group-hover:bg-[#ffda00] transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-[#ffda00] group-hover:text-[#002a35] transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="7" r="4" />
+                                <path d="M5.3 21a6.5 6.5 0 0 1 13.4 0" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoDriverLogin('driver')" class="text-[11px] font-bold text-[#ffda00] bg-white/10 hover:bg-[#ffda00] hover:text-[#002a35] px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Skilled Driver</h3>
+                    <p class="text-sm text-white/60 leading-relaxed mb-5 flex-grow">Licensed driver with your own
+                        vehicle. Accept trips, earn per delivery, build your rating on the grid.</p>
+                    <button onclick="openDriverModal('driver')" class="w-full flex items-center justify-center gap-2 bg-[#ffda00] text-[#002a35] py-2.5 rounded-xl font-bold text-sm hover:bg-[#ffe84d] transition-colors">
+                        <span>Enter as Driver</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="group text-left bg-white/[0.06] border border-white/15 rounded-3xl p-6 sm:p-7 hover:bg-white/[0.12] transition-all duration-300 flex flex-col h-full backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-emerald-400 group-hover:text-white transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="1" y="3" width="15" height="13" rx="2" />
+                                <path d="M16 8h4l3 3v5h-7z" />
+                                <circle cx="5.5" cy="18.5" r="2.5" />
+                                <circle cx="18.5" cy="18.5" r="2.5" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoDriverLogin('company')" class="text-[11px] font-bold text-emerald-300 bg-white/10 hover:bg-emerald-500 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Truck Company</h3>
+                    <p class="text-sm text-white/60 leading-relaxed mb-5 flex-grow">Fleet operator with multiple
+                        vehicles. Register your business, dispatch your drivers to grid pickups.</p>
+                    <button onclick="openDriverModal('company')" class="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">
+                        <span>Register Fleet</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <button onclick="openTrackOverlay()"
+                    class="group text-left bg-white/[0.06] border border-white/15 rounded-3xl p-7 hover:bg-white/[0.12] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full backdrop-blur-md">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-indigo-500/15 flex items-center justify-center mb-5 group-hover:bg-indigo-500 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-7 h-7 text-indigo-400 group-hover:text-white transition-colors" fill="none"
+                            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Track Your Order</h3>
+                    <p class="text-sm text-white/60 leading-relaxed mb-5 flex-grow">Buyer, farmer, or NGO? Enter your
+                        Lot ID to see the live truck position and escrow status. No login needed.</p>
+                    <div class="flex items-center gap-2 text-indigo-400 font-medium text-sm">
+                        <span>Track a Lot</span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="driver-modal" class="fixed inset-0 z-[110] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDriverModal()"></div>
+        <div class="relative modal-in w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-auto">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+                <h3 id="driver-modal-title" class="font-semibold text-neutral-900 text-base">Login</h3>
+                <button onclick="closeDriverModal()"
+                    class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors">✕</button>
+            </div>
+            <div id="driver-modal-body" class="p-6 max-h-[75vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="track-overlay" class="fixed inset-0 z-[120] hidden bg-black/95 backdrop-blur-xl overflow-y-auto">
+        <div class="min-h-screen w-full flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <button onclick="closeTrackOverlay()"
+                        class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m7 7-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div>
+                        <div class="font-barlow uppercase text-white text-xl font-black tracking-tight">Track Your Order
+                        </div>
+                        <div class="text-[11px] text-white/50">No login required · Enter your Lot ID below</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-grow max-w-4xl w-full mx-auto px-6 py-10">
+                <div class="flex gap-3 flex-wrap mb-8">
+                    <input id="public-track-input" type="text" placeholder="e.g. LOT-8291"
+                        class="flex-grow min-w-[240px] px-6 py-4 rounded-full bg-white/[0.06] text-white placeholder-white/40 text-base outline-none border border-transparent focus:border-[#ffda00]/50 focus:bg-white/[0.12] transition-all"
+                        onkeydown="if(event.key==='Enter') runPublicTrack();" />
+                    <button onclick="runPublicTrack()"
+                        class="px-8 py-4 rounded-full bg-[#ffda00] text-[#002a35] font-bold tracking-wide hover:bg-[#ffe84d] active:scale-95 transition-all uppercase">Track</button>
+                </div>
+                <div id="public-track-result"></div>
+            </div>
+        </div>
+    </div>
+    <!-- CONSOLE -->
+    <div id="console-wrapper"
+        class="relative min-h-screen w-full overflow-x-hidden font-sans antialiased hidden bg-transparent">
+
+        <!-- Telemetry Bar -->
+        <div
+            class="w-full bg-[#002a35]/95 backdrop-blur border-b border-[#ffda00]/20 px-3 sm:px-6 py-2 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-2 text-[#b0b8bc] z-40 relative">
+            <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-1 bg-[#ffda00] text-[#002a35] hover:bg-[#ffe84d] font-bold text-[11px] px-2.5 py-1 rounded-full uppercase tracking-wider transition-colors shrink-0">
+                    ← Main
+                </a>
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span class="text-white font-semibold">Operator: <span id="t-operator"
+                        class="text-[#ffda00]">—</span></span>
+                <span class="hidden sm:inline text-white/30">•</span>
+                <span class="hidden sm:inline text-white/90" id="t-vehicle">—</span>
+                <span class="hidden md:inline text-white/30">•</span>
+                <span class="hidden md:inline">Cap: <span id="t-capacity">—</span> kg</span>
+                <span class="text-[#ffda00] font-semibold">Active: <span id="t-activeloads">0</span></span>
+            </div>
+            <div class="flex items-center space-x-3 sm:space-x-4 mt-1 sm:mt-0">
+                <span class="text-white/80">GPS: <span class="text-emerald-400 font-medium" id="t-gps">—</span></span>
+                <button onclick="logoutDriver()"
+                    class="text-[11px] font-bold uppercase tracking-wider bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full transition-colors">Logout</button>
+            </div>
+        </div>
+
+        <!-- HERO (transparent so video plays through) -->
+        <section
+            class="relative w-full h-screen min-h-[640px] flex flex-col justify-between overflow-hidden bg-transparent">
+            <div
+                class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent z-[1] pointer-events-none">
+            </div>
+
+            <header
+                class="relative z-30 flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 md:px-12 pt-5 md:pt-10 w-full max-w-7xl mx-auto">
+                <div class="flex items-center gap-3">
+                    <a href="hero.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold backdrop-blur transition-all shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        <span>Back to Main</span>
+                    </a>
+                    <a href="hero.html" class="flex items-center space-x-2">
+                        <div class="font-barlow uppercase text-[clamp(20px,4vw,36px)] tracking-tight font-extrabold">
+                            <span class="text-white">BYTETOBITE </span><span class="text-[#ffda00]">LOGISTICS</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="hidden lg:flex items-center space-x-7 text-sm font-medium text-white/80">
+                    <a href="#jobs-board" class="nav-link hover:text-[#ffda00] transition-colors">Jobs Board</a>
+                    <a href="#live-routes" class="nav-link hover:text-[#ffda00] transition-colors">Live Routes</a>
+                    <a href="#earnings" class="nav-link hover:text-[#ffda00] transition-colors">Earnings</a>
+                    <button onclick="openSupportDrawer()"
+                        class="nav-link hover:text-[#ffda00] transition-colors">Support</button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div
+                        class="hidden sm:flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 backdrop-blur">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span class="text-[12px] text-white/80 font-medium" id="operator-pill-text">—</span>
+                    </div>
+                    <button onclick="openCancelDrawer()" id="cancel-trip-btn"
+                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/40 text-rose-200 text-[12px] font-bold uppercase tracking-wide transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M15 9l-6 6M9 9l6 6" />
+                        </svg>
+                        Cancel
+                    </button>
+                </div>
+            </header>
+
+            <div class="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pb-14 md:pb-20 flex flex-col justify-end">
+                <div class="flex flex-col items-start text-left max-w-5xl">
+                    <h1
+                        class="font-barlow uppercase font-black tracking-tight leading-[0.85] text-[clamp(44px,9.5vw,96px)] flex flex-col items-start w-full">
+                        <span class="text-white block">DISPATCH</span>
+                        <span class="text-[#ffda00] block mt-1">INTELLIGENCE</span>
+                        <span class="text-white block mt-1">&amp; LIVE TELEMETRY</span>
+                    </h1>
+                </div>
+
+                <div class="mt-8 md:mt-10 flex flex-wrap items-center gap-4">
+                    <a href="#jobs-board"
+                        class="inline-flex items-center group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105">
+                        <div
+                            class="relative flex items-center bg-[#ffda00] text-[#002a35] rounded-full pl-7 pr-3 py-3 shadow-2xl hover:bg-[#ffe84d] transition-all">
+                            <span class="font-bold text-[17px] md:text-[19px] mr-4">Browse Open Jobs</span>
+                            <div class="w-10 h-10 rounded-full bg-[#002a35] flex items-center justify-center">
+                                <svg class="w-5 h-5 text-[#ffda00]" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="#live-routes"
+                        class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-black/40 backdrop-blur-xl border border-white/15 text-sm font-medium text-white hover:bg-black/60 transition-all">
+                        <svg class="w-4 h-4 text-[#ffda00]" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path d="M12 2v4M12 22v-4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M22 12h-4" />
+                        </svg>
+                        <span>My Active Trip</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- JOBS BOARD (solid bg for readability) -->
+        <section id="jobs-board" class="relative w-full py-[clamp(60px,10vh,120px)] px-6 md:px-12 overflow-hidden"
+            style="background: linear-gradient(180deg, #0a1f2b 0%, #002a35 50%, #0a1f2b 100%);">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex flex-wrap items-end justify-between gap-6 mb-10">
+                    <div>
+                        <h2
+                            class="font-barlow uppercase text-white text-[clamp(44px,9vw,80px)] leading-[0.88] font-black tracking-tight">
+                            JOBS BOARD</h2>
+                        <p class="text-[clamp(15px,3.5vw,20px)] text-[#b0b8bc] mt-2 font-medium">Open dispatches from
+                            the grid. Accept, and it's yours.</p>
+                    </div>
+                    <div class="glass-card px-5 py-3 rounded-2xl text-xs">
+                        <div class="text-[#b0b8bc] uppercase tracking-wider font-semibold">Available Now</div>
+                        <div class="font-barlow text-3xl text-[#ffda00] font-black mt-1" id="jobs-count">0</div>
+                    </div>
+                </div>
+                <div id="jobs-list" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+            </div>
+        </section>
+
+        <!-- LIVE ROUTES + MAP -->
+        <section id="live-routes"
+            class="relative w-full py-[clamp(60px,10vh,120px)] px-6 md:px-12 text-[#1a1a1a] overflow-hidden"
+            style="background: linear-gradient(180deg, #C8C7B3 0%, #F0B172 50%, #EA7C58 100%);">
+            <div class="max-w-6xl mx-auto flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-6">
+                    <div>
+                        <h2
+                            class="font-barlow uppercase text-white text-[clamp(44px,9vw,80px)] leading-[0.88] font-black tracking-tight">
+                            LIVE ROUTES</h2>
+                        <p class="text-[clamp(16px,3.5vw,24px)] text-[#1a1a1a] mt-2 font-medium tracking-tight">dual-OTP
+                            custody <br />escrow-tied milestones</p>
+                    </div>
+                    <div
+                        class="glass-card p-6 rounded-3xl text-white min-w-[300px] sm:min-w-[340px] shadow-2xl relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 w-28 h-28 bg-[#ffda00]/10 rounded-full blur-2xl pointer-events-none">
+                        </div>
+                        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                            <span class="text-[11px] font-semibold text-[#ffda00] tracking-wider uppercase">Active
+                                Trip</span>
+                            <span id="active-trip-status" class="status-pill bg-white/10 text-white/60">NO TRIP</span>
+                        </div>
+                        <div class="mt-3">
+                            <div class="font-barlow text-2xl font-black text-white tracking-wide" id="active-trip-id">—
+                            </div>
+                            <div class="mt-3 space-y-2 text-xs">
+                                <div class="flex items-start justify-between"><span
+                                        class="text-[#b0b8bc]">Pickup:</span><span
+                                        class="text-white font-medium text-right ml-2" id="active-trip-pickup">—</span>
+                                </div>
+                                <div class="flex items-start justify-between"><span
+                                        class="text-[#b0b8bc]">Dropoff:</span><span
+                                        class="text-white font-medium text-right ml-2" id="active-trip-drop">—</span>
+                                </div>
+                                <div class="flex items-start justify-between pt-1 border-t border-white/5"><span
+                                        class="text-[#b0b8bc]">Payout:</span><span
+                                        class="text-emerald-400 font-semibold" id="active-trip-payout">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="relative w-full mt-10 mb-8 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#090e11]">
+                    <div
+                        class="bg-[#0a1f2b]/90 backdrop-blur p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button id="btn-accept" onclick="acceptActiveTrip()" disabled
+                                class="px-4 py-2.5 rounded-full text-xs font-bold tracking-wide uppercase bg-white/10 text-white/40 cursor-not-allowed transition-all">Accept
+                                Route</button>
+                            <button id="btn-pickup" onclick="openOtpDrawer('PICKUP')" disabled
+                                class="px-4 py-2.5 rounded-full text-xs font-bold tracking-wide uppercase bg-white/10 text-white/40 cursor-not-allowed transition-all">Verify
+                                Pickup OTP</button>
+                            <button id="btn-drop" onclick="openOtpDrawer('DROP')" disabled
+                                class="px-4 py-2.5 rounded-full text-xs font-bold tracking-wide uppercase bg-white/10 text-white/40 cursor-not-allowed transition-all">Verify
+                                Delivery OTP</button>
+                        </div>
+                        <button onclick="recalculateRoute()"
+                            class="px-4 py-2.5 rounded-full text-xs font-bold tracking-wide uppercase bg-[#ea7c58] text-white hover:bg-[#ff6f43] hover:scale-105 active:scale-95 shadow-md transition-all flex items-center space-x-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Recalculate</span>
+                        </button>
+                    </div>
+
+                    <div class="relative w-full h-[480px] md:h-[560px]">
+                        <div id="leaflet-map" class="w-full h-full"></div>
+
+                        <div class="absolute top-4 left-4 z-[400] glass-card p-4 rounded-2xl text-white max-w-xs">
+                            <div
+                                class="flex items-center justify-between text-xs text-[#ffda00] font-bold uppercase tracking-wider">
+                                <span>Telemetry</span>
+                                <span class="text-emerald-400">● LIVE</span>
+                            </div>
+                            <div class="text-xs text-white/80 mt-2 space-y-1">
+                                <div class="flex justify-between"><span class="text-[#b0b8bc]">ETA:</span><span
+                                        class="font-medium text-white" id="t-eta">—</span></div>
+                                <div class="flex justify-between"><span class="text-[#b0b8bc]">Distance
+                                        left:</span><span class="font-medium text-white" id="t-distance">—</span></div>
+                                <div class="flex justify-between"><span class="text-[#b0b8bc]">Hazard:</span><span
+                                        id="t-hazard" class="text-emerald-400 font-medium">Nominal</span></div>
+                            </div>
+                        </div>
+
+                        <div class="absolute top-4 right-4 z-[400] glass-card px-4 py-3 rounded-2xl text-white w-64">
+                            <div class="text-[11px] uppercase text-[#ffda00] font-bold tracking-wider mb-2">Trip
+                                Progress</div>
+                            <div class="h-2 rounded-full bg-white/10 overflow-hidden">
+                                <div id="progress-fill" class="h-full bg-[#ffda00] transition-all duration-1000"
+                                    style="width:0%"></div>
+                            </div>
+                            <div class="text-[11px] text-white/70 mt-2" id="progress-text">Awaiting pickup</div>
+                        </div>
+                    </div>
+
+                    <div id="otp-drawer"
+                        class="absolute bottom-0 inset-x-0 z-[500] glass-card-dark border-t border-[#ffda00]/40 p-6 text-white transition-transform duration-500 ease-expo translate-y-full">
+                        <div class="max-w-md mx-auto">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <div class="text-[11px] uppercase text-[#ffda00] font-bold tracking-wider">Secure
+                                        Verification</div>
+                                    <h4 id="otp-drawer-title"
+                                        class="text-xl font-barlow uppercase font-bold tracking-wide text-white">Enter
+                                        OTP</h4>
+                                </div>
+                                <button onclick="closeOtpDrawer()"
+                                    class="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors">✕</button>
+                            </div>
+                            <div id="otp-feedback" class="hidden p-3 mb-4 rounded-xl text-xs font-medium"></div>
+                            <div class="flex justify-center space-x-3.5 mb-5" id="otp-slots">
+                                <div
+                                    class="otp-slot w-12 h-14 rounded-2xl bg-white/[0.07] border border-white/20 flex items-center justify-center text-2xl font-bold text-[#ffda00] shadow-inner">
+                                    —</div>
+                                <div
+                                    class="otp-slot w-12 h-14 rounded-2xl bg-white/[0.07] border border-white/20 flex items-center justify-center text-2xl font-bold text-[#ffda00] shadow-inner">
+                                    —</div>
+                                <div
+                                    class="otp-slot w-12 h-14 rounded-2xl bg-white/[0.07] border border-white/20 flex items-center justify-center text-2xl font-bold text-[#ffda00] shadow-inner">
+                                    —</div>
+                                <div
+                                    class="otp-slot w-12 h-14 rounded-2xl bg-white/[0.07] border border-white/20 flex items-center justify-center text-2xl font-bold text-[#ffda00] shadow-inner">
+                                    —</div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="keypadPress('1')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">1</button>
+                                <button onclick="keypadPress('2')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">2</button>
+                                <button onclick="keypadPress('3')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">3</button>
+                                <button onclick="keypadPress('4')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">4</button>
+                                <button onclick="keypadPress('5')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">5</button>
+                                <button onclick="keypadPress('6')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">6</button>
+                                <button onclick="keypadPress('7')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">7</button>
+                                <button onclick="keypadPress('8')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">8</button>
+                                <button onclick="keypadPress('9')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">9</button>
+                                <button onclick="keypadBackspace()"
+                                    class="py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] active:scale-95 text-xs font-bold text-[#b0b8bc] tracking-wider">DEL</button>
+                                <button onclick="keypadPress('0')"
+                                    class="py-3 rounded-xl bg-white/[0.08] hover:bg-white/[0.16] active:scale-95 text-lg font-bold text-white">0</button>
+                                <button onclick="submitOtp()"
+                                    class="py-3 rounded-xl bg-[#ffda00] text-[#002a35] hover:bg-[#ffe84d] active:scale-95 font-bold text-xs tracking-wider uppercase shadow-lg">SUBMIT</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EARNINGS + AUDIT -->
+        <section id="earnings" class="relative w-full bg-[#0a1f2b] py-[clamp(56px,10vh,110px)] px-6 md:px-12">
+            <div class="max-w-4xl mx-auto flex flex-col">
+                <h2 class="font-barlow uppercase text-[clamp(44px,11vw,72px)] font-black tracking-tight leading-none">
+                    <span class="text-white">EARNINGS &amp; </span><span class="text-[#ffda00]">PERFORMANCE</span>
+                </h2>
+                <p class="mt-3 text-[#b0b8bc] text-[clamp(15px,3.8vw,18px)]">Your trips completed, total payouts, and
+                    rating on the circular grid.</p>
+
+                <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="glass-card-dark p-6 rounded-3xl border border-white/10 text-center">
+                        <div class="font-barlow text-5xl text-white font-black" id="perf-trips">0</div>
+                        <div class="text-[11px] text-[#b0b8bc] uppercase tracking-wider mt-2">Trips Completed</div>
+                    </div>
+                    <div class="glass-card-dark p-6 rounded-3xl border border-white/10 text-center">
+                        <div class="font-barlow text-5xl text-[#ffda00] font-black" id="perf-earnings">₹0</div>
+                        <div class="text-[11px] text-[#b0b8bc] uppercase tracking-wider mt-2">Net Earnings</div>
+                    </div>
+                    <div class="glass-card-dark p-6 rounded-3xl border border-white/10 text-center">
+                        <div class="font-barlow text-5xl text-emerald-400 font-black" id="perf-rating">5.0★</div>
+                        <div class="text-[11px] text-[#b0b8bc] uppercase tracking-wider mt-2">Rating</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 glass-card-dark p-5 rounded-3xl border border-white/10 text-white">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+                        <span class="font-semibold uppercase tracking-wider text-xs text-[#ffda00]">Adjustments</span>
+                        <span class="text-[11px] text-[#b0b8bc]" id="adjust-count">0 entries</span>
+                    </div>
+                    <div id="adjust-list" class="text-xs space-y-2 text-[#b0b8bc]">
+                        <div class="text-white/40">No penalties or adjustments. Keep it clean.</div>
+                    </div>
+                </div>
+
+                <div class="mt-8 glass-card-dark p-6 rounded-3xl border border-white/10 text-white shadow-2xl">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <span class="font-semibold uppercase tracking-wider text-xs text-[#ffda00]">Active Trip
+                            Record</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    </div>
+                    <div class="mt-4 space-y-2.5 text-xs text-[#b0b8bc]">
+                        <div class="flex flex-wrap justify-between gap-1"><span class="text-white/70">Trip
+                                ID:</span><span class="text-white font-medium break-all" id="rec-trip">—</span></div>
+                        <div class="flex flex-wrap justify-between gap-1"><span class="text-white/70">Contract
+                                Ref:</span><span class="text-white font-medium" id="rec-contract">—</span></div>
+                        <div class="flex flex-wrap justify-between gap-1 pt-2 border-t border-white/10"><span
+                                class="text-white/70">Escrow:</span><span class="text-emerald-400 font-bold"
+                                id="rec-escrow">—</span></div>
+                    </div>
+                </div>
+
+                <form onsubmit="event.preventDefault(); alert('Telemetry synced. Weighbridge slip recorded.');"
+                    class="mt-10 flex flex-col space-y-5 max-w-xl">
+                    <input type="text" required placeholder="Driver Notes / Weighbridge Slip ID"
+                        class="w-full px-6 py-4 rounded-full bg-white/[0.06] text-white placeholder-white/40 outline-none border border-transparent focus:border-[#ffda00]/50 focus:bg-white/[0.12] transition-all" />
+                    <input type="text" required placeholder="Vehicle Scale Tare Weight (kg)"
+                        class="w-full px-6 py-4 rounded-full bg-white/[0.06] text-white placeholder-white/40 outline-none border border-transparent focus:border-[#ffda00]/50 focus:bg-white/[0.12] transition-all" />
+                    <input type="text" required placeholder="Transporter Digital Signature"
+                        class="w-full px-6 py-4 rounded-full bg-white/[0.06] text-white placeholder-white/40 outline-none border border-transparent focus:border-[#ffda00]/50 focus:bg-white/[0.12] transition-all" />
+                    <button type="submit"
+                        class="w-full md:w-auto px-10 py-4 rounded-full bg-[#ffda00] text-[#0a1f2b] font-bold tracking-wide hover:bg-[#ffe84d] hover:-translate-y-0.5 active:scale-95 transition-all shadow-lg uppercase">Sync
+                        Telemetry to Escrow</button>
+                </form>
+
+                <div
+                    class="mt-16 pt-10 border-t border-white/10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div class="flex flex-col space-y-2">
+                        <a href="mailto:support@bytetobite.org"
+                            class="text-[#b0b8bc] hover:text-white text-sm font-medium">support@bytetobite.org</a>
+                        <a href="tel:+911612401960" class="text-[#b0b8bc] hover:text-white text-sm font-medium">+91 161
+                            240-1960 (Agritech Control Hub)</a>
+                    </div>
+                    <button onclick="window.scrollTo({top:0,behavior:'smooth'})"
+                        class="w-11 h-11 rounded-full bg-white flex items-center justify-center hover:scale-110 hover:-translate-y-1 transition-all">
+                        <svg class="w-5 h-5 stroke-[#0a1f2b] fill-none" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mt-8 text-[#6b7a80] text-sm font-medium">© 2026 ByteToBite Circular Agritech. All rights
+                    reserved.</div>
+            </div>
+        </section>
+    </div>
+
+    <div id="cancel-drawer" class="fixed inset-0 z-[115] hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeCancelDrawer()"></div>
+        <div
+            class="absolute top-0 right-0 h-full w-full sm:w-[460px] bg-[#0a1f2b] border-l border-white/10 shadow-2xl overflow-y-auto">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-white/10">
+                <div>
+                    <div class="text-[11px] uppercase text-rose-400 font-bold tracking-wider">Cancel Trip</div>
+                    <h3 class="text-xl font-barlow uppercase font-black text-white">Cancel This Pickup</h3>
+                </div>
+                <button onclick="closeCancelDrawer()"
+                    class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white">✕</button>
+            </div>
+            <div class="p-6 space-y-5" id="cancel-drawer-body"></div>
+        </div>
+    </div>
+
+    <div id="support-drawer" class="fixed inset-0 z-[115] hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeSupportDrawer()"></div>
+        <div
+            class="absolute top-0 right-0 h-full w-full sm:w-[440px] bg-[#0a1f2b] border-l border-white/10 shadow-2xl overflow-y-auto">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-white/10">
+                <div>
+                    <div class="text-[11px] uppercase text-[#ffda00] font-bold tracking-wider">Support</div>
+                    <h3 class="text-xl font-barlow uppercase font-black text-white">24×7 Driver Helpline</h3>
+                </div>
+                <button onclick="closeSupportDrawer()"
+                    class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white">✕</button>
+            </div>
+            <div class="p-6 space-y-4 text-white">
+                <a href="tel:+911612401960"
+                    class="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors">
+                    <div class="w-11 h-11 rounded-full bg-[#ffda00]/15 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-[#ffda00]" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-sm">Call Control Hub</div>
+                        <div class="text-xs text-[#b0b8bc]">+91 161 240-1960</div>
+                    </div>
+                </a>
+                <button onclick="alert('Accident / Breakdown reported. Nearest rescue unit dispatched. ETA 18 min.')"
+                    class="w-full text-left flex items-center gap-4 p-4 rounded-2xl bg-rose-600/20 hover:bg-rose-600/40 border border-rose-500/40 transition-colors">
+                    <div class="w-11 h-11 rounded-full bg-rose-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-rose-200" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-sm text-rose-200">Report Accident / Breakdown</div>
+                        <div class="text-xs text-rose-300/70">Priority SOS · Nearest rescue unit</div>
+                    </div>
+                </button>
+                <button onclick="alert('Route assistance requested. A grid operator will call you in 2 min.')"
+                    class="w-full text-left flex items-center gap-4 p-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors">
+                    <div class="w-11 h-11 rounded-full bg-[#ffda00]/15 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-[#ffda00]" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13 6-3m-6 3V7m6 10 4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-sm">Route Assistance</div>
+                        <div class="text-xs text-[#b0b8bc]">Ask a grid operator to help</div>
+                    </div>
+                </button>
+                <button onclick="alert('Weighbridge dispute noted. A supervisor will contact you within 5 min.')"
+                    class="w-full text-left flex items-center gap-4 p-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-colors">
+                    <div class="w-11 h-11 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 6v6l4 2" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-sm">Weighbridge Dispute</div>
+                        <div class="text-xs text-[#b0b8bc]">Weight mismatch at factory gate</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // STATE
+        // ==========================================
+        let currentOperator = null;
+        let jobs = [];
+        let myTrips = [];
+        let activeTripId = null;
+        let activeTrip = null;
+        let map = null;
+        let routeLine = null;
+        let progressLine = null;
+        let driverMarker = null;
+        let pickupMarker = null;
+        let dropMarker = null;
+        let routeCoords = [];
+        let rerouted = false;
+        let otpMode = null;
+        let otpDigits = '';
+        let unsubscribeDB = null;
+        let movementTimer = null;
+        let currentProgress = 0;
+        let routeDistanceKm = 0;
+        let adjustments = [];
+
+        const DEFAULT_FACILITY = { lat: 30.2110, lng: 74.9455 };
+        const FALLBACK_ROUTE = [[30.1453, 74.1994], [30.1650, 74.2400], [30.1780, 74.2810], [30.1920, 74.3200], [30.2110, 74.3655]];
+        const REROUTE_TEMPLATE = [[30.1453, 74.1994], [30.1580, 74.2300], [30.1890, 74.2690], [30.2050, 74.3120], [30.2110, 74.3655]];
+
+        const STATUS_COLORS = {
+            OPEN: { bg: 'bg-amber-500/20', text: 'text-amber-300', label: 'OPEN · Unassigned' },
+            SCHEDULED: { bg: 'bg-sky-500/20', text: 'text-sky-300', label: 'SCHEDULED' },
+            DISPATCHED: { bg: 'bg-indigo-500/20', text: 'text-indigo-300', label: 'DISPATCHED' },
+            IN_TRANSIT: { bg: 'bg-[#ffda00]/20', text: 'text-[#ffda00]', label: 'IN TRANSIT' },
+            DELIVERED: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', label: 'DELIVERED' }
+        };
+
+        const DEMO_OPERATORS = {
+            driver: {
+                role: 'driver', name: 'Harpal Singh', license: 'PB-2024-558340',
+                mobile: '9876543210', vehicle: 'Tata 407 (PB-03-AF-9120)', capacityKg: 3500,
+                lat: DEFAULT_FACILITY.lat, lng: DEFAULT_FACILITY.lng
+            },
+            company: {
+                role: 'company', name: 'Punjab Haulage Co.', gst: '03AAACP1234A1Z5',
+                fleetSize: 24, mobile: '9876543210',
+                lat: DEFAULT_FACILITY.lat, lng: DEFAULT_FACILITY.lng
+            }
+        };
+
+        const CANCEL_REASONS = [
+            { value: 'VEHICLE_BREAKDOWN', label: 'Vehicle breakdown / mechanical failure', penaltyPct: 0, desc: 'No penalty — genuine mechanical issue' },
+            { value: 'ROUTE_BLOCKED', label: 'Route blocked (flood / road closure)', penaltyPct: 0, desc: 'No penalty — force majeure' },
+            { value: 'FARMER_NO_SHOW', label: 'Farmer not present at pickup point', penaltyPct: 0, desc: 'No penalty — seller no-show' },
+            { value: 'OTHER_JOB_TAKEN', label: 'Accepted another job by mistake', penaltyPct: 15, desc: '15% of payout deducted — job returns to board' },
+            { value: 'PERSONAL_EMERGENCY', label: 'Personal emergency', penaltyPct: 5, desc: '5% of payout deducted — job returns to board' },
+            { value: 'OTHER', label: 'Other reason', penaltyPct: 10, desc: '10% of payout deducted — supervisor review' }
+        ];
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function money(n) { return '₹' + (n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function haversineKm(a, b) {
+            const R = 6371;
+            const dLat = (b.lat - a.lat) * Math.PI / 180;
+            const dLng = (b.lng - a.lng) * Math.PI / 180;
+            const lat1 = a.lat * Math.PI / 180, lat2 = b.lat * Math.PI / 180;
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(h));
+        }
+        function estimatePayout(kg, km) { return Math.round(40 + km * 2.2 + kg * 0.4); }
+        function showDriverError(msg) {
+            const el = document.getElementById('d-error');
+            if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+        }
+
+        // ==========================================
+        // GATEWAY MODAL
+        // ==========================================
+        window.quickDemoDriverLogin = function(mode) {
+            const target = DEMO_OPERATORS[mode] || DEMO_OPERATORS.driver;
+            completeDriverLogin({ ...target });
+        };
+
+        function openDriverModal(mode) {
+            const modal = document.getElementById('driver-modal');
+            const title = document.getElementById('driver-modal-title');
+            const body = document.getElementById('driver-modal-body');
+
+            const configs = {
+                driver: {
+                    title: 'Skilled Driver Login',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Full Name</label>
+                <input id="d-name" type="text" placeholder="Your name" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ffda00]"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Driving License Number</label>
+                <input id="d-license" type="text" placeholder="e.g. PB-2024-558340" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ffda00]"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Vehicle Type</label>
+                <select id="d-vehicle" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ffda00]">
+                  <option value="Tata Ace (750 kg)">Tata Ace · 750 kg</option>
+                  <option value="Tata 407 (3.5 T)" selected>Tata 407 · 3.5 T</option>
+                  <option value="Eicher 14ft (7 T)">Eicher 14ft · 7 T</option>
+                  <option value="Eicher 19ft (10 T)">Eicher 19ft · 10 T</option>
+                  <option value="Truck 22ft (16 T)">Truck 22ft · 16 T</option>
+                </select></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="d-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ffda00]"></div>
+              <p id="d-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitDriverLogin()" class="w-full py-3 bg-[#ffda00] hover:bg-[#ffe84d] text-[#002a35] rounded-xl text-sm font-bold uppercase tracking-wide">Send OTP & Verify</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-neutral-200"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">or demo</span>
+                <div class="flex-grow border-t border-neutral-200"></div>
+              </div>
+              <button type="button" onclick="quickDemoDriverLogin('driver')" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Instant Access)
+              </button>
+              <p class="text-[11px] text-neutral-500 text-center pt-1">Your current location will be captured for GPS tracking.</p>
+            </div>
+          `
+                },
+                company: {
+                    title: 'Truck Company Registration',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Company Name</label>
+                <input id="d-name" type="text" placeholder="e.g. Punjab Haulage Co." class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">GST Number (15 chars)</label>
+                <input id="d-gst" type="text" placeholder="22AAAAA0000A1Z5" maxlength="15" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm uppercase focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Fleet Size (vehicles)</label>
+                <input id="d-fleet" type="number" placeholder="e.g. 24" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-neutral-700 mb-1">Mobile (for OTP)</label>
+                <input id="d-mobile" type="tel" placeholder="10-digit mobile" maxlength="10" class="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <p id="d-error" class="text-xs text-red-500 hidden"></p>
+              <button onclick="submitCompanyLogin()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold uppercase tracking-wide">Register & Verify</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-neutral-200"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">or demo</span>
+                <div class="flex-grow border-t border-neutral-200"></div>
+              </div>
+              <button type="button" onclick="quickDemoDriverLogin('company')" class="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Fleet Operator)
+              </button>
+            </div>
+          `
+                }
+            };
+
+            title.textContent = configs[mode].title;
+            body.innerHTML = configs[mode].html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDriverModal() {
+            const m = document.getElementById('driver-modal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        // ==========================================
+        // LOGIN SUBMITS
+        // ==========================================
+        function submitDriverLogin() {
+            const name = document.getElementById('d-name').value.trim();
+            const license = document.getElementById('d-license').value.trim();
+            const vehicle = document.getElementById('d-vehicle').value;
+            const mobile = document.getElementById('d-mobile').value.trim();
+            if (name.length < 3) return showDriverError('Enter full name');
+            if (license.length < 6) return showDriverError('Enter valid driving license');
+            if (mobile.replace(/\D/g, '').length !== 10) return showDriverError('Enter 10-digit mobile');
+
+            const capacityMatch = vehicle.match(/([\d.]+)\s*(kg|T)/i);
+            const capacityKg = capacityMatch
+                ? (capacityMatch[2].toLowerCase() === 't' ? parseFloat(capacityMatch[1]) * 1000 : parseFloat(capacityMatch[1]))
+                : 3500;
+
+            runOtpFlow({ role: 'driver', name, license, mobile, vehicle: vehicle.split('·')[0].trim(), capacityKg });
+        }
+
+        function submitCompanyLogin() {
+            const name = document.getElementById('d-name').value.trim();
+            const gst = document.getElementById('d-gst').value.trim().toUpperCase();
+            const fleet = parseInt(document.getElementById('d-fleet').value) || 0;
+            const mobile = document.getElementById('d-mobile').value.trim();
+            if (name.length < 3) return showDriverError('Enter company name');
+            if (gst.length !== 15) return showDriverError('GST must be 15 characters');
+            if (fleet < 1) return showDriverError('Enter fleet size');
+            if (mobile.replace(/\D/g, '').length !== 10) return showDriverError('Enter 10-digit mobile');
+            runOtpFlow({ role: 'company', name, gst, fleetSize: fleet, mobile });
+        }
+
+        function runOtpFlow(operator) {
+            const body = document.getElementById('driver-modal-body');
+            body.innerHTML = `
+        <div class="space-y-4">
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <p class="text-sm text-neutral-700">We sent a 6-digit code to <strong>+91 ${operator.mobile}</strong></p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-neutral-700 mb-1">OTP</label>
+            <input id="d-otp" type="text" maxlength="6" placeholder="000000" class="w-full border border-neutral-200 rounded-xl px-3 py-3 text-center tracking-[0.5em] text-lg font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          </div>
+          <p id="d-error" class="text-xs text-red-500 hidden"></p>
+          <button onclick="verifyOperatorOtp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold uppercase tracking-wide">Verify & Enter Console</button>
+        </div>
+      `;
+            window._pendingOperator = operator;
+        }
+
+        async function verifyOperatorOtp() {
+            const otp = (document.getElementById('d-otp')?.value || '').trim();
+            if (otp.length !== 6) return showDriverError('Enter the 6-digit code');
+            const op = window._pendingOperator;
+            if (!op) return showDriverError('Session expired');
+
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) return reject(new Error('no gps'));
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000 });
+                });
+                op.lat = pos.coords.latitude;
+                op.lng = pos.coords.longitude;
+            } catch (e) {
+                op.lat = DEFAULT_FACILITY.lat;
+                op.lng = DEFAULT_FACILITY.lng;
+            }
+
+            try {
+                if (window.ByteToBiteAPI) await window.ByteToBiteAPI.saveProfile('driver-' + op.role, op);
+            } catch (e) { console.warn('Save failed:', e); }
+
+            completeDriverLogin(op);
+        }
+
+        // ==========================================
+        // COMPLETE LOGIN
+        // ==========================================
+        function completeDriverLogin(op) {
+            currentOperator = op;
+            closeDriverModal();
+            document.getElementById('driver-gateway').style.display = 'none';
+            document.getElementById('console-wrapper').classList.remove('hidden');
+
+            document.getElementById('t-operator').textContent = op.name;
+            document.getElementById('t-vehicle').textContent = op.role === 'driver'
+                ? op.vehicle : `${op.name} · Fleet of ${op.fleetSize}`;
+            document.getElementById('t-capacity').textContent = op.role === 'driver'
+                ? op.capacityKg.toLocaleString()
+                : (op.fleetSize * 3500).toLocaleString();
+            document.getElementById('t-gps').textContent = `${op.lat.toFixed(4)}°N, ${op.lng.toFixed(4)}°E`;
+            document.getElementById('operator-pill-text').textContent =
+                op.role === 'driver' ? `${op.name} · Driver` : `${op.name} · Fleet`;
+
+            requestAnimationFrame(() => {
+                initMap();
+                loadJobs();
+                loadMyTrips();
+                subscribeToDB();
+                renderPerf();
+                renderAdjustments();
+            });
+        }
+
+        async function logoutDriver() {
+            if (unsubscribeDB) { unsubscribeDB(); unsubscribeDB = null; }
+            if (movementTimer) { clearInterval(movementTimer); movementTimer = null; }
+            currentOperator = null;
+            jobs = []; myTrips = []; activeTrip = null; activeTripId = null;
+            if (map) { map.remove(); map = null; }
+            routeLine = null; progressLine = null; driverMarker = null; pickupMarker = null; dropMarker = null;
+            document.getElementById('console-wrapper').classList.add('hidden');
+            document.getElementById('driver-gateway').style.display = 'flex';
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                e.preventDefault();
+                const next = !currentOperator ? 'driver' : currentOperator.role === 'driver' ? 'company' : 'driver';
+                if (currentOperator) logoutDriver();
+                setTimeout(() => completeDriverLogin({ ...DEMO_OPERATORS[next] }), 50);
+            }
+        });
+
+        // ==========================================
+        // JOBS
+        // ==========================================
+        async function loadJobs() {
+            try {
+                if (!window.ByteToBiteAPI) return;
+                const lots = await window.ByteToBiteAPI.getLots();
+                const openLots = lots.filter(l => l.status === 'OPEN' || l.status === 'ESCROW LOCKED');
+                jobs = openLots.map(lot => {
+                    const distance = haversineKm({ lat: lot.lat, lng: lot.lng }, DEFAULT_FACILITY);
+                    return {
+                        id: lot.id, lotCode: lot.id, category: lot.category, massKg: lot.massKg,
+                        origin: lot.origin || 'Farm pickup', originLat: lot.lat, originLng: lot.lng,
+                        destination: lot.matchedBuyer || 'Buyer facility',
+                        destLat: DEFAULT_FACILITY.lat, destLng: DEFAULT_FACILITY.lng,
+                        rate: lot.rate, distance, payout: estimatePayout(lot.massKg, distance)
+                    };
+                });
+                document.getElementById('jobs-count').textContent = jobs.length;
+                renderJobsList();
+            } catch (e) { console.warn('Load jobs failed:', e); }
+        }
+
+        function renderJobsList() {
+            const container = document.getElementById('jobs-list');
+            if (!container) return;
+            if (jobs.length === 0) {
+                container.innerHTML = `
+          <div class="md:col-span-2 glass-card p-10 rounded-3xl text-center">
+            <div class="text-[#b0b8bc] text-sm">No open dispatches right now.</div>
+            <div class="text-white/40 text-xs mt-2">New jobs appear here the moment a buyer on the Buyer Hub confirms a match.</div>
+          </div>`;
+                return;
+            }
+            container.innerHTML = jobs.map(job => {
+                const canCarry = currentOperator?.role === 'company' ? true : (currentOperator?.capacityKg || 0) >= job.massKg;
+                const acceptBtn = canCarry
+                    ? `<button onclick="acceptJob('${job.id}')" class="w-full py-2.5 rounded-full bg-[#ffda00] text-[#002a35] font-bold text-xs uppercase tracking-wide hover:bg-[#ffe84d] active:scale-95 transition-all">Accept Job</button>`
+                    : `<button disabled class="w-full py-2.5 rounded-full bg-white/10 text-white/40 font-bold text-xs uppercase tracking-wide cursor-not-allowed">Weight exceeds capacity</button>`;
+                return `
+          <div class="glass-card p-6 rounded-3xl text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-[#ffda00]/5 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <div class="font-barlow text-2xl font-black tracking-wide text-white">${escapeHtml(job.lotCode)}</div>
+                <div class="text-[11px] text-[#b0b8bc] uppercase tracking-wider mt-0.5">${escapeHtml((job.category || '').replaceAll('_', ' '))}</div>
+              </div>
+              <span class="status-pill ${STATUS_COLORS.OPEN.bg} ${STATUS_COLORS.OPEN.text}">OPEN</span>
+            </div>
+            <div class="space-y-2 text-xs mb-5">
+              <div class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#ffda00] mt-1.5 shrink-0"></span>
+                <div><div class="text-[#b0b8bc]">Pickup</div><div class="text-white font-medium">${escapeHtml(job.origin)}</div></div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>
+                <div><div class="text-[#b0b8bc]">Dropoff</div><div class="text-white font-medium">${escapeHtml(job.destination)}</div></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 py-3 border-t border-white/10 text-center mb-4">
+              <div><div class="text-[10px] text-[#b0b8bc] uppercase tracking-wider">Mass</div><div class="text-white font-bold text-sm mt-0.5">${job.massKg.toLocaleString()} kg</div></div>
+              <div><div class="text-[10px] text-[#b0b8bc] uppercase tracking-wider">Distance</div><div class="text-white font-bold text-sm mt-0.5">${job.distance.toFixed(1)} km</div></div>
+              <div><div class="text-[10px] text-[#b0b8bc] uppercase tracking-wider">Payout</div><div class="text-emerald-400 font-bold text-sm mt-0.5">${money(job.payout)}</div></div>
+            </div>
+            ${acceptBtn}
+          </div>
+        `;
+            }).join('');
+        }
+
+        async function acceptJob(jobId) {
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+            try {
+                if (window.ByteToBiteAPI) {
+                    const lot = await window.ByteToBiteAPI.getLot(jobId);
+                    if (lot) await window.ByteToBiteAPI.publishLot({
+                        ...lot,
+                        transporter: `${currentOperator.name} · ${currentOperator.vehicle || 'Fleet'}`,
+                        acceptedAt: Date.now()
+                    });
+                }
+            } catch (e) { console.warn('Accept failed:', e); }
+            myTrips.push({ ...job, status: 'SCHEDULED', acceptedAt: Date.now() });
+            setActiveTrip(job.id, 'SCHEDULED');
+            jobs = jobs.filter(j => j.id !== jobId);
+            document.getElementById('jobs-count').textContent = jobs.length;
+            renderJobsList();
+            document.getElementById('live-routes').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // MY TRIPS
+        // ==========================================
+        async function loadMyTrips() {
+            try {
+                if (!window.ByteToBiteAPI) return;
+                const lots = await window.ByteToBiteAPI.getLots();
+                const mine = lots.filter(l => l.transporter && l.transporter.includes(currentOperator.name));
+                myTrips = mine.map(lot => ({
+                    id: lot.id, lotCode: lot.id, category: lot.category, massKg: lot.massKg,
+                    origin: lot.origin, originLat: lot.lat, originLng: lot.lng,
+                    destination: lot.matchedBuyer || 'Buyer facility',
+                    destLat: DEFAULT_FACILITY.lat, destLng: DEFAULT_FACILITY.lng,
+                    rate: lot.rate,
+                    payout: estimatePayout(lot.massKg, haversineKm({ lat: lot.lat, lng: lot.lng }, DEFAULT_FACILITY)),
+                    status: lot.tripStatus || (lot.status === 'ESCROW LOCKED' ? 'SCHEDULED' : lot.status)
+                }));
+                document.getElementById('t-activeloads').textContent = myTrips.filter(t => t.status !== 'DELIVERED').length;
+                if (myTrips.length > 0 && !activeTripId) setActiveTrip(myTrips[0].id, myTrips[0].status);
+            } catch (e) { console.warn('Load my trips failed:', e); }
+        }
+
+        function setActiveTrip(id, status) {
+            activeTripId = id;
+            activeTrip = myTrips.find(t => t.id === id) || jobs.find(j => j.id === id) || null;
+            if (!activeTrip) return;
+            activeTrip.status = status;
+
+            document.getElementById('active-trip-id').textContent = id;
+            document.getElementById('active-trip-pickup').textContent = activeTrip.origin || 'Farm';
+            document.getElementById('active-trip-drop').textContent = activeTrip.destination || 'Buyer';
+            document.getElementById('active-trip-payout').textContent = money(activeTrip.payout || 0);
+
+            const statusPill = document.getElementById('active-trip-status');
+            const sc = STATUS_COLORS[status] || STATUS_COLORS.SCHEDULED;
+            statusPill.className = `status-pill ${sc.bg} ${sc.text}`;
+            statusPill.textContent = sc.label;
+
+            const cancelBtn = document.getElementById('cancel-trip-btn');
+            if (cancelBtn) {
+                if (status === 'DELIVERED' || status === 'OPEN') cancelBtn.classList.add('hidden');
+                else cancelBtn.classList.remove('hidden');
+            }
+
+            updateActionButtons(status);
+            drawRoute();
+            updateAuditRecord(status);
+            updateProgress();
+
+            if (status === 'IN_TRANSIT' && !movementTimer) startSimulatedMovement();
+            if (status === 'DELIVERED' && movementTimer) { clearInterval(movementTimer); movementTimer = null; currentProgress = 1; updateProgress(); }
+        }
+
+        function updateActionButtons(status) {
+            const btnAccept = document.getElementById('btn-accept');
+            const btnPickup = document.getElementById('btn-pickup');
+            const btnDrop = document.getElementById('btn-drop');
+            const setBtn = (el, enabled, primary) => {
+                if (!el) return;
+                el.disabled = !enabled;
+                el.className = enabled
+                    ? `px-4 py-2.5 rounded-full text-xs font-bold tracking-wide uppercase transition-all cursor-pointer ${primary ? 'bg-[#ffda00] text-[#002a35] hover:bg-[#ffe84d] hover:scale-105 active:scale-95 shadow-md' : 'bg-white text-[#002a35] hover:bg-[#ffda00] hover:scale-105 active:scale-95 shadow-md'}`
+                    : 'px-4 py-2.5 rounded-full text-xs font-bold tracking-wide uppercase bg-white/10 text-white/40 cursor-not-allowed transition-all';
+            };
+            setBtn(btnAccept, status === 'SCHEDULED', true);
+            setBtn(btnPickup, status === 'DISPATCHED', false);
+            setBtn(btnDrop, status === 'IN_TRANSIT', true);
+        }
+
+        // ==========================================
+        // MAP
+        // ==========================================
+        function initMap() {
+            if (map) return;
+            map = L.map('leaflet-map', {
+                center: [DEFAULT_FACILITY.lat, DEFAULT_FACILITY.lng],
+                zoom: 11, zoomControl: false, attributionControl: false
+            });
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+        }
+
+        function drawRoute() {
+            if (!map || !activeTrip) return;
+            [routeLine, progressLine, pickupMarker, dropMarker, driverMarker].forEach(layer => {
+                if (layer && map.hasLayer(layer)) map.removeLayer(layer);
+            });
+
+            const origin = [activeTrip.originLat || 30.1453, activeTrip.originLng || 74.1994];
+            const dest = [activeTrip.destLat || 30.2110, activeTrip.destLng || 74.3655];
+            routeCoords = rerouted ? REROUTE_TEMPLATE : FALLBACK_ROUTE;
+            routeDistanceKm = haversineKm({ lat: origin[0], lng: origin[1] }, { lat: dest[0], lng: dest[1] });
+
+            pickupMarker = L.marker(origin, {
+                icon: L.divIcon({
+                    html: `<div style="background:#ffda00; color:#002a35; padding:4px 10px; font-weight:700; border-radius:6px; font-size:11px; white-space:nowrap; border:1px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">${escapeHtml(activeTrip.origin || 'Pickup')}</div>`,
+                    className: '', iconSize: [140, 24], iconAnchor: [70, 24]
+                })
+            }).addTo(map);
+
+            dropMarker = L.marker(dest, {
+                icon: L.divIcon({
+                    html: `<div style="background:#0a1f2b; color:#ffda00; padding:4px 10px; font-weight:700; border-radius:6px; font-size:11px; white-space:nowrap; border:1px solid #ffda00; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">${escapeHtml(activeTrip.destination || 'Dropoff')}</div>`,
+                    className: '', iconSize: [170, 24], iconAnchor: [85, 24]
+                })
+            }).addTo(map);
+
+            routeLine = L.polyline(routeCoords, { color: '#6b7a80', weight: 4, opacity: 0.55 }).addTo(map);
+
+            const startIdx = Math.max(0, Math.floor(currentProgress * (routeCoords.length - 1)));
+            const progressCoords = routeCoords.slice(0, startIdx + 1);
+            if (progressCoords.length > 1) {
+                progressLine = L.polyline(progressCoords, { color: rerouted ? '#ff4d4d' : '#ffda00', weight: 5, opacity: 0.95 }).addTo(map);
+            }
+
+            driverMarker = L.marker(routeCoords[startIdx] || origin, {
+                icon: L.divIcon({
+                    className: '',
+                    html: '<div class="truck-marker">🚚</div>',
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17]
+                }),
+                zIndexOffset: 1000
+            }).addTo(map);
+
+            map.fitBounds([origin, dest], { padding: [80, 80], maxZoom: 12 });
+        }
+
+        function recalculateRoute() {
+            if (!map || !routeLine) return;
+            rerouted = true;
+            routeCoords = REROUTE_TEMPLATE;
+            routeLine.setLatLngs(routeCoords);
+            routeLine.setStyle({ color: '#6b7a80' });
+            document.getElementById('t-hazard').textContent = 'Rerouted';
+            document.getElementById('t-hazard').className = 'text-amber-400 font-bold';
+            if (progressLine && map.hasLayer(progressLine)) map.removeLayer(progressLine);
+            map.fitBounds([routeCoords[0], routeCoords[routeCoords.length - 1]], { padding: [80, 80], maxZoom: 12 });
+        }
+
+        // ==========================================
+        // SIMULATED MOVEMENT
+        // ==========================================
+        function startSimulatedMovement() {
+            if (movementTimer) return;
+            const baseDurationSec = Math.max(30, Math.min(300, routeDistanceKm * 6));
+            const steps = 60;
+            const stepIntervalMs = (baseDurationSec * 1000) / steps;
+            currentProgress = currentProgress || 0.02;
+            movementTimer = setInterval(() => {
+                currentProgress += (1 / steps);
+                if (currentProgress >= 1) { currentProgress = 1; clearInterval(movementTimer); movementTimer = null; }
+                updateTruckPosition();
+                updateProgress();
+            }, stepIntervalMs);
+        }
+
+        function updateTruckPosition() {
+            if (!driverMarker || !map) return;
+            const idx = Math.min(routeCoords.length - 1, Math.floor(currentProgress * (routeCoords.length - 1)));
+            const nextIdx = Math.min(routeCoords.length - 1, idx + 1);
+            const t = (currentProgress * (routeCoords.length - 1)) - idx;
+            const lat = routeCoords[idx][0] + (routeCoords[nextIdx][0] - routeCoords[idx][0]) * t;
+            const lng = routeCoords[idx][1] + (routeCoords[nextIdx][1] - routeCoords[idx][1]) * t;
+            driverMarker.setLatLng([lat, lng]);
+
+            if (progressLine && map.hasLayer(progressLine)) map.removeLayer(progressLine);
+            const progressCoords = routeCoords.slice(0, idx + 1).concat([[lat, lng]]);
+            progressLine = L.polyline(progressCoords, { color: rerouted ? '#ff4d4d' : '#ffda00', weight: 5, opacity: 0.95 }).addTo(map);
+
+            const kmRemaining = Math.max(0, routeDistanceKm * (1 - currentProgress));
+            const etaMin = Math.max(1, Math.round(kmRemaining * 1.2));
+            document.getElementById('t-distance').textContent = kmRemaining.toFixed(1) + ' km';
+            document.getElementById('t-eta').textContent = kmRemaining < 0.2 ? 'Arriving now' : etaMin + ' min';
+        }
+
+        function updateProgress() {
+            const pct = Math.round(currentProgress * 100);
+            const fill = document.getElementById('progress-fill');
+            const text = document.getElementById('progress-text');
+            if (fill) fill.style.width = pct + '%';
+            if (text) {
+                if (activeTrip?.status === 'SCHEDULED') text.textContent = 'Awaiting route acceptance';
+                else if (activeTrip?.status === 'DISPATCHED') text.textContent = 'Driver en route to farm pickup';
+                else if (activeTrip?.status === 'IN_TRANSIT') text.textContent = `En route to factory · ${pct}%`;
+                else if (activeTrip?.status === 'DELIVERED') text.textContent = 'Delivered · escrow released';
+                else text.textContent = 'Awaiting pickup';
+            }
+        }
+
+        // ==========================================
+        // ACTIONS
+        // ==========================================
+        async function acceptActiveTrip() {
+            if (!activeTrip) return;
+            activeTrip.status = 'DISPATCHED';
+            await updateLotStatus(activeTrip.id, 'ESCROW LOCKED', 'DISPATCHED');
+            setActiveTrip(activeTrip.id, 'DISPATCHED');
+        }
+
+        // ==========================================
+        // OTP
+        // ==========================================
+        function openOtpDrawer(mode) {
+            otpMode = mode;
+            otpDigits = '';
+            document.getElementById('otp-drawer-title').textContent =
+                mode === 'PICKUP' ? 'Enter Seller Pickup OTP' : 'Enter Buyer Delivery OTP';
+            document.getElementById('otp-feedback').classList.add('hidden');
+            document.getElementById('otp-drawer').classList.remove('translate-y-full');
+            updateOtpSlots();
+        }
+        function closeOtpDrawer() { document.getElementById('otp-drawer').classList.add('translate-y-full'); }
+        function keypadPress(d) { if (otpDigits.length < 4) otpDigits += d; updateOtpSlots(); }
+        function keypadBackspace() { otpDigits = otpDigits.slice(0, -1); updateOtpSlots(); }
+        function updateOtpSlots() {
+            document.querySelectorAll('#otp-slots .otp-slot').forEach((slot, i) => slot.textContent = otpDigits[i] || '—');
+        }
+
+        async function submitOtp() {
+            if (otpDigits.length !== 4) return showOtpFeedback('error', 'Enter complete 4-digit code');
+
+            if (otpMode === 'PICKUP') {
+                activeTrip.status = 'IN_TRANSIT';
+                await updateLotStatus(activeTrip.id, 'IN_TRANSIT', 'IN_TRANSIT');
+                try {
+                    if (window.ByteToBiteAPI) {
+                        await window.ByteToBiteAPI.recordEscrow({
+                            listingId: activeTrip.id, milestone: 'ADVANCE_30',
+                            amount: (activeTrip.massKg || 0) * (activeTrip.rate || 0) * 0.3,
+                            releasedBy: 'DRIVER'
+                        });
+                    }
+                } catch (e) { }
+                showOtpFeedback('success', 'Hash verified. 30% escrow released. Trip: IN TRANSIT');
+                setTimeout(() => { closeOtpDrawer(); setActiveTrip(activeTrip.id, 'IN_TRANSIT'); startSimulatedMovement(); }, 1400);
+            } else if (otpMode === 'DROP') {
+                activeTrip.status = 'DELIVERED';
+                await updateLotStatus(activeTrip.id, 'DELIVERED', 'DELIVERED');
+                try {
+                    if (window.ByteToBiteAPI) {
+                        await window.ByteToBiteAPI.recordEscrow({
+                            listingId: activeTrip.id, milestone: 'BALANCE_70',
+                            amount: (activeTrip.massKg || 0) * (activeTrip.rate || 0) * 0.7,
+                            releasedBy: 'DRIVER'
+                        });
+                    }
+                } catch (e) { }
+                showOtpFeedback('success', 'Delivery validated. 70% balance released to farmer.');
+                setTimeout(() => {
+                    closeOtpDrawer();
+                    if (movementTimer) { clearInterval(movementTimer); movementTimer = null; }
+                    currentProgress = 1;
+                    setActiveTrip(activeTrip.id, 'DELIVERED');
+                    renderPerf();
+                }, 1400);
+            }
+        }
+
+        function showOtpFeedback(type, msg) {
+            const fb = document.getElementById('otp-feedback');
+            fb.className = `p-3 mb-4 rounded-xl text-xs font-medium ${type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}`;
+            fb.textContent = msg;
+            fb.classList.remove('hidden');
+        }
+
+        async function updateLotStatus(lotId, dbStatus, tripStatus) {
+            try {
+                if (window.ByteToBiteAPI) {
+                    const lot = await window.ByteToBiteAPI.getLot(lotId);
+                    if (lot) await window.ByteToBiteAPI.publishLot({ ...lot, status: dbStatus, tripStatus });
+                }
+            } catch (e) { console.warn('Update status failed:', e); }
+        }
+
+        // ==========================================
+        // CANCEL
+        // ==========================================
+        function openCancelDrawer() {
+            if (!activeTrip) { alert('No active trip to cancel.'); return; }
+            if (activeTrip.status === 'DELIVERED') { alert('Trip already delivered — nothing to cancel.'); return; }
+
+            const afterPickup = (activeTrip.status === 'IN_TRANSIT');
+            const body = document.getElementById('cancel-drawer-body');
+            const warningHtml = afterPickup
+                ? `<div class="p-4 rounded-2xl bg-rose-600/20 border border-rose-500/40 text-rose-100 text-sm">
+             <div class="font-bold mb-1">Goods already loaded</div>
+             Cancelling now releases the lot back to the Jobs Board and notifies the farmer and buyer. A penalty applies based on reason.
+           </div>`
+                : `<div class="p-4 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-100 text-sm">
+             <div class="font-bold mb-1">Before pickup</div>
+             Route is accepted but goods not yet loaded. Most reasons here have no penalty.
+           </div>`;
+
+            body.innerHTML = `
+        ${warningHtml}
+        <div class="mt-4">
+          <label class="block text-xs font-medium text-white/70 uppercase tracking-wider mb-3">Reason for cancelling</label>
+          <div class="space-y-2" id="cancel-reasons">
+            ${CANCEL_REASONS.map((r, i) => `
+              <label class="flex items-start gap-3 p-3.5 rounded-2xl border border-white/10 hover:border-[#ffda00]/40 bg-white/[0.03] hover:bg-white/[0.06] cursor-pointer transition-all" data-pct="${r.penaltyPct}">
+                <input type="radio" name="cancel-reason" value="${r.value}" ${i === 0 ? 'checked' : ''} onchange="updateCancelPenalty()" class="mt-0.5 accent-[#ffda00]">
+                <div class="flex-grow">
+                  <div class="text-white text-sm font-medium">${r.label}</div>
+                  <div class="text-[11px] text-[#b0b8bc] mt-0.5">${r.desc}</div>
+                </div>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        <div class="mt-5 p-4 rounded-2xl bg-black/40 border border-white/10">
+          <div class="flex justify-between text-xs text-[#b0b8bc] mb-2">
+            <span>Original trip payout</span><span class="text-white font-medium">${money(activeTrip.payout || 0)}</span>
+          </div>
+          <div class="flex justify-between text-xs text-[#b0b8bc] mb-2">
+            <span>Penalty deduction</span><span class="text-rose-300 font-semibold" id="penalty-amount">₹0</span>
+          </div>
+          <div class="flex justify-between text-sm border-t border-white/10 pt-2 mt-2">
+            <span class="text-white font-semibold">You keep</span><span class="text-emerald-400 font-bold" id="keep-amount">${money(activeTrip.payout || 0)}</span>
+          </div>
+        </div>
+        <div class="mt-5 flex gap-3">
+          <button onclick="closeCancelDrawer()" class="flex-1 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold uppercase tracking-wide transition-colors">Keep Trip</button>
+          <button onclick="confirmCancel()" class="flex-1 py-3 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold uppercase tracking-wide transition-colors">Confirm Cancel</button>
+        </div>
+      `;
+            document.getElementById('cancel-drawer').classList.remove('hidden');
+            updateCancelPenalty();
+        }
+
+        function closeCancelDrawer() { document.getElementById('cancel-drawer').classList.add('hidden'); }
+
+        function updateCancelPenalty() {
+            const selected = document.querySelector('input[name="cancel-reason"]:checked');
+            const pct = selected ? parseFloat(selected.closest('label').dataset.pct) : 0;
+            const payout = activeTrip?.payout || 0;
+            const penalty = Math.round(payout * (pct / 100));
+            document.getElementById('penalty-amount').textContent = '− ' + money(penalty);
+            document.getElementById('keep-amount').textContent = money(payout - penalty);
+        }
+
+        async function confirmCancel() {
+            const selected = document.querySelector('input[name="cancel-reason"]:checked');
+            if (!selected) return;
+            const reasonVal = selected.value;
+            const reasonObj = CANCEL_REASONS.find(r => r.value === reasonVal) || CANCEL_REASONS[0];
+            const penalty = Math.round((activeTrip?.payout || 0) * (reasonObj.penaltyPct / 100));
+
+            if (penalty > 0) {
+                adjustments.push({
+                    type: 'PENALTY',
+                    amount: penalty,
+                    reason: reasonObj.label,
+                    tripId: activeTrip.id,
+                    at: Date.now()
+                });
+                renderAdjustments();
+            }
+
+            try {
+                if (window.ByteToBiteAPI) {
+                    const lot = await window.ByteToBiteAPI.getLot(activeTrip.id);
+                    if (lot) {
+                        await window.ByteToBiteAPI.publishLot({
+                            ...lot,
+                            status: 'OPEN',
+                            tripStatus: 'OPEN',
+                            transporter: null,
+                            acceptedAt: null,
+                            cancelledAt: Date.now(),
+                            cancelReason: reasonObj.label
+                        });
+                    }
+                }
+            } catch (e) { console.warn('Cancel rollback failed:', e); }
+
+            const cancelledId = activeTrip.id;
+            myTrips = myTrips.filter(t => t.id !== cancelledId);
+            if (movementTimer) { clearInterval(movementTimer); movementTimer = null; }
+            currentProgress = 0;
+            activeTrip = null; activeTripId = null;
+
+            document.getElementById('active-trip-id').textContent = '—';
+            document.getElementById('active-trip-status').className = 'status-pill bg-white/10 text-white/60';
+            document.getElementById('active-trip-status').textContent = 'NO TRIP';
+            document.getElementById('active-trip-pickup').textContent = '—';
+            document.getElementById('active-trip-drop').textContent = '—';
+            document.getElementById('active-trip-payout').textContent = '—';
+            document.getElementById('cancel-trip-btn').classList.add('hidden');
+            updateActionButtons('OPEN');
+            if (routeLine && map?.hasLayer(routeLine)) map.removeLayer(routeLine);
+            if (progressLine && map?.hasLayer(progressLine)) map.removeLayer(progressLine);
+            if (driverMarker && map?.hasLayer(driverMarker)) map.removeLayer(driverMarker);
+            if (pickupMarker && map?.hasLayer(pickupMarker)) map.removeLayer(pickupMarker);
+            if (dropMarker && map?.hasLayer(dropMarker)) map.removeLayer(dropMarker);
+
+            closeCancelDrawer();
+            await loadJobs();
+            await loadMyTrips();
+            renderPerf();
+            alert(`Trip ${cancelledId} cancelled.\nReason: ${reasonObj.label}\nPenalty: ${money(penalty)}\nLot returned to Jobs Board.`);
+        }
+
+        function renderAdjustments() {
+            const list = document.getElementById('adjust-list');
+            const count = document.getElementById('adjust-count');
+            if (!list || !count) return;
+            count.textContent = adjustments.length + ' entries';
+            if (adjustments.length === 0) {
+                list.innerHTML = `<div class="text-white/40">No penalties or adjustments. Keep it clean.</div>`;
+                return;
+            }
+            list.innerHTML = adjustments.map(a => `
+        <div class="flex items-center justify-between p-3 rounded-xl bg-white/[0.04] border border-white/10">
+          <div>
+            <div class="text-white text-sm font-medium">${escapeHtml(a.reason)}</div>
+            <div class="text-[11px] text-[#b0b8bc] mt-0.5">${escapeHtml(a.tripId)} · ${new Date(a.at).toLocaleString('en-IN')}</div>
+          </div>
+          <div class="text-rose-300 font-semibold">− ${money(a.amount)}</div>
+        </div>
+      `).join('');
+        }
+
+        // ==========================================
+        // SUPPORT
+        // ==========================================
+        function openSupportDrawer() { document.getElementById('support-drawer').classList.remove('hidden'); }
+        function closeSupportDrawer() { document.getElementById('support-drawer').classList.add('hidden'); }
+
+        // ==========================================
+        // AUDIT + PERF
+        // ==========================================
+        function updateAuditRecord(status) {
+            document.getElementById('rec-trip').textContent = activeTripId || '—';
+            document.getElementById('rec-contract').textContent = activeTrip ? `B2B-${(activeTrip.category || 'LOT').replaceAll('_', '-')}-2026-GRID` : '—';
+            const map = { SCHEDULED: 'AWAITING PICKUP', DISPATCHED: 'ROUTE LOCKED', IN_TRANSIT: '30% ADVANCE RELEASED', DELIVERED: '100% RELEASED' };
+            document.getElementById('rec-escrow').textContent = map[status] || '—';
+        }
+
+        function renderPerf() {
+            const done = myTrips.filter(t => t.status === 'DELIVERED').length;
+            const grossEarnings = myTrips.filter(t => t.status === 'DELIVERED').reduce((s, t) => s + (t.payout || 0), 0);
+            const totalPenalties = adjustments.reduce((s, a) => s + (a.amount || 0), 0);
+            const netEarnings = grossEarnings - totalPenalties;
+            document.getElementById('perf-trips').textContent = done;
+            document.getElementById('perf-earnings').textContent = money(netEarnings);
+            document.getElementById('perf-rating').textContent = done > 0 ? (4.7 + Math.random() * 0.3).toFixed(1) + '★' : '5.0★';
+        }
+
+        // ==========================================
+        // PUBLIC TRACK OVERLAY
+        // ==========================================
+        function openTrackOverlay() {
+            document.getElementById('track-overlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => document.getElementById('public-track-input')?.focus(), 100);
+        }
+        function closeTrackOverlay() {
+            document.getElementById('track-overlay').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function runPublicTrack() {
+            const input = document.getElementById('public-track-input').value.trim();
+            if (!input) return;
+            const el = document.getElementById('public-track-result');
+            el.innerHTML = `<div class="text-white/50 text-sm">Searching grid for "${escapeHtml(input)}"...</div>`;
+
+            try {
+                if (!window.ByteToBiteAPI) { el.innerHTML = `<div class="text-white/50 text-sm">Grid unavailable.</div>`; return; }
+                const lots = await window.ByteToBiteAPI.getLots();
+                const found = lots.find(l => l.id === input || l.id === input.replace('B2B-', ''));
+                if (!found) {
+                    el.innerHTML = `<div class="text-rose-300 text-sm">No lot found with ID "${escapeHtml(input)}". Check the ID and try again.</div>`;
+                    return;
+                }
+
+                const dist = haversineKm({ lat: found.lat, lng: found.lng }, DEFAULT_FACILITY);
+                const payout = estimatePayout(found.massKg, dist);
+                const status = found.tripStatus || found.status;
+                const sc = STATUS_COLORS[status] || STATUS_COLORS.OPEN;
+
+                const stages = [
+                    { key: 'OPEN', label: 'Order placed' },
+                    { key: 'SCHEDULED', label: 'Driver assigned' },
+                    { key: 'DISPATCHED', label: 'Route accepted' },
+                    { key: 'IN_TRANSIT', label: 'In transit to factory' },
+                    { key: 'DELIVERED', label: 'Delivered & paid' }
+                ];
+                const currentIdx = stages.findIndex(s => s.key === status);
+                const timeline = stages.map((s, i) => `
+          <div class="flex items-center gap-3 py-2">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i <= currentIdx ? 'bg-[#ffda00] text-[#002a35]' : 'bg-white/10 text-white/40'}">${i < currentIdx ? '✓' : (i + 1)}</div>
+            <div class="text-sm ${i <= currentIdx ? 'text-white font-medium' : 'text-white/40'}">${s.label}</div>
+          </div>
+        `).join('');
+
+                const pctMap = { OPEN: 10, SCHEDULED: 25, DISPATCHED: 40, IN_TRANSIT: 75, DELIVERED: 100 };
+                const pct = pctMap[status] || 10;
+
+                el.innerHTML = `
+          <div class="glass-card-dark p-6 rounded-3xl border border-white/10 text-white">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div>
+                <div class="font-barlow text-3xl font-black tracking-wide">${escapeHtml(found.id)}</div>
+                <div class="text-[11px] text-[#b0b8bc] uppercase tracking-wider mt-0.5">${escapeHtml((found.category || '').replaceAll('_', ' '))}</div>
+              </div>
+              <span class="status-pill ${sc.bg} ${sc.text}">${sc.label}</span>
+            </div>
+            <div class="my-5">
+              <div class="flex justify-between text-[11px] text-[#b0b8bc] mb-1.5"><span>Progress</span><span>${pct}%</span></div>
+              <div class="h-2 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full bg-[#ffda00] transition-all duration-700" style="width:${pct}%"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4 text-xs mb-5">
+              <div><div class="text-[#b0b8bc] uppercase tracking-wider">Mass</div><div class="text-white font-bold text-base mt-1">${(found.massKg || 0).toLocaleString()} kg</div></div>
+              <div><div class="text-[#b0b8bc] uppercase tracking-wider">Distance</div><div class="text-white font-bold text-base mt-1">${dist.toFixed(1)} km</div></div>
+              <div><div class="text-[#b0b8bc] uppercase tracking-wider">Value</div><div class="text-emerald-400 font-bold text-base mt-1">${money(payout)}</div></div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-5 border-t border-white/10">
+              <div>
+                <div class="text-[11px] text-[#ffda00] uppercase tracking-wider font-bold mb-3">Live Timeline</div>
+                ${timeline}
+              </div>
+              <div class="text-xs text-[#b0b8bc] space-y-2">
+                <div>From: <span class="text-white font-medium">${escapeHtml(found.origin || 'Farm')}</span></div>
+                <div>To: <span class="text-white font-medium">${escapeHtml(found.matchedBuyer || 'Buyer facility')}</span></div>
+                <div>Transporter: <span class="text-white font-medium">${escapeHtml(found.transporter || 'Not yet assigned')}</span></div>
+                <div class="pt-3 border-t border-white/10">Escrow: <span class="text-emerald-400 font-semibold">${status === 'DELIVERED' ? '100% released' : status === 'IN_TRANSIT' ? '30% advance released' : 'Locked 100%'}</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+            } catch (e) {
+                el.innerHTML = `<div class="text-rose-300 text-sm">Search failed. Try again.</div>`;
+            }
+        }
+
+        // ==========================================
+        // LIVE DB SUBSCRIPTION
+        // ==========================================
+        function subscribeToDB() {
+            if (!window.ByteToBiteAPI) return;
+            if (unsubscribeDB) unsubscribeDB();
+            unsubscribeDB = window.ByteToBiteAPI.subscribe(async () => {
+                try {
+                    await loadJobs();
+                    await loadMyTrips();
+                    renderPerf();
+                } catch (e) { }
+            });
+        }
+
+        // ==========================================
+        // BOOT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const bgVideo = document.getElementById('bg-video');
+            if (bgVideo) {
+                bgVideo.muted = true;
+                bgVideo.play().catch(() => { });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && bgVideo.paused) bgVideo.play().catch(() => { });
+                });
+            }
+
+            (async () => {
+                try {
+                    if (window.ByteToBiteAPI) {
+                        const saved = await window.ByteToBiteAPI.getProfile('driver-driver')
+                            || await window.ByteToBiteAPI.getProfile('driver-company');
+                        if (saved) completeDriverLogin(saved);
+                    }
+                } catch (e) { }
+            })();
+        });
+    </script>
+</body>
+
+</html>

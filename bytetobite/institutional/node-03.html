@@ -1,0 +1,1859 @@
+<!doctype html>
+<html lang="en" class="anim">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#d7beaa">
+    <title>Node 03 — Live Counter | ByteToBite</title>
+    <style>
+        :root {
+            --ink: #161616;
+            --surface: #d7beaa;
+            --orb-reveal: cubic-bezier(.16, 1, .3, 1);
+            --orb-soft: cubic-bezier(.25, .8, .28, 1);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--surface);
+            color: var(--ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .viewport {
+            position: fixed;
+            inset: 0;
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .stage {
+            position: absolute;
+            inset: 0;
+            background-color: var(--surface);
+            contain: strict;
+            isolation: isolate;
+            overflow: hidden;
+        }
+
+        .stage__layer--bg {
+            z-index: 1;
+        }
+
+        .stage__layer--top {
+            z-index: 2;
+        }
+
+        .burger-wrapper {
+            z-index: 3;
+        }
+
+        .brand-cluster,
+        .right-operational-panel {
+            z-index: 4;
+        }
+
+        .scrim {
+            z-index: 9;
+        }
+
+        .mobile-sheet {
+            z-index: 10;
+        }
+
+        .burger-btn {
+            z-index: 12;
+        }
+
+        .stage__layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .stage__layer--top {
+            -webkit-mask-image: linear-gradient(#0000, #0000);
+            mask-image: linear-gradient(#0000, #0000);
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+        }
+
+        .stage__layer--bg {
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+        }
+
+        .brand-cluster {
+            position: absolute;
+            top: 2.141745dvh;
+            left: 3.5vw;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: clamp(32px, min(3vw, 4.6dvh), 52px);
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .brand-mark line {
+            stroke: #ffffff;
+            stroke-width: 5px;
+            stroke-linecap: square;
+        }
+
+        .node-header-label {
+            font-size: clamp(12px, min(1vw, 1.6dvh), 17px);
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #221611;
+            line-height: 1;
+            white-space: nowrap;
+            opacity: 0.9;
+        }
+
+        .orbit-word {
+            position: absolute;
+            top: 18dvh;
+            left: 3.5vw;
+            text-align: left;
+            font-family: "Didot", "Bodoni MT", "Cinzel", "Playfair Display", "Times New Roman", serif;
+            font-size: min(18vw, 36dvh);
+            line-height: 0.85;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin: 0;
+            padding: 0;
+            font-weight: 400;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .orbit-word__mask {
+            display: inline-block;
+            overflow: hidden;
+            padding-bottom: 0.08em;
+            margin-bottom: -0.08em;
+        }
+
+        .orbit-word__inner {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 0;
+        }
+
+        .orbit-word__white {
+            color: #ffffff;
+            display: block;
+        }
+
+        .orbit-word__o {
+            display: inline-block;
+            transform: scaleX(1.04);
+            transform-origin: center center;
+        }
+
+        .orbit-word__gold {
+            display: block;
+            background: linear-gradient(180deg, #d4a017 0%, #b8860b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stage__layer--top .orbit-word__white {
+            color: #e5a912;
+        }
+
+        .stage__layer--top .orbit-word__gold {
+            background: linear-gradient(180deg, #f5c542 0%, #c47d04 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @keyframes balanced-float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-14px) rotate(0.5deg);
+            }
+
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+        }
+
+        .burger-wrapper {
+            position: absolute;
+            top: 13dvh;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 74dvh;
+            max-height: 720px;
+            pointer-events: none;
+            display: inline-block;
+        }
+
+        .burger-floater {
+            height: 100%;
+            width: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: balanced-float 5s ease-in-out infinite;
+        }
+
+        .burger-stack {
+            position: relative;
+            height: 75%;
+            width: auto;
+            pointer-events: none;
+        }
+
+        .burger-stack__sizer {
+            display: block;
+            height: 100%;
+            width: auto;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .burger-stack__layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .burger-stack__layer img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .burger-stack__layer--bg img {
+            filter: drop-shadow(0 20px 30px rgba(45, 25, 10, 0.15));
+        }
+
+        .burger-stack__layer--top {
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+        }
+
+        .burger-stack__layer--top img {
+            filter: drop-shadow(0 20px 30px rgba(212, 160, 23, 0.3)) saturate(1.3) contrast(1.1);
+        }
+
+        .support-copy {
+            position: absolute;
+            bottom: 3.5dvh;
+            color: #221611;
+            font-size: clamp(13px, min(1.3vw, 1.9dvh), 22px);
+            line-height: 1.3;
+            letter-spacing: 0.015em;
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .support-copy--left {
+            left: 3.8vw;
+            transform: scaleX(1.04);
+            transform-origin: left bottom;
+        }
+
+        .support-copy--right {
+            right: 3.8vw;
+            text-align: right;
+            transform: scaleX(1.04);
+            transform-origin: right bottom;
+        }
+
+        .support-copy__inner {
+            display: block;
+        }
+
+        .sparkle-icon {
+            position: absolute;
+            bottom: 8.5dvh;
+            right: 5.5vw;
+            width: 24px;
+            height: 24px;
+            fill: rgba(255, 255, 255, 0.65);
+            pointer-events: none;
+        }
+
+        .stage__layer--top .support-copy {
+            color: #b8860b;
+        }
+
+        .stage__layer--top .sparkle-icon {
+            fill: #d4a017;
+        }
+
+        @property --c5-x1 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 10%;
+        }
+
+        @property --c5-y1 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 10%;
+        }
+
+        @property --c5-x2 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 90%;
+        }
+
+        @property --c5-y2 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 10%;
+        }
+
+        @property --c5-x3 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 10%;
+        }
+
+        @property --c5-y3 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 90%;
+        }
+
+        @property --c5-x4 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 90%;
+        }
+
+        @property --c5-y4 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 90%;
+        }
+
+        @property --c5-x5 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 50%;
+        }
+
+        @property --c5-y5 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 50%;
+        }
+
+        @property --c5-s1 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 55%;
+        }
+
+        @property --c5-s2 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 55%;
+        }
+
+        @property --c5-s3 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 55%;
+        }
+
+        @property --c5-s4 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 55%;
+        }
+
+        @property --c5-s5 {
+            syntax: '<percentage>';
+            inherits: false;
+            initial-value: 65%;
+        }
+
+        .c5-animated-gradient {
+            background-color: #ff8e53;
+            background-image:
+                radial-gradient(circle at var(--c5-x1) var(--c5-y1), #fff1aa 0px, transparent var(--c5-s1)),
+                radial-gradient(circle at var(--c5-x2) var(--c5-y2), #ff4b2b 0px, transparent var(--c5-s2)),
+                radial-gradient(circle at var(--c5-x3) var(--c5-y3), #8aff8a 0px, transparent var(--c5-s3)),
+                radial-gradient(circle at var(--c5-x4) var(--c5-y4), #ffd000 0px, transparent var(--c5-s4)),
+                radial-gradient(circle at var(--c5-x5) var(--c5-y5), #ff1493 0px, transparent var(--c5-s5));
+            animation:
+                c5-blob1 5s ease-in-out infinite, c5-blob2 6s ease-in-out infinite,
+                c5-blob3 5.5s ease-in-out infinite, c5-blob4 6.5s ease-in-out infinite,
+                c5-blob5 4s ease-in-out infinite, c5-size1 3.5s ease-in-out infinite,
+                c5-size2 4.2s ease-in-out infinite, c5-size3 3.8s ease-in-out infinite,
+                c5-size4 4.6s ease-in-out infinite, c5-size5 3s ease-in-out infinite;
+        }
+
+        @keyframes c5-blob1 {
+
+            0%,
+            100% {
+                --c5-x1: 5%;
+                --c5-y1: 5%;
+            }
+
+            25% {
+                --c5-x1: 45%;
+                --c5-y1: 20%;
+            }
+
+            50% {
+                --c5-x1: 30%;
+                --c5-y1: 55%;
+            }
+
+            75% {
+                --c5-x1: 0%;
+                --c5-y1: 30%;
+            }
+        }
+
+        @keyframes c5-blob2 {
+
+            0%,
+            100% {
+                --c5-x2: 95%;
+                --c5-y2: 5%;
+            }
+
+            33% {
+                --c5-x2: 55%;
+                --c5-y2: 35%;
+            }
+
+            66% {
+                --c5-x2: 80%;
+                --c5-y2: 65%;
+            }
+        }
+
+        @keyframes c5-blob3 {
+
+            0%,
+            100% {
+                --c5-x3: 5%;
+                --c5-y3: 95%;
+            }
+
+            40% {
+                --c5-x3: 45%;
+                --c5-y3: 65%;
+            }
+
+            70% {
+                --c5-x3: 25%;
+                --c5-y3: 100%;
+            }
+        }
+
+        @keyframes c5-blob4 {
+
+            0%,
+            100% {
+                --c5-x4: 95%;
+                --c5-y4: 95%;
+            }
+
+            30% {
+                --c5-x4: 60%;
+                --c5-y4: 70%;
+            }
+
+            60% {
+                --c5-x4: 100%;
+                --c5-y4: 50%;
+            }
+        }
+
+        @keyframes c5-blob5 {
+
+            0%,
+            100% {
+                --c5-x5: 50%;
+                --c5-y5: 50%;
+            }
+
+            25% {
+                --c5-x5: 70%;
+                --c5-y5: 30%;
+            }
+
+            50% {
+                --c5-x5: 40%;
+                --c5-y5: 70%;
+            }
+
+            75% {
+                --c5-x5: 30%;
+                --c5-y5: 40%;
+            }
+        }
+
+        @keyframes c5-size1 {
+
+            0%,
+            100% {
+                --c5-s1: 45%;
+            }
+
+            50% {
+                --c5-s1: 80%;
+            }
+        }
+
+        @keyframes c5-size2 {
+
+            0%,
+            100% {
+                --c5-s2: 45%;
+            }
+
+            50% {
+                --c5-s2: 85%;
+            }
+        }
+
+        @keyframes c5-size3 {
+
+            0%,
+            100% {
+                --c5-s3: 45%;
+            }
+
+            50% {
+                --c5-s3: 78%;
+            }
+        }
+
+        @keyframes c5-size4 {
+
+            0%,
+            100% {
+                --c5-s4: 45%;
+            }
+
+            50% {
+                --c5-s4: 82%;
+            }
+        }
+
+        @keyframes c5-size5 {
+
+            0%,
+            100% {
+                --c5-s5: 50%;
+            }
+
+            50% {
+                --c5-s5: 85%;
+            }
+        }
+
+        .right-operational-panel {
+            position: absolute;
+            top: 50%;
+            right: 2.8vw;
+            transform: translateY(-50%);
+            width: clamp(340px, 31vw, 470px);
+            border-radius: 26px;
+            padding: clamp(18px, 2.2dvh, 26px) clamp(16px, 1.8vw, 24px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 1.6dvh, 18px);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+            padding-bottom: 10px;
+        }
+
+        .panel-title {
+            font-size: clamp(13px, 1.1vw, 16px);
+            font-weight: 800;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .cta-pill-inline {
+            height: 32px;
+            padding: 0 1.2em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #161616;
+            color: #ffffff;
+            border-radius: 999px;
+            border: 1px solid #161616;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+
+        .cta-pill-inline:hover {
+            background: #ffffff;
+            color: #161616;
+            transform: scale(1.03);
+        }
+
+        .cta-pill-inline:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cta-pill-inline:disabled:hover {
+            background: #161616;
+            color: #fff;
+        }
+
+        .telemetry-deck {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.35);
+            padding: 8px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        .telemetry-card {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 12px;
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .telemetry-card--highlight {
+            background: #ffffff;
+            border-color: rgba(212, 160, 23, 0.5);
+            box-shadow: 0 4px 12px rgba(212, 160, 23, 0.2);
+        }
+
+        .telemetry-label {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(22, 22, 22, 0.6);
+            margin-bottom: 2px;
+        }
+
+        .telemetry-value {
+            font-size: clamp(16px, 1.4vw, 22px);
+            font-weight: 800;
+            color: #161616;
+            line-height: 1.1;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+        }
+
+        .telemetry-value .telemetry-unit {
+            font-size: 0.65em;
+            font-weight: 600;
+            color: rgba(22, 22, 22, 0.6);
+        }
+
+        .tally-action-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .liquid-carve-btn {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            min-height: 58px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+            background: transparent;
+            border: none;
+            outline: none;
+            overflow: visible;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.08));
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.18s ease;
+            padding: 0;
+        }
+
+        .liquid-carve-btn--span2 {
+            grid-column: span 2;
+            aspect-ratio: auto;
+            height: 58px;
+        }
+
+        .liquid-carve-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.14));
+        }
+
+        .liquid-carve-btn:active {
+            transform: translateY(1px) scale(0.96);
+        }
+
+        .liquid-carve-btn svg.lcb-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .liquid-carve-btn span.lcb-label {
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            white-space: nowrap;
+            font-size: clamp(14px, 1.1vw, 18px);
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            pointer-events: none;
+            gap: 2px;
+        }
+
+        .liquid-carve-btn span.lcb-sub {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .trail-canvas {
+            display: none;
+        }
+
+        .burger-btn,
+        .scrim,
+        .mobile-sheet {
+            display: none;
+        }
+
+        @keyframes orb-quiet {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes orb-word {
+            0% {
+                transform: translateY(118%);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes orb-subject {
+            0% {
+                opacity: 0;
+                transform: translateY(4dvh);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes orb-corner {
+            0% {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        html.anim .brand-cluster {
+            animation: orb-quiet 620ms var(--orb-soft) 100ms both;
+        }
+
+        html.anim .right-operational-panel {
+            animation: orb-quiet 750ms var(--orb-soft) 220ms both;
+        }
+
+        html.anim .orbit-word__inner {
+            animation: orb-word 1150ms var(--orb-reveal) 300ms both;
+        }
+
+        html.anim .burger-wrapper {
+            animation: orb-subject 1150ms var(--orb-reveal) 660ms both;
+        }
+
+        html.anim .support-copy--left .support-copy__inner,
+        html.anim .support-copy--right .support-copy__inner {
+            animation: orb-corner 720ms var(--orb-soft) 980ms both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .c5-animated-gradient,
+            .burger-floater {
+                animation: none !important;
+            }
+
+            html.anim .brand-cluster,
+            html.anim .right-operational-panel,
+            html.anim .orbit-word__inner,
+            html.anim .burger-wrapper,
+            html.anim .support-copy__inner {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+
+            .burger-wrapper {
+                transform: translateX(-50%) !important;
+            }
+
+            .right-operational-panel {
+                transform: translateY(-50%) !important;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .right-operational-panel {
+                top: auto;
+                bottom: 2dvh;
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                width: min(92vw, 440px);
+            }
+
+            .support-copy--right {
+                display: none;
+            }
+
+            .support-copy--left {
+                bottom: auto;
+                top: 2.141745dvh;
+                left: auto;
+                right: 4.5vw;
+                text-align: right;
+            }
+
+            .orbit-word {
+                top: 13dvh;
+                font-size: min(18vw, 14dvh);
+            }
+
+            .burger-wrapper {
+                top: 14dvh;
+                height: 38dvh;
+            }
+        }
+
+        /* connection status pill top right */
+        .grid-status-pill {
+            position: absolute;
+            top: 2.141745dvh;
+            right: 3.5vw;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(22, 22, 22, 0.85);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-family: ui-monospace, "JetBrains Mono", monospace;
+            z-index: 4;
+            pointer-events: auto;
+        }
+
+        .grid-status-pill .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        .grid-status-pill.err .dot {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+        }
+
+        /* toast */
+        .toast-wrap {
+            position: fixed;
+            top: 6dvh;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            padding: 10px 18px;
+            background: rgba(22, 22, 22, 0.92);
+            color: #fff;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-item.warn {
+            background: rgba(180, 83, 9, 0.95);
+        }
+
+        .toast-item.error {
+            background: rgba(153, 27, 27, 0.95);
+        }
+
+        .toast-item.success {
+            background: rgba(6, 95, 70, 0.95);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="viewport">
+        <section class="stage" id="stage">
+
+            <!-- BASE STAGE LAYER -->
+            <div class="stage__layer stage__layer--bg" id="stage-bg">
+                <h1 class="orbit-word" aria-label="Live Hub">
+                    <span class="orbit-word__mask">
+                        <span class="orbit-word__inner">
+                            <span class="orbit-word__white"><span class="orbit-word__o">L</span>IVE</span>
+                            <span class="orbit-word__gold">HUB</span>
+                        </span>
+                    </span>
+                </h1>
+                <div class="support-copy support-copy--left">
+                    <span class="support-copy__inner" id="burn-rate-display-bg">
+                        Serving Speed: 0.00 plates/min<br>Status: Normal Speed
+                    </span>
+                </div>
+                <svg class="sparkle-icon" viewBox="0 0 24 24">
+                    <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+                </svg>
+                <div class="support-copy support-copy--right">
+                    <span class="support-copy__inner" id="surplus-projection-display-bg">
+                        Expected Leftover: 0 plates<br>Time Left: 90m
+                    </span>
+                </div>
+            </div>
+
+            <!-- TOP REVEAL STAGE LAYER -->
+            <div class="stage__layer stage__layer--top" id="stage-top" aria-hidden="true">
+                <h1 class="orbit-word">
+                    <span class="orbit-word__mask">
+                        <span class="orbit-word__inner">
+                            <span class="orbit-word__white"><span class="orbit-word__o">L</span>IVE</span>
+                            <span class="orbit-word__gold">HUB</span>
+                        </span>
+                    </span>
+                </h1>
+                <div class="support-copy support-copy--left">
+                    <span class="support-copy__inner" id="burn-rate-display-top">
+                        Serving Speed: 0.00 plates/min<br>Status: Normal Speed
+                    </span>
+                </div>
+                <svg class="sparkle-icon" viewBox="0 0 24 24">
+                    <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+                </svg>
+                <div class="support-copy support-copy--right">
+                    <span class="support-copy__inner" id="surplus-projection-display-top">
+                        Expected Leftover: 0 plates<br>Time Left: 90m
+                    </span>
+                </div>
+            </div>
+
+            <!-- Center Visual Stack -->
+            <div class="burger-wrapper">
+                <div class="burger-floater">
+                    <div class="burger-stack" id="burger-target">
+                        <img class="burger-stack__sizer" src="burger.png" alt="" aria-hidden="true">
+                        <div class="burger-stack__layer burger-stack__layer--bg" id="burger-bg">
+                            <img src="burger.png" alt="Operational Center">
+                        </div>
+                        <div class="burger-stack__layer burger-stack__layer--top" id="burger-top" aria-hidden="true">
+                            <img src="burger.png" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brand Cluster -->
+            <div class="brand-cluster" id="brand-cluster" onclick="window.location.href='hub.html'">
+                <svg class="brand-mark" viewBox="0 0 66 62" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    aria-label="ByteToBite Logo">
+                    <line x1="33" y1="1" x2="33" y2="61" />
+                    <line x1="3" y1="31" x2="63" y2="31" />
+                    <line x1="11.8" y1="9.8" x2="54.2" y2="52.2" />
+                    <line x1="54.2" y1="9.8" x2="11.8" y2="52.2" />
+                </svg>
+                <span class="node-header-label">Node 03</span>
+            </div>
+
+            <!-- Grid status pill -->
+            <div class="grid-status-pill" id="grid-status-pill">
+                <span class="dot"></span>
+                <span id="grid-status-text">Connecting…</span>
+            </div>
+
+            <!-- Right Operations Deck -->
+            <aside class="right-operational-panel c5-animated-gradient" id="operational-card">
+                <div class="panel-header">
+                    <span class="panel-title">Plate Counter</span>
+                    <button class="cta-pill-inline" id="finalize-session-btn">Finish Meal</button>
+                </div>
+
+                <div class="telemetry-deck">
+                    <div class="telemetry-card">
+                        <span class="telemetry-label">Total Made</span>
+                        <span class="telemetry-value"><span id="nav-prep-val">—</span></span>
+                    </div>
+                    <div class="telemetry-card telemetry-card--highlight">
+                        <span class="telemetry-label">Served</span>
+                        <span class="telemetry-value" style="color: #b8860b;"><span id="nav-served-val">0</span></span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label">Left in Pots</span>
+                        <span class="telemetry-value"><span id="nav-pots-val">—</span></span>
+                    </div>
+                    <div class="telemetry-card">
+                        <span class="telemetry-label">Serving Speed</span>
+                        <span class="telemetry-value"><span id="nav-burn-val">0.00</span><span
+                                class="telemetry-unit">/min</span></span>
+                    </div>
+                </div>
+
+                <div class="tally-action-bar">
+                    <button class="liquid-carve-btn" id="btn-sub-1" data-fill="#FFECEC" data-text-color="#A81C1C"
+                        data-blob-color="#FF4D4D" data-blob-size="80" data-radius="14" title="Undo 1 Plate">
+                        <span class="lcb-label">-1<span class="lcb-sub">Undo</span></span>
+                    </button>
+                    <button class="liquid-carve-btn" id="btn-add-1" data-fill="#FFFFFF" data-text-color="#161616"
+                        data-blob-color="#D4A017" data-blob-size="80" data-radius="14">
+                        <span class="lcb-label">+1<span class="lcb-sub">Plate</span></span>
+                    </button>
+                    <button class="liquid-carve-btn" id="btn-add-5" data-fill="#FFFFFF" data-text-color="#161616"
+                        data-blob-color="#D4A017" data-blob-size="80" data-radius="14">
+                        <span class="lcb-label">+5<span class="lcb-sub">Plates</span></span>
+                    </button>
+                    <button class="liquid-carve-btn" id="btn-add-10" data-fill="#FFFFFF" data-text-color="#161616"
+                        data-blob-color="#D4A017" data-blob-size="80" data-radius="14">
+                        <span class="lcb-label">+10<span class="lcb-sub">Plates</span></span>
+                    </button>
+                    <button class="liquid-carve-btn" id="btn-add-25" data-fill="#FFFFFF" data-text-color="#161616"
+                        data-blob-color="#D4A017" data-blob-size="80" data-radius="14">
+                        <span class="lcb-label">+25<span class="lcb-sub">Plates</span></span>
+                    </button>
+                    <button class="liquid-carve-btn" id="btn-add-50" data-fill="#FFFFFF" data-text-color="#161616"
+                        data-blob-color="#D4A017" data-blob-size="80" data-radius="14">
+                        <span class="lcb-label">+50<span class="lcb-sub">Plates</span></span>
+                    </button>
+                    <button class="liquid-carve-btn liquid-carve-btn--span2" id="btn-topup" data-fill="#EBF5FF"
+                        data-text-color="#0B5CAB" data-blob-color="#2D8CFF" data-blob-size="95" data-radius="14"
+                        title="Add extra food cooked mid-service">
+                        <span class="lcb-label">+Extra Food<span class="lcb-sub">Kitchen</span></span>
+                    </button>
+                </div>
+            </aside>
+
+        </section>
+    </main>
+
+    <canvas class="trail-canvas" id="mask-canvas"></canvas>
+
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <script src="institutional-db.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // TOASTS
+        // ═══════════════════════════════════════════════════════════════
+        function showToast(msg, type = 'info') {
+            const wrap = document.getElementById('toast-wrap');
+            const el = document.createElement('div');
+            el.className = 'toast-item ' + (type !== 'info' ? type : '');
+            el.textContent = msg;
+            wrap.appendChild(el);
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.35s, transform 0.35s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(() => el.remove(), 400);
+            }, 3200);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PART 1: LIVE COUNTER ENGINE — wired to InstitutionalAPI
+        // ═══════════════════════════════════════════════════════════════
+        class LiveCounterEngine {
+            constructor() {
+                this.state = {
+                    totalPrepared: 0,
+                    servedPlates: 0,
+                    remainingInPots: 0,
+                    serviceStartTime: Date.now(),
+                    serviceDurationMinutes: 90,
+                    sessionActive: true,
+                    mealSlot: '—',
+                    plan: null,
+                    prep: null,
+                    tally: null,
+                    institute: null,
+                    connected: false
+                };
+                this.subscribers = new Set();
+                this.tickerInterval = null;
+                this.unsubscribeGrid = null;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    if (!window.InstitutionalAPI) {
+                        this.setConnection('No API loaded — include institutional-db.js', true);
+                        return;
+                    }
+
+                    const session = await window.InstitutionalAPI.getCurrentSession();
+                    if (!session || !session.institute_id) {
+                        this.setConnection('No session — sign in first', true);
+                        return;
+                    }
+
+                    const inst = await window.InstitutionalAPI.getInstitute(session.institute_id);
+                    if (!inst) {
+                        this.setConnection('Institute not found', true);
+                        return;
+                    }
+                    this.state.institute = inst;
+
+                    // find active plan
+                    const plans = await window.InstitutionalAPI.getMealPlans(inst.id);
+                    const sorted = plans.slice().sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+                    const active = sorted.find(p => p.status === 'IN_SERVICE')
+                        || sorted.find(p => p.status === 'PUBLISHED')
+                        || sorted.find(p => p.status === 'COMPLETED')
+                        || sorted[0];
+
+                    if (!active) {
+                        this.setConnection('No plan found — publish on Node 01', true);
+                        return;
+                    }
+                    this.state.plan = active;
+                    this.state.mealSlot = (active.meal_slot || '').toUpperCase();
+
+                    // find prep from Node 02
+                    const prep = await window.InstitutionalAPI.getPrepByPlan(active.id);
+                    this.state.prep = prep;
+                    const prepared = prep?.prepared_count || active.prepared_count || active.predicted_demand || 0;
+                    this.state.totalPrepared = prepared;
+                    this.state.remainingInPots = prepared;
+
+                    // restore any existing tally
+                    if (prep?.id) {
+                        const tally = await window.InstitutionalAPI.getLatestTally(prep.id);
+                        if (tally) {
+                            this.state.tally = tally;
+                            this.state.servedPlates = tally.served_count || 0;
+                            this.state.remainingInPots = Math.max(0, prepared - this.state.servedPlates);
+                            if (tally.created_at) this.state.serviceStartTime = tally.created_at;
+                        } else {
+                            this.state.serviceStartTime = Date.now();
+                        }
+                    } else {
+                        this.state.serviceStartTime = Date.now();
+                    }
+
+                    this.setConnection('Live · grid connected', false);
+                    this.notify();
+
+                    // subscribe to grid events
+                    this.unsubscribeGrid = window.InstitutionalAPI.subscribe(async (type) => {
+                        const label = (type || '').replace('bytetobite:', '').replace('-changed', '');
+                        if (label === 'meal-plans' || label === 'meal-preps') {
+                            await this.refreshFromGrid();
+                        }
+                    });
+
+                    this.startTicker();
+                } catch (e) {
+                    console.error(e);
+                    this.setConnection('Grid error — check console', true);
+                }
+            }
+
+            async refreshFromGrid() {
+                try {
+                    if (!this.state.institute) return;
+                    const plans = await window.InstitutionalAPI.getMealPlans(this.state.institute.id);
+                    const sorted = plans.slice().sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+                    const active = sorted.find(p => p.status === 'IN_SERVICE')
+                        || sorted.find(p => p.status === 'PUBLISHED')
+                        || sorted.find(p => p.status === 'COMPLETED')
+                        || sorted[0];
+                    if (!active) return;
+                    this.state.plan = active;
+                    this.state.mealSlot = (active.meal_slot || '').toUpperCase();
+
+                    const prep = await window.InstitutionalAPI.getPrepByPlan(active.id);
+                    this.state.prep = prep;
+                    const prepared = prep?.prepared_count || active.prepared_count || active.predicted_demand || 0;
+                    this.state.totalPrepared = prepared;
+                    this.recalculateRemaining();
+                    this.notify();
+                } catch (e) { console.warn(e); }
+            }
+
+            setConnection(text, isError) {
+                this.state.connected = !isError;
+                const pill = document.getElementById('grid-status-pill');
+                const t = document.getElementById('grid-status-text');
+                if (pill) pill.classList.toggle('err', !!isError);
+                if (t) t.textContent = text;
+            }
+
+            increment(delta = 1) {
+                if (!this.state.sessionActive || delta <= 0) return;
+                this.state.servedPlates += delta;
+                this.recalculateRemaining();
+                this.notify();
+                this.persistTally();
+            }
+
+            decrement(delta = 1) {
+                if (!this.state.sessionActive || delta <= 0) return;
+                this.state.servedPlates = Math.max(0, this.state.servedPlates - delta);
+                this.recalculateRemaining();
+                this.notify();
+                this.persistTally();
+            }
+
+            addPreparedBuffer(additional) {
+                if (!this.state.sessionActive || additional <= 0) return;
+                this.state.totalPrepared += Math.floor(additional);
+                this.recalculateRemaining();
+                this.notify();
+                this.persistTally();
+            }
+
+            recalculateRemaining() {
+                this.state.remainingInPots = Math.max(0, this.state.totalPrepared - this.state.servedPlates);
+            }
+
+            async persistTally() {
+                if (!window.InstitutionalAPI || !this.state.prep?.id) return;
+                try {
+                    const t = await window.InstitutionalAPI.savePlateTally({
+                        id: this.state.tally?.id,
+                        prep_id: this.state.prep.id,
+                        institute_id: this.state.institute.id,
+                        served_count: this.state.servedPlates
+                    });
+                    this.state.tally = t;
+                } catch (e) { console.warn('tally save failed', e); }
+            }
+
+            computeLiveTelemetry() {
+                const now = Date.now();
+                const elapsedMinutes = Math.max(1 / 60, (now - this.state.serviceStartTime) / 60000);
+                const remainingMinutes = Math.max(0, this.state.serviceDurationMinutes - elapsedMinutes);
+                const burnRatePerMin = Number((this.state.servedPlates / elapsedMinutes).toFixed(2));
+                const expectedBurnRatePerMin = this.state.serviceDurationMinutes > 0
+                    ? Number((this.state.totalPrepared / this.state.serviceDurationMinutes).toFixed(2))
+                    : 0;
+                const estimatedFinalServed = Math.min(
+                    this.state.totalPrepared,
+                    Math.round(this.state.servedPlates + (burnRatePerMin * remainingMinutes))
+                );
+                const projectedSurplus = Math.max(0, this.state.totalPrepared - estimatedFinalServed);
+
+                let riskLevel = 'NOMINAL_PACE';
+                let riskMessage = 'Normal serving pace.';
+                const velocityVariance = expectedBurnRatePerMin > 0
+                    ? ((burnRatePerMin - expectedBurnRatePerMin) / expectedBurnRatePerMin) * 100
+                    : 0;
+
+                if ((this.state.servedPlates / Math.max(1, this.state.totalPrepared)) > 0.90 && remainingMinutes > 25) {
+                    riskLevel = 'STOCKOUT_HAZARD';
+                    riskMessage = 'WARNING: Food running out! Cook more food immediately.';
+                } else if (velocityVariance < -15 && remainingMinutes < 30) {
+                    riskLevel = 'SURPLUS_ACCUMULATION_WARNING';
+                    riskMessage = 'NOTICE: Slow crowd. Extra food will be left over.';
+                }
+
+                return {
+                    elapsedMinutes: Number(elapsedMinutes.toFixed(1)),
+                    remainingMinutes: Number(remainingMinutes.toFixed(1)),
+                    burnRatePerMin,
+                    expectedBurnRatePerMin,
+                    estimatedFinalServed,
+                    projectedSurplus,
+                    riskLevel,
+                    riskMessage,
+                    velocityVariance: Number(velocityVariance.toFixed(1))
+                };
+            }
+
+            async finalizeAndExportSession() {
+                this.state.sessionActive = false;
+                const finalSurplus = Math.max(0, this.state.totalPrepared - this.state.servedPlates);
+
+                // write to plan
+                if (window.InstitutionalAPI && this.state.plan) {
+                    try {
+                        await window.InstitutionalAPI.saveMealPlan({
+                            ...this.state.plan,
+                            status: 'COMPLETED',
+                            prepared_count: this.state.totalPrepared,
+                            variance_pct: this.state.plan.predicted_demand
+                                ? Math.round(((this.state.totalPrepared - this.state.plan.predicted_demand) / this.state.plan.predicted_demand) * 100)
+                                : null
+                        });
+                    } catch (e) { console.warn(e); }
+                }
+
+                // write ESG entry so Node 06 has data
+                if (window.InstitutionalAPI && this.state.institute) {
+                    try {
+                        await window.InstitutionalAPI.saveEsgEntry({
+                            institute_id: this.state.institute.id,
+                            dispatch_id: null,
+                            plan_id: this.state.plan?.id || null,
+                            meals_rescued: finalSurplus,
+                            co2e_kg: +(finalSurplus * 1.05).toFixed(2),
+                            water_l: Math.round(finalSurplus * 180),
+                            cost_inr: Math.round(finalSurplus * 65)
+                        });
+                    } catch (e) { console.warn(e); }
+                }
+
+                this.notify();
+                this.stopTicker();
+                return {
+                    totalServed: this.state.servedPlates,
+                    verifiedSurplus: finalSurplus,
+                    mealSlot: this.state.mealSlot
+                };
+            }
+
+            subscribe(listener) {
+                this.subscribers.add(listener);
+                listener(Object.freeze({ ...this.state }), this.computeLiveTelemetry());
+                return () => this.subscribers.delete(listener);
+            }
+
+            notify() {
+                const stateSnapshot = Object.freeze({ ...this.state });
+                const telemetrySnapshot = this.computeLiveTelemetry();
+                this.subscribers.forEach((cb) => cb(stateSnapshot, telemetrySnapshot));
+            }
+
+            startTicker() {
+                this.stopTicker();
+                this.tickerInterval = window.setInterval(() => {
+                    if (this.state.sessionActive) this.notify();
+                }, 3000);
+            }
+
+            stopTicker() {
+                if (this.tickerInterval) { clearInterval(this.tickerInterval); this.tickerInterval = null; }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PART 2: UI WIRING
+        // ═══════════════════════════════════════════════════════════════
+        const counterHub = new LiveCounterEngine();
+
+        const navPrep = document.getElementById('nav-prep-val');
+        const navServed = document.getElementById('nav-served-val');
+        const navPots = document.getElementById('nav-pots-val');
+        const navBurn = document.getElementById('nav-burn-val');
+        const burnCopyBg = document.getElementById('burn-rate-display-bg');
+        const burnCopyTop = document.getElementById('burn-rate-display-top');
+        const surplusCopyBg = document.getElementById('surplus-projection-display-bg');
+        const surplusCopyTop = document.getElementById('surplus-projection-display-top');
+        const finalizeBtn = document.getElementById('finalize-session-btn');
+
+        counterHub.subscribe((state, telemetry) => {
+            navPrep.textContent = (state.totalPrepared || 0).toLocaleString();
+            navServed.textContent = (state.servedPlates || 0).toLocaleString();
+            navPots.textContent = (state.remainingInPots || 0).toLocaleString();
+            navBurn.textContent = telemetry.burnRatePerMin.toFixed(2);
+
+            const burnHtml = `Serving Speed: ${telemetry.burnRatePerMin} plates/min<br>${telemetry.riskMessage}`;
+            burnCopyBg.innerHTML = burnHtml;
+            burnCopyTop.innerHTML = burnHtml;
+
+            const surplusHtml = `Expected Leftover: ${telemetry.projectedSurplus.toLocaleString()} plates<br>Time Left: ${telemetry.remainingMinutes}m`;
+            surplusCopyBg.innerHTML = surplusHtml;
+            surplusCopyTop.innerHTML = surplusHtml;
+
+            if (!state.sessionActive) {
+                finalizeBtn.textContent = 'Meal Ended';
+                finalizeBtn.disabled = true;
+            } else {
+                finalizeBtn.textContent = 'Finish Meal';
+                finalizeBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-add-1').addEventListener('click', () => counterHub.increment(1));
+        document.getElementById('btn-add-5').addEventListener('click', () => counterHub.increment(5));
+        document.getElementById('btn-add-10').addEventListener('click', () => counterHub.increment(10));
+        document.getElementById('btn-add-25').addEventListener('click', () => counterHub.increment(25));
+        document.getElementById('btn-add-50').addEventListener('click', () => counterHub.increment(50));
+        document.getElementById('btn-sub-1').addEventListener('click', () => counterHub.decrement(1));
+
+        document.getElementById('btn-topup').addEventListener('click', () => {
+            const topup = prompt('Extra plates cooked mid-service:', '50');
+            if (topup && !isNaN(Number(topup))) {
+                counterHub.addPreparedBuffer(Number(topup));
+                showToast(`Added ${topup} extra plates`, 'success');
+            }
+        });
+
+        finalizeBtn.addEventListener('click', async () => {
+            if (!confirm('End meal service and save counts?')) return;
+            finalizeBtn.textContent = 'Saving…';
+            finalizeBtn.disabled = true;
+            const res = await counterHub.finalizeAndExportSession();
+            showToast(`Meal finished · ${res.totalServed} served · ${res.verifiedSurplus} left over`, 'success');
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === ' ' || e.key === 'Enter') {
+                counterHub.increment(1);
+            } else if (e.key === 'Backspace') {
+                counterHub.decrement(1);
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // PART 3: LIQUID CARVE (unchanged)
+        // ═══════════════════════════════════════════════════════════════
+        class LiquidCarveController {
+            static GOO_STRENGTH = 8;
+            static FOLLOW_TAU_MIN = 0.02;
+            static FOLLOW_TAU_MAX = 0.4;
+            static SQUASH_TAU = 0.09;
+            static SQUASH_PER_PX_PER_SEC = 0.0011;
+            static SQUASH_MAX = 1.6;
+
+            constructor(buttonEl, index) {
+                this.el = buttonEl;
+                this.uid = `lcb_card_${index}_${Math.random().toString(36).substr(2, 7)}`;
+                this.filterId = `goo-${this.uid}`;
+                this.maskId = `bite-${this.uid}`;
+                this.fillColor = this.el.dataset.fill || '#FFFFFF';
+                this.textColor = this.el.dataset.textColor || '#161616';
+                this.blobColor = this.el.dataset.blobColor || '#D4A017';
+                this.blobSize = parseFloat(this.el.dataset.blobSize) || 80;
+                this.cornerRad = parseFloat(this.el.dataset.radius) || 14;
+                this.smoothness = 55;
+                this.hovered = false;
+                this.chase = { x: 0, y: 0, tx: 0, ty: 0, squash: 1, angle: 0, scale: 0 };
+                this.lastTime = performance.now();
+                this.buildSVG();
+                this.bindEvents();
+            }
+
+            buildSVG() {
+                const labelEl = this.el.querySelector('.lcb-label');
+                if (labelEl) labelEl.style.color = this.textColor;
+                const svgNS = "http://www.w3.org/2000/svg";
+                const svg = document.createElementNS(svgNS, "svg");
+                svg.setAttribute("class", "lcb-svg");
+                svg.setAttribute("aria-hidden", "true");
+                svg.innerHTML = `
+          <defs>
+            <filter id="${this.filterId}">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="${LiquidCarveController.GOO_STRENGTH}" result="blur" />
+              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" />
+            </filter>
+            <mask id="${this.maskId}">
+              <rect x="0" y="0" width="100%" height="100%" fill="#fff" rx="${this.cornerRad}" ry="${this.cornerRad}" />
+              <g class="lcb-follow" style="transform-box: fill-box; transform-origin: center;">
+                <g class="lcb-squash" style="transform-box: fill-box; transform-origin: center;">
+                  <g class="lcb-bite" style="transform-box: fill-box; transform-origin: center; transform: scale(0);">
+                    <circle cx="50%" cy="50%" r="${this.blobSize / 2}" fill="#000" />
+                  </g>
+                </g>
+              </g>
+            </mask>
+          </defs>
+          <g filter="url(#${this.filterId})">
+            <rect x="0" y="0" width="100%" height="100%" rx="${this.cornerRad}" ry="${this.cornerRad}" fill="${this.blobColor}" />
+          </g>
+          <g filter="url(#${this.filterId})">
+            <rect x="0" y="0" width="100%" height="100%" rx="${this.cornerRad}" ry="${this.cornerRad}" fill="${this.fillColor}" mask="url(#${this.maskId})" />
+          </g>
+        `;
+                this.el.insertBefore(svg, this.el.firstChild);
+                this.followEl = svg.querySelector('.lcb-follow');
+                this.squashEl = svg.querySelector('.lcb-squash');
+                this.biteEl = svg.querySelector('.lcb-bite');
+            }
+
+            getOffset(e) {
+                const r = this.el.getBoundingClientRect();
+                return { dx: e.clientX - (r.left + r.width / 2), dy: e.clientY - (r.top + r.height / 2) };
+            }
+
+            bindEvents() {
+                this.el.addEventListener('pointerenter', (e) => {
+                    this.hovered = true;
+                    const o = this.getOffset(e);
+                    this.chase.tx = o.dx; this.chase.ty = o.dy;
+                    this.chase.x = o.dx; this.chase.y = o.dy;
+                    if (this.followEl) this.followEl.style.transform = `translate(${o.dx}px, ${o.dy}px)`;
+                });
+                this.el.addEventListener('pointermove', (e) => {
+                    if (!this.hovered) return;
+                    const o = this.getOffset(e);
+                    this.chase.tx = o.dx; this.chase.ty = o.dy;
+                });
+                this.el.addEventListener('pointerleave', () => { this.hovered = false; });
+            }
+
+            update(now) {
+                const dt = Math.min(0.05, (now - this.lastTime) / 1000) || (1 / 60);
+                this.lastTime = now;
+                const st = this.chase;
+                const t = Math.max(0, Math.min(100, this.smoothness)) / 100;
+                const tau = LiquidCarveController.FOLLOW_TAU_MIN + t * (LiquidCarveController.FOLLOW_TAU_MAX - LiquidCarveController.FOLLOW_TAU_MIN);
+                const k = 1 - Math.exp(-dt / tau);
+                const dx = (st.tx - st.x) * k;
+                const dy = (st.ty - st.y) * k;
+                st.x += dx; st.y += dy;
+                const speed = Math.hypot(dx, dy) / dt;
+                const wantSquash = Math.min(LiquidCarveController.SQUASH_MAX, 1 + speed * LiquidCarveController.SQUASH_PER_PX_PER_SEC);
+                st.squash += (wantSquash - st.squash) * (1 - Math.exp(-dt / LiquidCarveController.SQUASH_TAU));
+                if (speed > 8) st.angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+                const targetScale = this.hovered ? 1 : 0;
+                st.scale += (targetScale - st.scale) * (1 - Math.exp(-dt / 0.12));
+                if (this.followEl) this.followEl.style.transform = `translate(${st.x}px, ${st.y}px)`;
+                if (this.squashEl) this.squashEl.style.transform = `rotate(${st.angle}deg) scale(${st.squash}, ${1 / st.squash})`;
+                if (this.biteEl) this.biteEl.style.transform = `scale(${st.scale})`;
+            }
+        }
+
+        const liquidButtons = [];
+        document.querySelectorAll('.liquid-carve-btn').forEach((btn, idx) => {
+            liquidButtons.push(new LiquidCarveController(btn, idx));
+        });
+
+        function liquidCarveLoop(now) {
+            for (let i = 0; i < liquidButtons.length; i++) liquidButtons[i].update(now);
+            requestAnimationFrame(liquidCarveLoop);
+        }
+        requestAnimationFrame(liquidCarveLoop);
+
+        // ═══════════════════════════════════════════════════════════════
+        // PART 4: CURSOR MASK TRAIL (unchanged)
+        // ═══════════════════════════════════════════════════════════════
+        const cleanupTimer = setTimeout(() => {
+            document.documentElement.classList.remove('anim');
+        }, 6000);
+
+        const stageEl = document.getElementById('stage');
+        stageEl.addEventListener('animationend', (e) => {
+            if (e.target.classList.contains('support-copy__inner')) {
+                document.documentElement.classList.remove('anim');
+                clearTimeout(cleanupTimer);
+            }
+        });
+
+        const TRAIL_MAX_POINTS = 60;
+        const TRAIL_HEAD_R = 140;
+        const TRAIL_NOISE_AMP = 44;
+        const TRAIL_BLOB_PTS = 24;
+        const TRAIL_FADE_SPEED = 0.92;
+        const TRAIL_SAMPLE_DIST = 8;
+
+        const stageBg = document.getElementById('stage-bg');
+        const stageTop = document.getElementById('stage-top');
+        const burgerBg = document.getElementById('burger-bg');
+        const burgerTop = document.getElementById('burger-top');
+        const canvas = document.getElementById('mask-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let points = [];
+        let isHovering = false;
+        let headRadius = 0;
+        let mousePos = { x: 0, y: 0 };
+        let time = 0;
+        let stageRect = null;
+
+        function updateBounds() {
+            stageRect = stageEl.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const w = Math.round(stageRect.width * dpr);
+            const h = Math.round(stageRect.height * dpr);
+            if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
+                canvas.width = w; canvas.height = h;
+            }
+        }
+
+        window.addEventListener('resize', updateBounds);
+        window.addEventListener('scroll', updateBounds);
+
+        stageEl.addEventListener('mouseenter', (e) => { isHovering = true; updateBounds(); recordMouse(e); });
+        stageEl.addEventListener('mouseleave', () => { isHovering = false; });
+        stageEl.addEventListener('mousemove', (e) => { isHovering = true; recordMouse(e); });
+
+        function recordMouse(e) {
+            updateBounds();
+            if (!stageRect) return;
+            const scaleX = canvas.width / stageRect.width;
+            const scaleY = canvas.height / stageRect.height;
+            mousePos.x = (e.clientX - stageRect.left) * scaleX;
+            mousePos.y = (e.clientY - stageRect.top) * scaleY;
+        }
+
+        function drawMorphBlob(context, cx, cy, r, t, seed) {
+            if (r < 2) return;
+            const pts = [];
+            const step = (Math.PI * 2) / TRAIL_BLOB_PTS;
+            for (let i = 0; i < TRAIL_BLOB_PTS; i++) {
+                const angle = i * step;
+                const n1 = Math.sin(angle * 3 + t * 1.4 + seed) * 0.45;
+                const n2 = Math.sin(angle * 5 - t * 0.9 + seed * 2.3) * 0.3;
+                const n3 = Math.cos(angle * 2 + t * 1.8 + seed * 0.7) * 0.25;
+                const noise = (n1 + n2 + n3) * TRAIL_NOISE_AMP * (r / TRAIL_HEAD_R);
+                const currR = Math.max(0, r + noise);
+                pts.push({ x: cx + Math.cos(angle) * currR, y: cy + Math.sin(angle) * currR });
+            }
+            context.beginPath();
+            const last = pts[pts.length - 1];
+            const first = pts[0];
+            context.moveTo((last.x + first.x) / 2, (last.y + first.y) / 2);
+            for (let i = 0; i < pts.length; i++) {
+                const p1 = pts[i];
+                const p2 = pts[(i + 1) % pts.length];
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                context.quadraticCurveTo(p1.x, p1.y, midX, midY);
+            }
+            context.closePath();
+            context.fill();
+        }
+
+        function renderMasks() {
+            const targetR = isHovering ? TRAIL_HEAD_R : 0;
+            headRadius += (targetR - headRadius) * (isHovering ? 0.14 : 0.04);
+
+            if (isHovering && headRadius > 5 && stageRect) {
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                const effectiveDist = TRAIL_SAMPLE_DIST * dpr;
+                let shouldAdd = false;
+                if (points.length === 0) shouldAdd = true;
+                else {
+                    const lastPt = points[points.length - 1];
+                    const dist = Math.hypot(mousePos.x - lastPt.x, mousePos.y - lastPt.y);
+                    if (dist > effectiveDist) shouldAdd = true;
+                }
+                if (shouldAdd) {
+                    points.push({ x: mousePos.x, y: mousePos.y, r: headRadius * dpr, alpha: 1, seed: Math.random() * 100 });
+                    if (points.length > TRAIL_MAX_POINTS) points.shift();
+                }
+            }
+
+            for (let i = points.length - 1; i >= 0; i--) {
+                points[i].alpha *= TRAIL_FADE_SPEED;
+                points[i].r *= 0.995;
+                if (points[i].alpha < 0.01) points.splice(i, 1);
+            }
+
+            time += 0.016;
+
+            if (canvas.width > 0 && canvas.height > 0) {
+                if (points.length === 0 && headRadius < 1) {
+                    stageTop.style.webkitMaskImage = 'linear-gradient(#0000, #0000)';
+                    stageTop.style.maskImage = 'linear-gradient(#0000, #0000)';
+                    stageBg.style.webkitMaskImage = 'none';
+                    stageBg.style.maskImage = 'none';
+                    burgerTop.style.webkitMaskImage = 'linear-gradient(#0000, #0000)';
+                    burgerTop.style.maskImage = 'linear-gradient(#0000, #0000)';
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.globalCompositeOperation = 'source-over';
+                    for (let i = 0; i < points.length; i++) {
+                        const pt = points[i];
+                        ctx.fillStyle = `rgba(255, 255, 255, ${pt.alpha})`;
+                        drawMorphBlob(ctx, pt.x, pt.y, pt.r, time, pt.seed);
+                    }
+                    if (isHovering && headRadius > 2) {
+                        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                        drawMorphBlob(ctx, mousePos.x, mousePos.y, headRadius * dpr, time, 42);
+                    }
+                    const topMaskUrl = `url(${canvas.toDataURL()})`;
+                    stageTop.style.webkitMaskImage = topMaskUrl;
+                    stageTop.style.maskImage = topMaskUrl;
+                    burgerTop.style.webkitMaskImage = topMaskUrl;
+                    burgerTop.style.maskImage = topMaskUrl;
+
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.globalCompositeOperation = 'destination-out';
+                    for (let i = 0; i < points.length; i++) {
+                        const pt = points[i];
+                        ctx.fillStyle = `rgba(0, 0, 0, ${pt.alpha})`;
+                        drawMorphBlob(ctx, pt.x, pt.y, pt.r, time, pt.seed);
+                    }
+                    if (isHovering && headRadius > 2) {
+                        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+                        drawMorphBlob(ctx, mousePos.x, mousePos.y, headRadius * dpr, time, 42);
+                    }
+                    const bgMaskUrl = `url(${canvas.toDataURL()})`;
+                    stageBg.style.webkitMaskImage = bgMaskUrl;
+                    stageBg.style.maskImage = bgMaskUrl;
+                }
+            }
+
+            requestAnimationFrame(renderMasks);
+        }
+
+        window.addEventListener('load', () => {
+            updateBounds();
+            requestAnimationFrame(renderMasks);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#b8d8ea">
+    <title>Node 05 — Surplus Food Logistics &amp; NGO Dispatch | ByteToBite</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #f7f5f2;
+            --muted: #8e9bb0;
+            --panel: rgba(7, 12, 24, 0.72);
+            --panel-border: rgba(180, 205, 255, 0.18);
+            --accent-orange: #ff724c;
+            --accent-green: #5eead4;
+            --accent-yellow: #ffd462;
+            --accent-blue: #38bdf8;
+            --accent-red: #f87171;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-serif: "Times New Roman", Times, serif;
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow-x: hidden;
+            background: #b8d8ea;
+            color: var(--ink);
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+            text-rendering: geometricPrecision;
+            position: relative;
+        }
+
+        .truck-container {
+            position: fixed;
+            top: 50%;
+            left: 100vw;
+            width: min(1300px, 75vw);
+            aspect-ratio: 280 / 110;
+            z-index: 1;
+            pointer-events: none;
+            transform: translateY(-50%);
+            animation: drive-full-screen 7.5s linear infinite;
+            will-change: transform;
+        }
+
+        .truck-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes drive-full-screen {
+            0% {
+                transform: translateY(-50%) translateX(0);
+            }
+
+            100% {
+                transform: translateY(-50%) translateX(calc(-100vw - 115%));
+            }
+        }
+
+        .reference-canvas {
+            position: relative;
+            width: 100%;
+            max-width: 1720px;
+            margin: 0 auto;
+            padding: 30px 40px 60px;
+            z-index: 2;
+            isolation: isolate;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 48px;
+            margin-bottom: 24px;
+            padding-right: 180px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: #0f1c2b;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            position: relative;
+            background: linear-gradient(145deg, #ff9a71 0%, #ff724c 68%, #e95235 100%);
+            box-shadow: 0 0 14px rgba(255, 112, 69, .48), inset 0 1px 0 rgba(255, 255, 255, .32);
+        }
+
+        .brand-mark::before,
+        .brand-mark::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+        }
+
+        .brand-mark::before {
+            top: 6px;
+            border-bottom: 7px solid #17130e;
+        }
+
+        .brand-mark::after {
+            bottom: 6px;
+            border-top: 7px solid #17130e;
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .glass-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 28px;
+            padding: 0 12px;
+            border: 1px solid rgba(180, 205, 255, .38);
+            border-radius: 999px;
+            color: #c2cbe6;
+            background: rgba(7, 16, 39, .68);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 4px 13px rgba(0, 0, 0, .20);
+            -webkit-backdrop-filter: blur(13px) saturate(150%);
+            backdrop-filter: blur(13px) saturate(150%);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: -0.1px;
+            user-select: none;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #7adcc0;
+            box-shadow: 0 0 6px #7adcc0;
+        }
+
+        .dot.live {
+            animation: live-signal 1.5s infinite;
+        }
+
+        .dot.yellow {
+            background: var(--accent-yellow);
+            box-shadow: 0 0 6px var(--accent-yellow);
+        }
+
+        .dot.orange {
+            background: var(--accent-orange);
+            box-shadow: 0 0 6px var(--accent-orange);
+        }
+
+        .dot.red {
+            background: var(--accent-red);
+            box-shadow: 0 0 6px var(--accent-red);
+        }
+
+        .intro {
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: 300;
+        }
+
+        .headline-sans {
+            display: block;
+            color: #2b3d52;
+            font-size: clamp(32px, 3.8vw, 56px);
+            line-height: 1.08;
+            letter-spacing: -2px;
+        }
+
+        .headline-serif {
+            display: inline;
+            color: #0f1c2b;
+            font-family: var(--font-serif);
+            font-size: clamp(34px, 4.1vw, 60px);
+            font-weight: 700;
+            letter-spacing: -2.5px;
+        }
+
+        .intro-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #2e4359;
+            font-weight: 500;
+            flex-wrap: wrap;
+        }
+
+        .dispatch-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr 430px;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .card {
+            position: relative;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            border-top-color: rgba(255, 255, 255, .45);
+            background: rgba(4, 7, 16, 0.58);
+            -webkit-backdrop-filter: blur(14px) saturate(130%);
+            backdrop-filter: blur(14px) saturate(130%);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(184, 198, 229, 0.14);
+            padding-bottom: 14px;
+        }
+
+        .card-heading h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #e2e8f5;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #b0c0d8;
+            font-family: var(--font-mono);
+        }
+
+        .control-value {
+            color: var(--accent-orange);
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 5px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-orange);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 114, 76, 0.8);
+        }
+
+        select,
+        input[type="text"],
+        textarea {
+            width: 100%;
+            background: rgba(10, 16, 32, 0.7);
+            border: 1px solid rgba(180, 205, 255, 0.22);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #fff;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus,
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .kpi-box {
+            background: rgba(14, 23, 46, 0.5);
+            border: 1px solid rgba(180, 205, 255, 0.12);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .kpi-box span {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            font-family: var(--font-mono);
+        }
+
+        .kpi-box strong {
+            font-size: 18px;
+            color: #f7f9fd;
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        .map-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 520px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(180, 205, 255, 0.2);
+            background: #0b111e;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: #0b111e;
+        }
+
+        .leaflet-tile-pane {
+            filter: brightness(0.68) invert(1) contrast(3) hue-rotate(205deg) saturate(0.4);
+        }
+
+        .map-overlay-kpi {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .ngo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .ngo-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .ngo-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        .ngo-item {
+            padding: 12px 14px;
+            background: rgba(13, 21, 41, 0.55);
+            border: 1px solid rgba(180, 205, 255, 0.15);
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .ngo-item:hover,
+        .ngo-item.selected {
+            background: rgba(26, 44, 85, 0.7);
+            border-color: var(--accent-orange);
+            transform: translateX(2px);
+        }
+
+        .ngo-item.selected::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 9px 0 0 9px;
+            background: var(--accent-orange);
+        }
+
+        .ngo-item.infeasible {
+            opacity: 0.55;
+        }
+
+        .ngo-name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .ngo-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        .badge.optimal {
+            background: rgba(94, 234, 212, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(94, 234, 212, 0.3);
+        }
+
+        .badge.urgent {
+            background: rgba(255, 212, 98, 0.15);
+            color: var(--accent-yellow);
+            border: 1px solid rgba(255, 212, 98, 0.3);
+        }
+
+        .badge.infeasible {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .ngo-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--muted);
+            font-family: var(--font-mono);
+            flex-wrap: wrap;
+        }
+
+        .action-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 9px;
+            border: 1px solid transparent;
+            font-family: var(--font-sans);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #ff8159 0%, #ff5c30 100%);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(255, 92, 48, 0.35);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            filter: brightness(1.1);
+            box-shadow: 0 6px 24px rgba(255, 92, 48, 0.5);
+        }
+
+        .btn-whatsapp {
+            background: #128c7e;
+            color: #fff;
+        }
+
+        .btn-whatsapp:hover:not(:disabled) {
+            background: #075e54;
+        }
+
+        .btn-whatsapp.disabled {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        @keyframes live-signal {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.3;
+                transform: scale(0.75);
+            }
+        }
+
+        .toast-wrap {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            padding: 10px 20px;
+            background: rgba(7, 16, 39, 0.95);
+            color: #fff;
+            border-radius: 9999px;
+            font-size: 12.5px;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(180, 205, 255, 0.22);
+            animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+            font-family: var(--font-sans);
+        }
+
+        .toast-item.warn {
+            background: rgba(120, 53, 15, 0.95);
+            border-color: rgba(255, 212, 98, 0.4);
+        }
+
+        .toast-item.error {
+            background: rgba(127, 29, 29, 0.95);
+            border-color: rgba(248, 113, 113, 0.4);
+        }
+
+        .toast-item.success {
+            background: rgba(6, 78, 59, 0.95);
+            border-color: rgba(94, 234, 212, 0.4);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .dispatch-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .truck-container {
+                display: none;
+            }
+
+            .map-wrapper {
+                min-height: 420px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="truck-container" aria-hidden="true">
+        <svg class="truck-svg" viewBox="0 0 280 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="90" y="10" width="175" height="68" rx="4" fill="#1b2434" stroke="#2d3b52" stroke-width="2" />
+            <line x1="90" y1="44" x2="265" y2="44" stroke="#ff724c" stroke-width="3" />
+            <line x1="125" y1="12" x2="125" y2="76" stroke="#263449" stroke-width="1.5" />
+            <line x1="160" y1="12" x2="160" y2="76" stroke="#263449" stroke-width="1.5" />
+            <line x1="195" y1="12" x2="195" y2="76" stroke="#263449" stroke-width="1.5" />
+            <line x1="230" y1="12" x2="230" y2="76" stroke="#263449" stroke-width="1.5" />
+            <rect x="15" y="74" width="250" height="8" rx="2" fill="#0b0e14" />
+            <path d="M15 78 L15 50 L35 24 L78 24 L85 24 L85 78 Z" fill="#ff724c" />
+            <path d="M22 48 L37 28 L62 28 L62 48 Z" fill="#9bd1f5" />
+            <path d="M66 30 L80 30 L80 72 L66 72 Z" fill="#e05832" />
+            <polygon points="15,62 0,55 0,75 15,68" fill="rgba(255, 235, 150, 0.45)" />
+            <rect x="13" y="60" width="4" height="9" rx="1" fill="#fff5aa" />
+            <rect x="75" y="8" width="5" height="24" fill="#8892a0" />
+            <path d="M75 8 Q75 4 71 4 L68 4" stroke="#8892a0" stroke-width="3" fill="none" />
+            <rect x="100" y="70" width="35" height="12" rx="4" fill="#717f94" />
+            <circle cx="42" cy="84" r="14" fill="#12151b" />
+            <circle cx="42" cy="84" r="7" fill="#5c6778" />
+            <circle cx="42" cy="84" r="3" fill="#cfd6e0" />
+            <circle cx="195" cy="84" r="14" fill="#12151b" />
+            <circle cx="195" cy="84" r="7" fill="#5c6778" />
+            <circle cx="195" cy="84" r="3" fill="#cfd6e0" />
+            <circle cx="230" cy="84" r="14" fill="#12151b" />
+            <circle cx="230" cy="84" r="7" fill="#5c6778" />
+            <circle cx="230" cy="84" r="3" fill="#cfd6e0" />
+        </svg>
+    </div>
+
+    <div class="reference-canvas">
+        <header class="nav">
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <a href="hub.html" class="brand">
+                    <span class="brand-mark"></span>
+                    <span>ByteToBite <span style="font-weight: 300; opacity: 0.7;">// Node 05</span></span>
+                </a>
+                <div class="nav-status">
+                    <span class="glass-pill"><i class="dot live" id="live-dot"></i><span
+                            id="live-text">CONNECTING…</span></span>
+                    <span class="glass-pill" id="hub-pill">HUB: —</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="intro">
+            <h1>
+                <span class="headline-sans">Surplus Logistics &amp;</span>
+                <span class="headline-serif">Automated NGO Dispatch.</span>
+            </h1>
+            <div class="intro-meta">
+                <span id="origin-line">📍 Origin: — </span>
+                <span>•</span>
+                <span id="upstream-status">🔗 Upstream: waiting for Node 04</span>
+            </div>
+        </div>
+
+        <main class="dispatch-grid">
+
+            <section class="card" aria-label="Surplus Manifest Parameters">
+                <div class="card-heading">
+                    <h2>Surplus Manifest</h2>
+                    <span class="badge optimal" id="batch-state">WAITING</span>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span>Verified Plate Count</span>
+                        <span class="control-value" id="plateCountVal">0 meals</span>
+                    </div>
+                    <input type="range" id="plateCount" min="20" max="600" value="180" step="10">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span>Meal Category</span>
+                    </div>
+                    <select id="mealCategory">
+                        <option value="GRAVY" selected>Hot Meals (Dal / Curry / Rice) — 3.5h half-life</option>
+                        <option value="DRY">Dry Rations / Rotis / Breads — 6h half-life</option>
+                        <option value="PACKAGED">Sealed Packaged Food — 12h half-life</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span>Core Temperature at Packaging</span>
+                        <span class="control-value" id="tempVal">68°C</span>
+                    </div>
+                    <input type="range" id="tempInput" min="20" max="85" value="68" step="1">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span>Safe Transit Window</span>
+                        <span class="control-value" id="transitWindowVal">45 mins</span>
+                    </div>
+                    <input type="range" id="transitWindow" min="15" max="120" value="45" step="5">
+                </div>
+
+                <div class="kpi-row">
+                    <div class="kpi-box">
+                        <span>Est. Weight</span>
+                        <strong id="kpiWeight">0 kg</strong>
+                    </div>
+                    <div class="kpi-box">
+                        <span>CO₂ Offset</span>
+                        <strong id="kpiCo2" style="color: var(--accent-green);">0 kg</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" style="padding: 16px;" aria-label="Geospatial Map">
+                <div class="map-wrapper">
+                    <div id="map"></div>
+                    <div class="map-overlay-kpi">
+                        <span class="glass-pill" id="routeDistPill">Distance: -- km</span>
+                        <span class="glass-pill" id="routeEtaPill">Transit: -- mins</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" aria-label="NGO Matching and Dispatch Actions">
+                <div class="card-heading">
+                    <h2>Recipient Match Engine</h2>
+                    <span class="glass-pill" style="font-size: 10px;" id="matchCount">— Available</span>
+                </div>
+
+                <div class="ngo-list" id="ngoList"></div>
+
+                <div class="kpi-box" style="margin-top: 4px;">
+                    <span>Target Dispatch Focal Point</span>
+                    <strong id="targetContactName" style="font-size: 14px; color: #fff;">—</strong>
+                    <div style="font-size: 12px; color: var(--muted); margin-top: 4px;" id="targetContactDetail">
+                        Pick an NGO from the list above
+                    </div>
+                </div>
+
+                <div class="action-group">
+                    <button class="btn btn-primary" id="btnDispatch" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        <span id="btnDispatchLabel">Confirm &amp; Send Dispatch to Grid</span>
+                    </button>
+                    <a class="btn btn-whatsapp disabled" id="btnWhatsApp" target="_blank" rel="noopener">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z" />
+                        </svg>
+                        Alert Driver Fleet on WhatsApp
+                    </a>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="institutional-db.js"></script>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // TOASTS
+        // ═══════════════════════════════════════════════════════════════
+        function showToast(msg, type) {
+            type = type || 'info';
+            const wrap = document.getElementById('toast-wrap');
+            const el = document.createElement('div');
+            el.className = 'toast-item ' + (type !== 'info' ? type : '');
+            el.textContent = msg;
+            wrap.appendChild(el);
+            setTimeout(function () {
+                el.style.transition = 'opacity 0.35s, transform 0.35s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(function () { el.remove(); }, 400);
+            }, 3600);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // NGO POOL
+        // Loads from InstitutionalAPI.getNGOs() if available.
+        // Falls back to a small built-in list so the demo never breaks.
+        // ═══════════════════════════════════════════════════════════════
+        const FALLBACK_NGOS = [
+            { id: 'ngo-1', name: 'Aahar Center Khandagiri', coords: [20.2612, 85.7895], distanceKm: 2.8, capacity: 250, contact: 'Rajesh Mohapatra', phone: '+91 94370 12345', email: 'aahar.khandagiri@odisha.gov.in', baseEtaMin: 9 },
+            { id: 'ngo-2', name: 'Mission Ashra Shelter', coords: [20.2310, 85.7920], distanceKm: 4.6, capacity: 180, contact: 'Dr. Sunita Nayak', phone: '+91 98610 54321', email: 'dispatch@missionashra.org', baseEtaMin: 14 },
+            { id: 'ngo-3', name: 'Jeevan Jyoti Destitute Home', coords: [20.2850, 85.8150], distanceKm: 8.2, capacity: 120, contact: 'Sister Teresa', phone: '+91 94380 98765', email: 'contact@jeevanjyoti-odisha.org', baseEtaMin: 22 },
+            { id: 'ngo-4', name: 'Bhubaneswar Urban Food Bank', coords: [20.2980, 85.8450], distanceKm: 13.5, capacity: 500, contact: 'Alok Jena', phone: '+91 99370 11223', email: 'ops@bbsrfoodbank.org', baseEtaMin: 36 }
+        ];
+
+        let NGO_DATABASE = FALLBACK_NGOS.slice();
+
+        async function loadNGOs() {
+            try {
+                if (window.InstitutionalAPI && typeof window.InstitutionalAPI.getNGOs === 'function') {
+                    const fetched = await window.InstitutionalAPI.getNGOs();
+                    if (Array.isArray(fetched) && fetched.length) {
+                        NGO_DATABASE = fetched;
+                    }
+                }
+            } catch (e) {
+                console.warn('getNGOs failed, using fallback pool', e);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════
+        const state = {
+            institute: null,
+            plan: null,
+            prep: null,
+            tally: null,
+            thermal: null,
+            dispatchReady: false,
+            surplus: 0,
+            selectedNgo: null,
+            connected: false
+        };
+
+        const ORIGIN_COORDS = [20.2520, 85.7780];
+
+        let map, originMarker, recipientMarkers = [], routePolyline = null;
+
+        // DOM refs
+        const plateSlider = document.getElementById('plateCount');
+        const plateVal = document.getElementById('plateCountVal');
+        const tempSlider = document.getElementById('input-temp') || document.getElementById('tempInput');
+        const tempVal = document.getElementById('tempVal');
+        const transitSlider = document.getElementById('transitWindow');
+        const transitVal = document.getElementById('transitWindowVal');
+        const categorySelect = document.getElementById('mealCategory');
+        const kpiWeight = document.getElementById('kpiWeight');
+        const kpiCo2 = document.getElementById('kpiCo2');
+        const ngoListContainer = document.getElementById('ngoList');
+        const routeDistPill = document.getElementById('routeDistPill');
+        const routeEtaPill = document.getElementById('routeEtaPill');
+        const targetContactName = document.getElementById('targetContactName');
+        const targetContactDetail = document.getElementById('targetContactDetail');
+        const btnDispatch = document.getElementById('btnDispatch');
+        const btnDispatchLabel = document.getElementById('btnDispatchLabel');
+        const btnWhatsApp = document.getElementById('btnWhatsApp');
+        const batchState = document.getElementById('batch-state');
+        const matchCount = document.getElementById('matchCount');
+        const hubPill = document.getElementById('hub-pill');
+        const liveText = document.getElementById('live-text');
+        const upstreamStatus = document.getElementById('upstream-status');
+        const originLine = document.getElementById('origin-line');
+
+        // ═══════════════════════════════════════════════════════════════
+        // BOOT
+        // ═══════════════════════════════════════════════════════════════
+        async function boot() {
+            await loadNGOs();
+            initMap();
+            wireInputs();
+            await hydrateFromGrid();
+            subscribe();
+        }
+
+        async function hydrateFromGrid() {
+            try {
+                if (!window.InstitutionalAPI) {
+                    liveText.textContent = 'NO API';
+                    return;
+                }
+                const session = await window.InstitutionalAPI.getCurrentSession();
+                if (!session || !session.institute_id) {
+                    liveText.textContent = 'NO SESSION';
+                    return;
+                }
+                const inst = await window.InstitutionalAPI.getInstitute(session.institute_id);
+                if (!inst) return;
+                state.institute = inst;
+                hubPill.textContent = 'HUB: ' + (inst.name || '').toUpperCase();
+
+                originLine.textContent = '📍 Origin: ' + (inst.mess_name || 'Campus Mess') + ' · ' + (inst.city || '');
+
+                const plans = await window.InstitutionalAPI.getMealPlans(inst.id);
+                const sorted = plans.slice().sort(function (a, b) { return (b.created_at || 0) - (a.created_at || 0); });
+                const active =
+                    sorted.find(function (p) { return p.status === 'IN_SERVICE'; }) ||
+                    sorted.find(function (p) { return p.status === 'PUBLISHED'; }) ||
+                    sorted.find(function (p) { return p.status === 'COMPLETED'; }) ||
+                    sorted[0] || null;
+
+                if (!active) {
+                    upstreamStatus.textContent = '🔗 No active plan yet — publish on Node 01';
+                    liveText.textContent = 'WAITING';
+                    return;
+                }
+                state.plan = active;
+
+                const prep = await window.InstitutionalAPI.getPrepByPlan(active.id);
+                state.prep = prep;
+                const tally = prep && prep.id ? await window.InstitutionalAPI.getLatestTally(prep.id) : null;
+                state.tally = tally;
+                const thermal = prep && prep.id ? await window.InstitutionalAPI.getLatestThermal(prep.id) : null;
+                state.thermal = thermal;
+
+                const prepared = (prep && prep.prepared_count) || active.prepared_count || active.predicted_demand || 0;
+                const served = (tally && tally.served_count) || 0;
+                state.surplus = Math.max(0, prepared - served);
+                plateSlider.value = state.surplus;
+
+                // Was the batch marked ready on Node 04?
+                state.dispatchReady = !!(active.dispatch_ready || (thermal && thermal.ready_for_dispatch));
+                if (state.dispatchReady) {
+                    batchState.textContent = 'MARKED READY (N04)';
+                    batchState.className = 'badge optimal';
+                    upstreamStatus.textContent = '🔗 Upstream: Node 04 confirmed quality ✓';
+                } else if (thermal) {
+                    batchState.textContent = 'QUALITY: ' + (thermal.state || 'UNKNOWN');
+                    batchState.className = 'badge ' + (thermal.state === 'EXPIRED' ? 'infeasible' : thermal.state === 'URGENT' ? 'urgent' : 'optimal');
+                    upstreamStatus.textContent = '🔗 Upstream: Node 04 recorded ' + (thermal.state || '') + ' state';
+                } else {
+                    batchState.textContent = 'NOT VERIFIED';
+                    batchState.className = 'badge urgent';
+                    upstreamStatus.textContent = '🔗 Upstream: waiting for Node 04 confirmation';
+                }
+
+                liveText.textContent = 'DISPATCH TELEMETRY LIVE';
+                state.connected = true;
+
+                updateCalculations();
+            } catch (e) {
+                console.warn('hydrateFromGrid failed', e);
+            }
+        }
+
+        function subscribe() {
+            if (!window.InstitutionalAPI) return;
+            window.InstitutionalAPI.subscribe(async function (type) {
+                const label = String(type || '').replace('bytetobite:', '').replace('-changed', '');
+                if (label === 'tallies' || label === 'meal-plans' || label === 'meal-preps' || label === 'thermal') {
+                    await hydrateFromGrid();
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MAP
+        // ═══════════════════════════════════════════════════════════════
+        function initMap() {
+            map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView(ORIGIN_COORDS, 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            setTimeout(function () { map.invalidateSize(); }, 150);
+
+            const originIcon = L.divIcon({
+                className: 'custom-map-icon',
+                html: '<div style="background: #ff724c; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 10px #ff724c;"></div>',
+                iconSize: [14, 14]
+            });
+            originMarker = L.marker(ORIGIN_COORDS, { icon: originIcon }).addTo(map)
+                .bindPopup('<strong>Campus Central Kitchen</strong><br>Origin Point');
+
+            drawNgoMarkers();
+        }
+
+        function drawNgoMarkers() {
+            if (!map) return;
+            recipientMarkers.forEach(function (m) { map.removeLayer(m); });
+            recipientMarkers = [];
+
+            NGO_DATABASE.forEach(function (ngo) {
+                const isSelected = state.selectedNgo && ngo.id === state.selectedNgo.id;
+                const color = isSelected ? '#5eead4' : '#38bdf8';
+                const icon = L.divIcon({
+                    className: 'custom-map-icon',
+                    html: '<div style="background: ' + color + '; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px ' + color + ';"></div>',
+                    iconSize: [12, 12]
+                });
+                const marker = L.marker(ngo.coords, { icon: icon }).addTo(map);
+                marker.on('click', function () { selectNgo(ngo.id); });
+                marker.bindPopup('<strong>' + ngo.name + '</strong><br>Capacity: ' + ngo.capacity + ' Meals<br>Distance: ' + ngo.distanceKm + ' km');
+                recipientMarkers.push(marker);
+            });
+        }
+
+        function updateRoute() {
+            if (!map || !state.selectedNgo) return;
+            if (routePolyline) map.removeLayer(routePolyline);
+
+            const latlngs = [ORIGIN_COORDS, state.selectedNgo.coords];
+            routePolyline = L.polyline(latlngs, {
+                color: '#ff724c',
+                weight: 4,
+                opacity: 0.85,
+                dashArray: '8, 8'
+            }).addTo(map);
+
+            map.fitBounds(routePolyline.getBounds(), { padding: [40, 40] });
+
+            routeDistPill.textContent = 'Distance: ' + state.selectedNgo.distanceKm + ' km';
+            routeEtaPill.textContent = 'Transit: ~' + state.selectedNgo.baseEtaMin + ' mins';
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // NGO LIST
+        // ═══════════════════════════════════════════════════════════════
+        function getDecayStatus(ngo, maxSafeMinutes) {
+            const eta = ngo.baseEtaMin;
+            if (eta > maxSafeMinutes) return { label: 'INFEASIBLE', cls: 'infeasible' };
+            if (eta > maxSafeMinutes * 0.6) return { label: 'URGENT', cls: 'urgent' };
+            return { label: 'OPTIMAL', cls: 'optimal' };
+        }
+
+        function renderNgoList() {
+            const plates = parseInt(plateSlider.value, 10);
+            const maxMinutes = parseInt(transitSlider.value, 10);
+
+            ngoListContainer.innerHTML = '';
+            let feasibleCount = 0;
+
+            NGO_DATABASE.forEach(function (ngo) {
+                const decay = getDecayStatus(ngo, maxMinutes);
+                const isSelected = state.selectedNgo && ngo.id === state.selectedNgo.id;
+                const isCapacityMatch = ngo.capacity >= plates;
+                const isFeasible = decay.cls !== 'infeasible' && state.dispatchReady;
+                if (isFeasible) feasibleCount++;
+
+                const item = document.createElement('div');
+                item.className = 'ngo-item' + (isSelected ? ' selected' : '') + (isFeasible ? '' : ' infeasible');
+                item.onclick = function () { selectNgo(ngo.id); };
+
+                item.innerHTML =
+                    '<div class="ngo-name-row">' +
+                    '<span class="ngo-name">' + ngo.name + '</span>' +
+                    '<span class="badge ' + decay.cls + '">' + decay.label + '</span>' +
+                    '</div>' +
+                    '<div class="ngo-stats">' +
+                    '<span>📍 ' + ngo.distanceKm + ' km</span>' +
+                    '<span>⏱ ' + ngo.baseEtaMin + 'm transit</span>' +
+                    '<span style="color: ' + (isCapacityMatch ? 'var(--accent-green)' : 'var(--accent-yellow)') + '">' +
+                    '📦 Cap: ' + ngo.capacity + ' ' + (isCapacityMatch ? '✓' : '(Partial)') +
+                    '</span>' +
+                    '</div>';
+
+                ngoListContainer.appendChild(item);
+            });
+
+            matchCount.textContent = feasibleCount + ' Available';
+        }
+
+        function selectNgo(id) {
+            const target = NGO_DATABASE.find(function (n) { return n.id === id; });
+            if (!target) return;
+            state.selectedNgo = target;
+            targetContactName.textContent = target.name;
+            targetContactDetail.textContent = 'Contact: ' + target.contact + ' · ' + target.phone + ' · Capacity: ' + target.capacity + ' Meals';
+            drawNgoMarkers();
+            updateRoute();
+            renderNgoList();
+            updateDispatchLinks();
+        }
+
+        function autoSelectBestNgo() {
+            const plates = parseInt(plateSlider.value, 10);
+            const maxMinutes = parseInt(transitSlider.value, 10);
+
+            const feasible = NGO_DATABASE
+                .map(function (n) {
+                    const decay = getDecayStatus(n, maxMinutes);
+                    const capacityMatch = n.capacity >= plates;
+                    return Object.assign({}, n, {
+                        decay: decay,
+                        capacityMatch: capacityMatch,
+                        score: (decay.cls === 'optimal' ? 100 : decay.cls === 'urgent' ? 60 : 0) +
+                            (capacityMatch ? 40 : 0) -
+                            n.distanceKm * 2
+                    });
+                })
+                .filter(function (n) { return n.decay.cls !== 'infeasible'; })
+                .sort(function (a, b) { return b.score - a.score; });
+
+            if (feasible.length) selectNgo(feasible[0].id);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // CALCULATIONS
+        // ═══════════════════════════════════════════════════════════════
+        function updateCalculations() {
+            const plates = parseInt(plateSlider.value, 10);
+            const temp = tempSlider.value;
+            const windowVal = transitSlider.value;
+
+            plateVal.textContent = plates + ' meals';
+            tempVal.textContent = temp + '°C';
+            transitVal.textContent = windowVal + ' mins';
+
+            const kg = (plates * 0.4).toFixed(1);
+            const co2 = Math.round(plates * 1.05);
+
+            kpiWeight.textContent = kg + ' kg';
+            kpiCo2.textContent = co2 + ' kg';
+
+            renderNgoList();
+            updateDispatchLinks();
+        }
+
+        function updateDispatchLinks() {
+            const plates = plateSlider.value;
+            const category = categorySelect.options[categorySelect.selectedIndex].text;
+            const temp = tempSlider.value;
+            const ngo = state.selectedNgo;
+
+            const canDispatch = state.dispatchReady && ngo && parseInt(plates, 10) > 0;
+
+            btnDispatch.disabled = !canDispatch;
+            btnDispatchLabel.textContent = !state.dispatchReady
+                ? 'Waiting for Node 04 quality check'
+                : (canDispatch ? 'Confirm & Send Dispatch to Grid' : 'Pick an NGO first');
+
+            if (!canDispatch) {
+                btnWhatsApp.classList.add('disabled');
+                btnWhatsApp.removeAttribute('href');
+                return;
+            }
+
+            btnWhatsApp.classList.remove('disabled');
+            const waText = encodeURIComponent(
+                '*BYTETOBITE FOOD DISPATCH ALERT (Node 05)*\n\n' +
+                '*Origin:* ' + (state.institute && state.institute.mess_name ? state.institute.mess_name : 'Campus Kitchen') + '\n' +
+                '*Destination:* ' + ngo.name + '\n' +
+                '*Plates:* ' + plates + ' Meals (' + category + ')\n' +
+                '*Temp at Packaging:* ' + temp + '°C\n' +
+                '*Est Transit:* ' + ngo.baseEtaMin + ' mins\n' +
+                '*Driver Action Required:* Pickup immediate. Please verify seals upon arrival.'
+            );
+            btnWhatsApp.href = 'https://wa.me/?text=' + waText;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // DISPATCH WRITE
+        // ═══════════════════════════════════════════════════════════════
+        async function confirmDispatch() {
+            if (!state.dispatchReady) {
+                showToast('Node 04 must mark this batch safe first', 'warn');
+                return;
+            }
+            if (!state.selectedNgo) {
+                showToast('Pick an NGO from the list', 'warn');
+                return;
+            }
+            const plates = parseInt(plateSlider.value, 10) || 0;
+            if (plates < 1) {
+                showToast('No plates to dispatch', 'warn');
+                return;
+            }
+
+            btnDispatch.disabled = true;
+            btnDispatchLabel.textContent = 'Sending…';
+
+            try {
+                if (!window.InstitutionalAPI || !state.institute) {
+                    throw new Error('Grid not connected');
+                }
+
+                const ngo = state.selectedNgo;
+                const category = categorySelect.options[categorySelect.selectedIndex].text;
+                const temp = tempSlider.value;
+
+                const dispatch = await window.InstitutionalAPI.saveDispatch({
+                    institute_id: state.institute.id,
+                    prep_id: state.prep && state.prep.id ? state.prep.id : null,
+                    plan_id: state.plan && state.plan.id ? state.plan.id : null,
+                    ngo_id: ngo.id,
+                    ngo_name: ngo.name,
+                    ngo_distance_km: ngo.distanceKm,
+                    ngo_contact: ngo.contact,
+                    ngo_phone: ngo.phone,
+                    ngo_email: ngo.email,
+                    meals_sent: plates,
+                    eta_minutes: ngo.baseEtaMin,
+                    category: category,
+                    temp_c: temp,
+                    custody_officer: 'Mess Lead',
+                    verified_at: Date.now()
+                });
+
+                const co2 = Number((plates * 1.05).toFixed(2));
+                const valueINR = plates * 45;
+                const waterL = plates * 180;
+
+                await window.InstitutionalAPI.saveEsgEntry({
+                    institute_id: state.institute.id,
+                    dispatch_id: dispatch && dispatch.id ? dispatch.id : null,
+                    plan_id: state.plan && state.plan.id ? state.plan.id : null,
+                    meals_rescued: plates,
+                    co2e_kg: co2,
+                    water_l: waterL,
+                    cost_inr: valueINR
+                });
+
+                showToast('Dispatch saved · ' + plates + ' meals to ' + ngo.name, 'success');
+
+                batchState.textContent = 'DISPATCHED';
+                batchState.className = 'badge optimal';
+
+                btnDispatchLabel.textContent = 'Dispatched ✓';
+                setTimeout(function () { updateDispatchLinks(); }, 2500);
+            } catch (e) {
+                console.error('Dispatch failed', e);
+                showToast('Dispatch failed: ' + (e.message || 'unknown'), 'error');
+                btnDispatch.disabled = false;
+                btnDispatchLabel.textContent = 'Confirm & Send Dispatch to Grid';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // WIRING
+        // ═══════════════════════════════════════════════════════════════
+        function wireInputs() {
+            plateSlider.addEventListener('input', updateCalculations);
+            tempSlider.addEventListener('input', updateCalculations);
+            transitSlider.addEventListener('input', updateCalculations);
+            categorySelect.addEventListener('change', updateCalculations);
+            window.addEventListener('resize', function () { if (map) map.invalidateSize(); });
+
+            btnDispatch.addEventListener('click', confirmDispatch);
+        }
+
+        // Boot
+        document.addEventListener('DOMContentLoaded', boot);
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(boot, 0);
+        }
+    </script>
+</body>
+
+</html>

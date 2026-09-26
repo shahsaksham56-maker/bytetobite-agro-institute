@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite — Bio-Compost Hub</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['"Instrument Serif"', 'serif'],
+                        body: ['"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        background: 'hsl(var(--background))',
+                        foreground: 'hsl(var(--foreground))',
+                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+                        border: 'hsl(var(--border))',
+                        ring: 'hsl(var(--ring))',
+                    },
+                    borderRadius: { DEFAULT: 'var(--radius)' }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 210 14% 17%;
+            --primary: 210 14% 17%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 0 0% 96%;
+            --secondary-foreground: 0 0% 9%;
+            --muted: 0 0% 96%;
+            --muted-foreground: 184 5% 55%;
+            --accent: 239 84% 67%;
+            --accent-foreground: 0 0% 100%;
+            --border: 0 0% 90%;
+            --ring: 239 84% 67%;
+            --radius: 0.5rem;
+            --shadow-dashboard: 0 25px 80px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+            --shadow-gateway: 0 30px 90px -20px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
+        }
+
+        #bg-video {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .num {
+            font-family: 'Instrument Serif', serif;
+            font-weight: 400;
+            letter-spacing: 0;
+            font-size: 1.05em;
+        }
+
+        .num-lg {
+            font-family: 'Instrument Serif', serif;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+
+        .num-col {
+            font-family: 'Instrument Serif', serif;
+            font-variant-numeric: tabular-nums;
+        }
+
+        @keyframes fadeUpBadge {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUpHeadline {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUpSubhead {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUpCTA {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUpDashboard {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .anim-badge {
+            animation: fadeUpBadge 0.5s ease-out forwards;
+        }
+
+        .anim-headline {
+            opacity: 0;
+            animation: fadeUpHeadline 0.6s ease-out 0.1s forwards;
+        }
+
+        .anim-subhead {
+            opacity: 0;
+            animation: fadeUpSubhead 0.6s ease-out 0.2s forwards;
+        }
+
+        .anim-cta {
+            opacity: 0;
+            animation: fadeUpCTA 0.6s ease-out 0.3s forwards;
+        }
+
+        .anim-dashboard {
+            opacity: 0;
+            animation: fadeUpDashboard 0.8s ease-out 0.5s forwards;
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 1.6s ease-in-out infinite;
+        }
+
+        .modal-in {
+            animation: modal-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .anim-done,
+        .anim-done * {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 9999px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+
+<body
+    class="bg-background text-foreground antialiased font-body selection:bg-accent/20 selection:text-foreground min-h-screen overflow-x-hidden overflow-y-auto">
+
+    <video id="bg-video" autoplay muted loop playsinline preload="auto" webkit-playsinline="true">
+        <source
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_015952_e1deeb12-8fb7-4071-a42a-60779fc64ab6.mp4"
+            type="video/mp4" />
+    </video>
+
+    <!-- ==========================================
+       GATEWAY (login screen, shown by default)
+       ========================================== -->
+    <div id="compost-gateway"
+        class="fixed inset-0 z-[100] flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-10 overflow-y-auto">
+        <div class="absolute inset-0 bg-white/55 backdrop-blur-md"></div>
+        <div class="relative z-10 w-full max-w-5xl my-auto py-4">
+            <!-- Top Navigation & Demo bar -->
+            <div class="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-2 bg-background/80 hover:bg-background text-foreground text-xs font-semibold px-4 py-2 rounded-full border border-border shadow-sm backdrop-blur transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to Main Hub</span>
+                </a>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="quickDemoGateLogin('operator')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Operator
+                    </button>
+                    <button onclick="quickDemoGateLogin('auditor')" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm transition-all">
+                        ⚡ Demo Auditor
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mb-8 sm:mb-10">
+                <div
+                    class="inline-flex items-center gap-2 bg-background rounded-full px-4 py-1.5 shadow-sm text-[13px] font-medium text-foreground border border-border mb-4 sm:mb-5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                    <span>ByteToBite Bio-Compost Grid · Choose Your Gateway</span>
+                </div>
+                <h1
+                    class="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] leading-[0.95] tracking-tight text-foreground max-w-3xl mx-auto">
+                    Sign in to the <span class="italic font-normal">compost</span> console
+                </h1>
+                <p class="mt-3 text-muted-foreground max-w-lg mx-auto text-sm">Only verified operators and auditors can
+                    access this console. Nothing goes to waste without a signature.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+
+                <!-- OPERATOR CARD -->
+                <div class="group text-left bg-background rounded-3xl p-6 sm:p-7 shadow-xl border border-border hover:shadow-2xl transition-all flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoGateLogin('operator')" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-foreground mb-2">Plant Operator</h3>
+                    <p class="text-sm text-muted-foreground leading-relaxed mb-5 flex-grow">The person running the
+                        digester. Takes in batches, starts processing, sends carbon credits to SEBI, issues
+                        certificates.</p>
+                    <button onclick="openGateModal('operator')" class="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">
+                        <span>Sign in as Operator</span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- AUDITOR CARD -->
+                <div class="group text-left bg-background rounded-3xl p-6 sm:p-7 shadow-xl border border-border hover:shadow-2xl transition-all flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-5">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-7 h-7 text-indigo-600 group-hover:text-white transition-colors" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.3-4.3" />
+                            </svg>
+                        </div>
+                        <button onclick="quickDemoGateLogin('auditor')" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white px-2.5 py-1 rounded-full transition-all">
+                            ⚡ Quick Demo
+                        </button>
+                    </div>
+                    <h3 class="text-xl font-semibold text-foreground mb-2">Regulator / Auditor</h3>
+                    <p class="text-sm text-muted-foreground leading-relaxed mb-5 flex-grow">CPCB or SEBI auditor. Views
+                        the same console read-only — sees every batch, every certificate, every carbon credit. Cannot
+                        change anything.</p>
+                    <button onclick="openGateModal('auditor')" class="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-500 transition-colors">
+                        <span>Sign in as Auditor</span>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-center text-[11px] text-muted-foreground mt-8">All actions are logged. Every batch carries a
+                cryptographic fingerprint.</p>
+        </div>
+    </div>
+
+    <!-- ==========================================
+       GATE MODAL
+       ========================================== -->
+    <div id="gate-modal" class="fixed inset-0 z-[110] hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeGateModal()"></div>
+        <div
+            class="relative modal-in w-full max-w-md bg-background rounded-3xl shadow-2xl overflow-hidden border border-border my-auto">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-border">
+                <h3 id="gate-modal-title" class="font-semibold text-foreground text-base">Sign in</h3>
+                <button onclick="closeGateModal()"
+                    class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">✕</button>
+            </div>
+            <div id="gate-modal-body" class="p-6 max-h-[75vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+       MAIN CONSOLE (hidden until sign-in)
+       ========================================== -->
+    <div id="console-wrapper" class="relative min-h-screen flex flex-col justify-between hidden">
+
+        <header class="relative z-20 flex flex-wrap items-center justify-between gap-3 px-4 md:px-12 lg:px-20 py-4 font-body shrink-0 border-b border-border/40">
+            <div class="flex items-center gap-3 flex-wrap">
+                <a href="hero.html" class="inline-flex items-center gap-1.5 bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold px-3 py-1.5 rounded-full border border-border transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    <span>Back to Main</span>
+                </a>
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-semibold tracking-tight text-foreground">ByteToBite</span>
+                    <span class="text-muted-foreground">/</span>
+                    <span class="text-sm text-muted-foreground font-medium">Compost Hub · P-05</span>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-8 text-sm text-muted-foreground font-medium">
+                <button onclick="focusPanel('intake')" class="hover:text-foreground transition-colors">New
+                    arrivals</button>
+                <button onclick="focusPanel('tanks')" class="hover:text-foreground transition-colors">Tanks</button>
+                <button onclick="focusPanel('carbon')" class="hover:text-foreground transition-colors">Carbon
+                    record</button>
+                <button onclick="focusPanel('certs')"
+                    class="hover:text-foreground transition-colors">Certificates</button>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <div
+                    class="hidden sm:flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
+                    <span id="user-role-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="user-name-label" class="text-xs text-foreground font-medium">Operator</span>
+                </div>
+                <button onclick="logoutGate()"
+                    class="text-xs text-muted-foreground hover:text-foreground font-medium px-2 transition-colors">Sign
+                    out</button>
+            </div>
+        </header>
+        <main class="relative z-10 flex flex-col items-center w-full flex-1 px-4 pt-4 md:pt-8 pb-16">
+
+            <div
+                class="anim-badge inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-1.5 text-sm text-muted-foreground font-body mb-6 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                Live scanning — nothing goes to waste
+            </div>
+
+            <h1
+                class="anim-headline text-center font-display text-5xl md:text-6xl lg:text-[5rem] leading-[0.95] tracking-tight text-foreground max-w-2xl">
+                The <span class="italic font-normal">automatic</span> sink for farm waste
+            </h1>
+
+            <p
+                class="anim-subhead mt-4 text-center text-base md:text-lg text-muted-foreground max-w-[650px] leading-relaxed font-body">
+                When food or crop waste goes bad or gets rejected, we take it. It goes into our digester, comes out as
+                gas and compost, and nothing ends up in a landfill.
+            </p>
+
+            <div class="anim-cta mt-5 flex items-center gap-3">
+                <button onclick="openDrawer('intake')" id="cta-intake"
+                    class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 py-3 text-sm font-medium font-body transition-colors shadow-sm">
+                    Take in a batch
+                </button>
+                <button onclick="openDrawer('carbon')" id="cta-carbon"
+                    class="rounded-full border border-border bg-background hover:bg-secondary text-foreground rounded-full px-5 py-3 text-sm font-medium transition-colors">
+                    Save carbon credit
+                </button>
+            </div>
+
+            <div class="anim-dashboard mt-8 w-full max-w-6xl">
+
+                <div class="rounded-2xl overflow-hidden p-2.5 md:p-4 text-[11px]"
+                    style="background: rgba(255,255,255,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.5); box-shadow: var(--shadow-dashboard);">
+                    <div class="bg-background rounded-xl border border-border flex flex-col shadow-sm overflow-hidden">
+
+                        <div
+                            class="flex items-center justify-between px-3 md:px-4 py-2.5 border-b border-border bg-background">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-5 h-5 rounded bg-foreground text-background flex items-center justify-center font-bold text-[10px]">
+                                    B</div>
+                                <span class="font-semibold text-foreground">Compost Console</span>
+                            </div>
+
+                            <div
+                                class="hidden sm:flex items-center gap-2 bg-secondary/80 border border-border px-3 py-1 rounded-md text-muted-foreground w-64 justify-between">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        strokeWidth="2">
+                                        <circle cx="11" cy="11" r="8" />
+                                        <path d="m21 21-4.3-4.3" />
+                                    </svg>
+                                    <span>Search a lot ID</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <div id="top-quick-intake"
+                                    class="bg-foreground text-background px-2.5 py-1 rounded-md text-[10px] font-medium cursor-pointer"
+                                    onclick="openDrawer('intake')">Quick intake</div>
+                                <div class="w-6 h-6 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-[10px] font-semibold"
+                                    id="top-avatar">OP</div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row min-h-[560px]">
+
+                            <!-- Sidebar -->
+                            <aside
+                                class="w-full md:w-44 border-b md:border-b-0 md:border-r border-border p-3 flex flex-col justify-between bg-background shrink-0">
+                                <div class="space-y-4">
+                                    <div class="space-y-1">
+                                        <button onclick="focusPanel('intake')" data-nav="intake"
+                                            class="nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md bg-secondary text-foreground font-medium">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" strokeWidth="2">
+                                                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                                </svg>
+                                                New arrivals
+                                            </span>
+                                            <span
+                                                class="bg-background border border-border text-foreground px-1.5 rounded-full text-[9px] font-medium"
+                                                id="sb-intake-count">0</span>
+                                        </button>
+                                        <button onclick="focusPanel('digesting')" data-nav="digesting"
+                                            class="nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md text-muted-foreground hover:bg-secondary/60 transition-colors">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" strokeWidth="2">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <path d="M12 6v6l4 2" />
+                                                </svg>
+                                                Being processed
+                                            </span>
+                                            <span
+                                                class="bg-secondary text-foreground px-1.5 rounded-full text-[9px] font-medium"
+                                                id="sb-digesting-count">0</span>
+                                        </button>
+                                        <button onclick="focusPanel('tanks')" data-nav="tanks"
+                                            class="nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md text-muted-foreground hover:bg-secondary/60 transition-colors">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" strokeWidth="2">
+                                                    <rect x="3" y="6" width="18" height="14" rx="2" />
+                                                    <path d="M3 12h18" />
+                                                </svg>
+                                                Tanks
+                                            </span>
+                                            <span class="text-muted-foreground text-[9px]">3</span>
+                                        </button>
+                                        <button onclick="focusPanel('compost')" data-nav="compost"
+                                            class="nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md text-muted-foreground hover:bg-secondary/60 transition-colors">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" strokeWidth="2">
+                                                    <path d="M12 2v20M2 12h20" />
+                                                </svg>
+                                                Compost ready
+                                            </span>
+                                            <span
+                                                class="bg-secondary text-foreground px-1.5 rounded-full text-[9px] font-medium"
+                                                id="sb-compost-count">0</span>
+                                        </button>
+                                        <button onclick="focusPanel('carbon')" data-nav="carbon"
+                                            class="nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md text-muted-foreground hover:bg-secondary/60 transition-colors">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" strokeWidth="2">
+                                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                                </svg>
+                                                Carbon record
+                                            </span>
+                                        </button>
+                                        <button onclick="focusPanel('certs')" data-nav="certs"
+                                            class="nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md text-muted-foreground hover:bg-secondary/60 transition-colors">
+                                            <span class="flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" strokeWidth="2">
+                                                    <circle cx="12" cy="8" r="6" />
+                                                    <path d="M8.21 13.89 7 23l5-3 5 3-1.21-9.12" />
+                                                </svg>
+                                                Certificates
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    <div class="pt-2 border-t border-border">
+                                        <span
+                                            class="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold px-2">Our
+                                            facility</span>
+                                        <div class="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
+                                            <div class="px-2 py-1" id="sb-facility-name">—</div>
+                                            <div class="px-2 py-1" id="sb-facility-code">—</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+
+                            <!-- Main -->
+                            <div class="flex-1 bg-secondary/30 p-3 md:p-4 space-y-3.5">
+
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <h2 class="text-sm font-semibold text-foreground">Everything that comes in gets
+                                            used</h2>
+                                        <div class="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
+                                            <span id="mode-label">Checking the grid every 5 seconds</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span
+                                            class="bg-background border border-border text-foreground px-3 py-1.5 rounded-full text-[11px]">
+                                            <span class="text-muted-foreground">CO₂ saved:</span> <span id="stat-carbon"
+                                                class="num text-foreground text-base">0.0 t</span>
+                                        </span>
+                                        <span
+                                            class="bg-background border border-border text-foreground px-3 py-1.5 rounded-full text-[11px]">
+                                            <span class="text-muted-foreground">Gas made:</span> <span
+                                                id="stat-biomethane" class="num text-foreground text-base">0 m³</span>
+                                        </span>
+                                        <span
+                                            class="bg-background border border-border text-foreground px-3 py-1.5 rounded-full text-[11px]">
+                                            <span class="text-muted-foreground">Sent to landfill:</span> <span
+                                                id="stat-zerofill" class="num text-foreground text-base">0%</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div id="panel-intake"
+                                    class="panel bg-background border border-border rounded-xl p-3.5">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="font-semibold text-foreground text-xs flex items-center gap-2">
+                                            Waiting to be taken in
+                                            <span class="text-[10px] text-muted-foreground font-normal">— lots flagged
+                                                as spoiled or rejected</span>
+                                        </div>
+                                        <button onclick="refreshMetrics()"
+                                            class="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                strokeWidth="2">
+                                                <path d="M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z" />
+                                                <path d="M21 3v6h-6" />
+                                            </svg>
+                                            Check again
+                                        </button>
+                                    </div>
+                                    <div id="queue-list" class="space-y-2 max-h-[200px] overflow-y-auto no-scrollbar">
+                                        <div class="text-[11px] text-muted-foreground py-3 text-center">All clear.
+                                            Nothing waiting right now.</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div id="panel-tanks"
+                                        class="panel bg-background border border-border rounded-xl p-3.5">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold text-foreground text-xs">Where the trucks are
+                                                coming from</span>
+                                            <span class="text-[10px] text-muted-foreground" id="map-trip-label">0 on the
+                                                way</span>
+                                        </div>
+                                        <div id="leaflet-map"
+                                            class="w-full h-[220px] rounded-lg overflow-hidden border border-border">
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-background border border-border rounded-xl p-3.5">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold text-foreground text-xs">Our three tanks</span>
+                                            <span class="text-[10px] text-muted-foreground">Live readings</span>
+                                        </div>
+                                        <div id="tanks-grid" class="space-y-2"></div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                    <div class="bg-background border border-border rounded-xl p-3.5">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold text-foreground text-xs">Gas we can make</span>
+                                            <span class="text-[10px] text-muted-foreground num" id="yield-coef">0.45 m³
+                                                per kg</span>
+                                        </div>
+                                        <div class="text-3xl text-foreground tracking-tight num-lg font-display"
+                                            id="calcBiogasDisplay">0 m³</div>
+                                        <p class="text-[10px] text-muted-foreground mt-0.5">From the batch size below
+                                        </p>
+                                    </div>
+
+                                    <div class="bg-background border border-border rounded-xl p-3.5">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-semibold text-foreground text-xs">CO₂ we keep out of the
+                                                air</span>
+                                            <span class="text-[10px] text-muted-foreground num" id="carbon-coef">1.9 kg
+                                                per kg</span>
+                                        </div>
+                                        <div class="text-3xl text-foreground tracking-tight num-lg font-display"
+                                            id="calcCarbonDisplay">0.00 t</div>
+                                        <p class="text-[10px] text-muted-foreground mt-0.5">Methane we would have
+                                            released</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-background border border-border rounded-xl p-3.5">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-semibold text-foreground text-xs">Try a batch size</span>
+                                        <span class="text-base text-foreground num" id="sliderMassValue">1,000 kg</span>
+                                    </div>
+                                    <input id="massRange" type="range" min="100" max="5000" step="50" value="1000"
+                                        class="w-full cursor-pointer accent-foreground"
+                                        oninput="updateCalculator(this.value)" />
+                                </div>
+
+                                <div id="panel-compost"
+                                    class="panel bg-background border border-border rounded-xl p-3.5 hidden">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-semibold text-foreground text-xs">Compost we've made</span>
+                                        <span class="text-[10px] text-muted-foreground" id="compost-count">0
+                                            batches</span>
+                                    </div>
+                                    <div id="compost-list" class="space-y-2 max-h-[220px] overflow-y-auto no-scrollbar">
+                                        <div class="text-[11px] text-muted-foreground py-3 text-center">Nothing finished
+                                            yet.</div>
+                                    </div>
+                                </div>
+
+                                <div id="panel-carbon"
+                                    class="panel bg-background border border-border rounded-xl p-3.5 hidden">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-semibold text-foreground text-xs">Carbon savings record</span>
+                                        <button onclick="openDrawer('carbon')"
+                                            class="text-[10px] text-foreground bg-secondary hover:bg-secondary/80 px-2.5 py-1 rounded-full transition-colors">Send
+                                            to SEBI</button>
+                                    </div>
+                                    <div class="space-y-2 text-[11px]">
+                                        <div class="flex justify-between py-1.5 border-b border-border">
+                                            <span class="text-muted-foreground">CO₂ avoided so far</span>
+                                            <span class="text-foreground num" id="ledger-tco2">0.000 t</span>
+                                        </div>
+                                        <div class="flex justify-between py-1.5 border-b border-border">
+                                            <span class="text-muted-foreground">Gas produced</span>
+                                            <span class="text-foreground num" id="ledger-biomethane">0 m³</span>
+                                        </div>
+                                        <div class="flex justify-between py-1.5 border-b border-border">
+                                            <span class="text-muted-foreground">Methane prevented</span>
+                                            <span class="text-foreground num" id="ledger-methane">0.000 t</span>
+                                        </div>
+                                        <div class="flex justify-between py-1.5">
+                                            <span class="text-muted-foreground">Batches processed</span>
+                                            <span class="text-foreground num" id="ledger-batches">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="panel-certs"
+                                    class="panel bg-background border border-border rounded-xl p-3.5 hidden">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="font-semibold text-foreground text-xs">Proof of what we did</span>
+                                        <button onclick="openDrawer('certificate')"
+                                            class="text-[10px] text-foreground bg-secondary hover:bg-secondary/80 px-2.5 py-1 rounded-full transition-colors">Make
+                                            new</button>
+                                    </div>
+                                    <p class="text-[11px] text-muted-foreground leading-relaxed">
+                                        Every batch gets a certificate with a fingerprint so anyone can check it later.
+                                        Download it for government or ESG reports.
+                                    </p>
+                                    <div id="cert-list" class="mt-3 space-y-1.5 text-[10px]">
+                                        <div class="text-muted-foreground">No certificates made yet.</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <aside id="persistentDrawer"
+        class="fixed top-0 right-0 h-full w-full max-w-md z-50 transform translate-x-full transition-transform duration-300 ease-in-out p-4 flex flex-col">
+        <div
+            class="bg-background border border-border rounded-2xl w-full h-full p-6 flex flex-col justify-between overflow-y-auto shadow-2xl">
+            <div class="flex items-center justify-between border-b border-border pb-4">
+                <span class="font-medium text-sm text-foreground" id="drawerTitle">Action</span>
+                <button onclick="closeDrawer()"
+                    class="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">✕</button>
+            </div>
+            <div class="flex-1 py-5 overflow-y-auto text-xs text-muted-foreground space-y-4" id="drawerContent"></div>
+            <div class="border-t border-border pt-4 flex items-center justify-between gap-3">
+                <button onclick="closeDrawer()"
+                    class="px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">Close</button>
+                <button id="drawerPrimaryAction"
+                    class="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-5 py-2 text-xs font-medium transition-colors">Confirm</button>
+            </div>
+        </div>
+    </aside>
+
+    <div id="toast-root"></div>
+
+    <script src="db.js"></script>
+    <script>
+        // ==========================================
+        // SETTINGS
+        // ==========================================
+        const DEFAULT_FACILITY = { lat: 30.2110, lng: 74.9455, name: 'Malwa Bio-Energy #3' };
+        const SINK_RADIUS_KM = 35;
+        const OLD_LOT_HOURS = 72;
+
+        const WASTE_TYPES = {
+            CROP_RESIDUE: { gas: 0.32, co2: 1.42, days: 28, grade: 'B', name: 'Crop residue' },
+            SPOILED_GRAIN: { gas: 0.55, co2: 2.10, days: 21, grade: 'A', name: 'Spoiled grain' },
+            VEGETABLE_WASTE: { gas: 0.48, co2: 1.75, days: 18, grade: 'A', name: 'Vegetable waste' },
+            FRUIT_POMACE: { gas: 0.52, co2: 1.95, days: 16, grade: 'A', name: 'Fruit waste' },
+            CITRUS_POMACE: { gas: 0.50, co2: 1.88, days: 16, grade: 'A', name: 'Citrus waste' },
+            COCONUT_HUSK: { gas: 0.28, co2: 1.20, days: 35, grade: 'C', name: 'Coconut husk' },
+            LEAF_LITTER: { gas: 0.22, co2: 1.05, days: 42, grade: 'C', name: 'Leaves' },
+            COOKED_ANIMAL_FEED: { gas: 0.62, co2: 2.35, days: 14, grade: 'A', name: 'Cooked food' },
+            COOKED_SURPLUS: { gas: 0.62, co2: 2.35, days: 14, grade: 'A', name: 'Cooked food' },
+            BIO_MASS: { gas: 0.36, co2: 1.55, days: 26, grade: 'B', name: 'Green waste' },
+            PLANT_FIBER: { gas: 0.30, co2: 1.35, days: 30, grade: 'B', name: 'Plant fiber' },
+            MUSHROOM_SUBSTRATE: { gas: 0.34, co2: 1.48, days: 24, grade: 'B', name: 'Mushroom waste' },
+            SILICA_SAND: { gas: 0.10, co2: 0.40, days: 45, grade: 'C', name: 'Sand' },
+            OTHER: { gas: 0.35, co2: 1.50, days: 25, grade: 'B', name: 'Mixed waste' }
+        };
+
+        const DEMO_PROFILES = {
+            operator: {
+                role: 'operator',
+                name: 'Harpreet Kaur',
+                facilityName: 'Malwa Bio-Energy #3',
+                cpcbId: 'PB/PWM/2024/091',
+                lat: DEFAULT_FACILITY.lat,
+                lng: DEFAULT_FACILITY.lng,
+                initials: 'HK'
+            },
+            auditor: {
+                role: 'auditor',
+                name: 'SEBI Audit — Rajesh Menon',
+                badge: 'CPCB-AUD-2026-0421',
+                agency: 'CPCB',
+                lat: DEFAULT_FACILITY.lat,
+                lng: DEFAULT_FACILITY.lng,
+                initials: 'RM'
+            }
+        };
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let currentUser = null;
+        let readOnly = false;
+
+        let queueList = [];
+        let digestingList = [];
+        let doneList = [];
+        let totalCO2 = 0;
+        let totalGas = 0;
+        let totalMethane = 0;
+
+        let tanks = [
+            { id: 'Tank 1', name: 'Hot tank', temp: 55.2, ph: 7.1, fill: 62, jobs: 3, pressure: 1.8 },
+            { id: 'Tank 2', name: 'Warm tank', temp: 37.8, ph: 7.3, fill: 48, jobs: 2, pressure: 1.4 },
+            { id: 'Tank 3', name: 'Cooling', temp: 28.5, ph: 6.8, fill: 74, jobs: 5, pressure: 0.9 }
+        ];
+
+        let map = null;
+        let mapMarkers = [];
+        let unsubscribeDB = null;
+        let watchdogTimer = null;
+        let tankTimer = null;
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function fmt(n, dp = 0) { return Number(n || 0).toLocaleString('en-IN', { maximumFractionDigits: dp }); }
+        function showToast(msg, kind = 'info') {
+            const root = document.getElementById('toast-root');
+            if (!root) return;
+            const dot = kind === 'warn' ? 'bg-amber-400' : kind === 'error' ? 'bg-rose-400' : 'bg-emerald-400';
+            const el = document.createElement('div');
+            el.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-background border border-border rounded-full px-5 py-2.5 text-xs text-foreground font-medium shadow-xl transition-all duration-300 flex items-center gap-2';
+            el.innerHTML = `<span class="w-2 h-2 rounded-full ${dot}"></span> <span>${escapeHtml(msg)}</span>`;
+            root.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3400);
+        }
+        function showGateError(msg) {
+            const el = document.getElementById('g-error');
+            if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+        }
+
+        function checkLot(lot) {
+            const type = WASTE_TYPES[lot.category] || WASTE_TYPES.OTHER;
+            const kg = lot.massKg || 0;
+            const hoursOld = (Date.now() - (lot.createdAt || Date.now())) / 3600000;
+            const gasCanMake = kg * type.gas;
+            const co2Saved = (kg * type.co2) / 1000;
+            const daysToCompost = type.days;
+            let grade = type.grade;
+            if (grade === 'B' && kg > 1500 && (lot.moisture || 50) < 40) grade = 'A';
+            if (grade === 'C' && hoursOld < 6 && kg > 500) grade = 'B';
+            return { type, kg, hoursOld, gasCanMake, co2Saved, daysToCompost, grade };
+        }
+
+        // ==========================================
+        // GATE MODAL
+        // ==========================================
+        window.quickDemoGateLogin = function(role) {
+            const target = DEMO_PROFILES[role] || DEMO_PROFILES.operator;
+            completeLogin({ ...target });
+        };
+
+        function openGateModal(role) {
+            const modal = document.getElementById('gate-modal');
+            const title = document.getElementById('gate-modal-title');
+            const body = document.getElementById('gate-modal-body');
+
+            const configs = {
+                operator: {
+                    title: 'Plant Operator Sign In',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-foreground mb-1">Your Name</label>
+                <input id="g-name" type="text" placeholder="e.g. Harpreet Kaur" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-foreground mb-1">Facility Name</label>
+                <input id="g-facility" type="text" placeholder="e.g. Malwa Bio-Energy #3" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-foreground mb-1">CPCB Plant ID</label>
+                <input id="g-cpcb" type="text" placeholder="e.g. PB/PWM/2024/091" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <div><label class="block text-xs font-medium text-foreground mb-1">Mobile (for OTP)</label>
+                <input id="g-mobile" type="tel" maxlength="10" placeholder="10-digit mobile" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"></div>
+              <p id="g-error" class="text-xs text-rose-500 hidden"></p>
+              <button onclick="submitGateLogin('operator')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition-colors">Send OTP & Sign In</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-border"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-muted-foreground">or demo</span>
+                <div class="flex-grow border-t border-border"></div>
+              </div>
+              <button type="button" onclick="quickDemoGateLogin('operator')" class="w-full py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Plant Operator)
+              </button>
+              <p class="text-[11px] text-muted-foreground text-center pt-1">We will capture your current location for routing and audit logs.</p>
+            </div>
+          `
+                },
+                auditor: {
+                    title: 'Regulator / Auditor Sign In',
+                    html: `
+            <div class="space-y-3">
+              <div><label class="block text-xs font-medium text-foreground mb-1">Your Name</label>
+                <input id="g-name" type="text" placeholder="e.g. Rajesh Menon" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-foreground mb-1">Agency</label>
+                <select id="g-agency" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  <option value="CPCB">CPCB — Central Pollution Control Board</option>
+                  <option value="SEBI">SEBI — BRSR Audit</option>
+                  <option value="MoFPI">MoFPI — Food Processing</option>
+                </select></div>
+              <div><label class="block text-xs font-medium text-foreground mb-1">Badge / Audit ID</label>
+                <input id="g-badge" type="text" placeholder="e.g. CPCB-AUD-2026-0421" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <div><label class="block text-xs font-medium text-foreground mb-1">Mobile (for OTP)</label>
+                <input id="g-mobile" type="tel" maxlength="10" placeholder="10-digit mobile" class="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"></div>
+              <p class="text-[11px] text-muted-foreground bg-secondary/60 p-2.5 rounded-lg">Auditors get read-only access. You can view every batch, certificate, and carbon credit — but no changes.</p>
+              <p id="g-error" class="text-xs text-rose-500 hidden"></p>
+              <button onclick="submitGateLogin('auditor')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition-colors">Send OTP & Sign In</button>
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-border"></div>
+                <span class="flex-shrink mx-2 text-[10px] uppercase font-bold text-muted-foreground">or demo</span>
+                <div class="flex-grow border-t border-border"></div>
+              </div>
+              <button type="button" onclick="quickDemoGateLogin('auditor')" class="w-full py-2.5 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Login for Demo (Auditor)
+              </button>
+            </div>
+          `
+                }
+            };
+
+            title.textContent = configs[role].title;
+            body.innerHTML = configs[role].html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            window._pendingRole = role;
+        }
+
+        function closeGateModal() {
+            const m = document.getElementById('gate-modal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        // ==========================================
+        // LOGIN SUBMITS
+        // ==========================================
+        function submitGateLogin(role) {
+            const name = (document.getElementById('g-name')?.value || '').trim();
+            const mobile = (document.getElementById('g-mobile')?.value || '').trim();
+            if (name.length < 3) return showGateError('Enter your full name');
+            if (mobile.replace(/\D/g, '').length !== 10) return showGateError('Enter a valid 10-digit mobile');
+
+            const base = { role, name, mobile };
+
+            if (role === 'operator') {
+                const facility = (document.getElementById('g-facility')?.value || '').trim();
+                const cpcb = (document.getElementById('g-cpcb')?.value || '').trim();
+                if (facility.length < 3) return showGateError('Enter your facility name');
+                if (cpcb.length < 5) return showGateError('Enter a valid CPCB Plant ID');
+                base.facilityName = facility;
+                base.cpcbId = cpcb;
+                base.initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            } else {
+                const badge = (document.getElementById('g-badge')?.value || '').trim();
+                const agency = document.getElementById('g-agency')?.value || 'CPCB';
+                if (badge.length < 4) return showGateError('Enter your badge or audit ID');
+                base.badge = badge;
+                base.agency = agency;
+                base.initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            }
+
+            runOtp(role, base);
+        }
+
+        function runOtp(role, profile) {
+            const body = document.getElementById('gate-modal-body');
+            body.innerHTML = `
+        <div class="space-y-4">
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <p class="text-sm text-foreground">We sent a code to <strong>+91 ${profile.mobile}</strong></p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-foreground mb-1">Enter OTP</label>
+            <input id="g-otp" type="text" maxlength="6" placeholder="6-digit code" class="w-full border border-border rounded-xl px-3 py-3 text-center tracking-[0.5em] text-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          </div>
+          <p id="g-error" class="text-xs text-rose-500 hidden"></p>
+          <button onclick="verifyOtp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition-colors">Verify & Enter</button>
+          <button onclick="openGateModal('${role}')" class="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-2">Go back</button>
+        </div>
+      `;
+            window._pendingProfile = profile;
+        }
+
+        async function verifyOtp() {
+            const otp = (document.getElementById('g-otp')?.value || '').trim();
+            if (otp.length !== 6) return showGateError('Enter the 6-digit code');
+            const profile = window._pendingProfile;
+            if (!profile) return showGateError('Session expired');
+
+            // Capture GPS
+            try {
+                const pos = await new Promise((res, rej) => {
+                    if (!navigator.geolocation) return rej(new Error('no gps'));
+                    navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 8000 });
+                });
+                profile.lat = pos.coords.latitude;
+                profile.lng = pos.coords.longitude;
+            } catch (e) {
+                profile.lat = DEFAULT_FACILITY.lat;
+                profile.lng = DEFAULT_FACILITY.lng;
+            }
+
+            try {
+                if (window.ByteToBiteAPI) await window.ByteToBiteAPI.saveProfile('compost-' + profile.role, profile);
+            } catch (e) { }
+
+            completeLogin(profile);
+        }
+
+        // ==========================================
+        // COMPLETE LOGIN
+        // ==========================================
+        function completeLogin(profile) {
+            currentUser = profile;
+            readOnly = profile.role === 'auditor';
+
+            closeGateModal();
+            document.getElementById('compost-gateway').style.display = 'none';
+            document.getElementById('console-wrapper').classList.remove('hidden');
+
+            // Update header
+            const nameLabel = document.getElementById('user-name-label');
+            const roleDot = document.getElementById('user-role-dot');
+            const avatar = document.getElementById('top-avatar');
+            const facilityName = document.getElementById('sb-facility-name');
+            const facilityCode = document.getElementById('sb-facility-code');
+            const modeLabel = document.getElementById('mode-label');
+
+            nameLabel.textContent = profile.role === 'auditor'
+                ? `${profile.name} · ${profile.agency}`
+                : profile.name;
+            roleDot.className = 'w-2 h-2 rounded-full ' + (readOnly ? 'bg-indigo-500' : 'bg-emerald-500');
+            avatar.textContent = profile.initials || 'OP';
+
+            if (readOnly) {
+                facilityName.textContent = 'Viewing: Malwa Bio-Energy #3';
+                facilityCode.textContent = 'Read-only mode';
+                modeLabel.textContent = 'Read-only — auditors cannot change anything';
+            } else {
+                facilityName.textContent = profile.facilityName;
+                facilityCode.textContent = profile.cpcbId;
+                modeLabel.textContent = 'Checking the grid every 5 seconds';
+            }
+
+            // Hide write buttons for auditors
+            applyReadOnlyMode();
+
+            // Boot UI
+            requestAnimationFrame(() => {
+                refreshTanks();
+                refreshQueue();
+                refreshStats();
+                refreshLedger();
+                refreshCompost();
+                refreshCerts();
+                updateCalculator(1000);
+                initMap();
+                runWatchdog();
+                startTankReadings();
+                subscribeToDB();
+                checkUrlParams();
+                watchdogTimer = setInterval(runWatchdog, 5000);
+            });
+        }
+
+        function applyReadOnlyMode() {
+            if (!readOnly) return;
+            // Hide write CTA buttons
+            ['cta-intake', 'cta-carbon', 'top-quick-intake'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            // Hide the "Send to SEBI" / "Make new" / "Start a batch" style buttons inside panels
+            document.querySelectorAll('[onclick*="openDrawer(\'carbon\')"], [onclick*="openDrawer(\'certificate\')"], [onclick*="openDrawer(\'intake\')"]').forEach(el => {
+                if (el.id !== 'top-quick-intake' && !el.classList.contains('nav-btn')) {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+
+        async function logoutGate() {
+            if (unsubscribeDB) { unsubscribeDB(); unsubscribeDB = null; }
+            if (watchdogTimer) { clearInterval(watchdogTimer); watchdogTimer = null; }
+            if (tankTimer) { clearInterval(tankTimer); tankTimer = null; }
+            currentUser = null;
+            readOnly = false;
+            queueList = [];
+            digestingList = [];
+            doneList = [];
+            if (map) { map.remove(); map = null; }
+            mapMarkers = [];
+            document.getElementById('console-wrapper').classList.add('hidden');
+            document.getElementById('compost-gateway').style.display = 'flex';
+            // Restore hidden buttons (in case role changes)
+            ['cta-intake', 'cta-carbon', 'top-quick-intake'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('hidden');
+            });
+        }
+
+        // Hidden dev cycle
+        window.addEventListener('keydown', (e) => {
+            if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+                e.preventDefault();
+                const order = ['operator', 'auditor'];
+                const next = !currentUser ? 'operator' : order[(order.indexOf(currentUser.role) + 1) % 2];
+                if (currentUser) logoutGate();
+                setTimeout(() => completeLogin({ ...DEMO_PROFILES[next] }), 50);
+            }
+        });
+
+        // ==========================================
+        // PANEL SWITCHING
+        // ==========================================
+        function focusPanel(name) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+            const map = {
+                intake: 'panel-intake',
+                digesting: 'panel-intake',
+                tanks: 'panel-tanks',
+                compost: 'panel-compost',
+                carbon: 'panel-carbon',
+                certs: 'panel-certs'
+            };
+            const target = document.getElementById(map[name]);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                const active = b.dataset.nav === name;
+                b.className = 'nav-btn w-full flex items-center justify-between px-2 py-1.5 rounded-md ' +
+                    (active ? 'bg-secondary text-foreground font-medium' : 'text-muted-foreground hover:bg-secondary/60 transition-colors');
+            });
+            target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (name === 'tanks' && map) setTimeout(() => window.map && window.map.invalidateSize(), 150);
+        }
+
+        // ==========================================
+        // DRAWER
+        // ==========================================
+        function openDrawer(mode, payload = null) {
+            const drawer = document.getElementById('persistentDrawer');
+            const title = document.getElementById('drawerTitle');
+            const content = document.getElementById('drawerContent');
+            const btn = document.getElementById('drawerPrimaryAction');
+
+            if (mode === 'intake') {
+                const lot = payload?.lot || queueList[0];
+                if (!lot) {
+                    title.innerText = 'Take in a batch';
+                    content.innerHTML = `<p class="leading-relaxed">Nothing waiting right now. We check the grid every 5 seconds and take in anything that gets spoiled or rejected.</p>`;
+                    btn.innerText = 'Okay';
+                    btn.onclick = () => closeDrawer();
+                    btn.classList.toggle('hidden', readOnly);
+                } else {
+                    const c = checkLot(lot);
+                    title.innerText = 'Take in this batch';
+                    content.innerHTML = `
+            <div class="space-y-3">
+              <p class="leading-relaxed">
+                We're taking <span class="font-semibold text-foreground">${escapeHtml(lot.id)}</span> from <span class="text-foreground">${escapeHtml(lot.origin || 'a farm')}</span>.
+              </p>
+              <div class="bg-secondary/50 rounded-xl p-3 space-y-1.5 text-[11px]">
+                <div class="flex justify-between"><span class="text-muted-foreground">What it is:</span><span class="text-foreground">${escapeHtml(c.type.name)}</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Why we're taking it:</span><span class="text-rose-600">${escapeHtml((lot.divertReason || 'Too old').replace(/_/g, ' ').toLowerCase())}</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">How old:</span><span class="text-foreground num">${c.hoursOld.toFixed(1)} hours</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Weight:</span><span class="text-foreground num">${fmt(c.kg)} kg</span></div>
+                <div class="flex justify-between pt-2 mt-1 border-t border-border"><span class="text-muted-foreground">Gas we'll make:</span><span class="text-emerald-600 num">${fmt(c.gasCanMake, 1)} m³</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">CO₂ we'll save:</span><span class="text-emerald-600 num">${c.co2Saved.toFixed(3)} t</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Compost grade:</span><span class="text-foreground">Grade ${c.grade}</span></div>
+                <div class="flex justify-between"><span class="text-muted-foreground">Takes:</span><span class="text-foreground num">${c.daysToCompost} days</span></div>
+              </div>
+              <div class="bg-secondary/40 rounded-xl p-3 text-[11px] leading-relaxed">
+                <span class="text-foreground font-medium block mb-1">Where it goes</span>
+                <span class="text-muted-foreground">${c.kg > 1000 ? 'Bulk load — straight to the hot tank.' : 'Normal load — to the warm tank.'} No prep needed.</span>
+              </div>
+            </div>
+          `;
+                    if (readOnly) {
+                        btn.innerText = 'Read-only (auditor)';
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        btn.innerText = 'Start processing';
+                        btn.onclick = () => startProcessing(lot.id);
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            }
+            else if (mode === 'certificate') {
+                const last = doneList[doneList.length - 1];
+                title.innerText = 'Certificate';
+                const payloadStr = last
+                    ? JSON.stringify({ batch: last.id, mass: last.kg, gas: last.gas, co2: last.co2, when: Date.now() })
+                    : JSON.stringify({ facility: DEFAULT_FACILITY.name, when: Date.now() });
+                content.innerHTML = `
+          <div class="space-y-3">
+            <p class="leading-relaxed">Each batch gets a fingerprint so anyone can verify it later.</p>
+            <div class="bg-secondary/50 rounded-xl p-3 text-[11px] space-y-2 break-all">
+              <span class="text-muted-foreground block text-[10px]">FINGERPRINT</span>
+              <span class="text-emerald-600 select-all" id="cert-hash">Making it…</span>
+            </div>
+            <div class="bg-secondary/50 rounded-xl p-3 text-[11px] space-y-1.5">
+              <div class="flex justify-between"><span class="text-muted-foreground">Latest batch:</span><span class="text-foreground">${last ? escapeHtml(last.id) : 'None yet'}</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Compost grade:</span><span class="text-foreground">${last ? 'Grade ' + last.grade : '—'}</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Went to landfill:</span><span class="text-emerald-600">No — 0%</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Signed by:</span><span class="text-foreground">MoFPI portal</span></div>
+            </div>
+          </div>
+        `;
+                crypto.subtle.digest('SHA-256', new TextEncoder().encode(payloadStr)).then(buf => {
+                    const hash = '0x' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+                    const el = document.getElementById('cert-hash');
+                    if (el) el.textContent = hash;
+                });
+                btn.innerText = 'Download';
+                btn.onclick = () => downloadCertificate();
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            else if (mode === 'carbon') {
+                title.innerText = 'Carbon savings';
+                content.innerHTML = `
+          <div class="space-y-3">
+            <p class="leading-relaxed">Every batch we process saves carbon. This records it into the government ESG register.</p>
+            <div class="bg-secondary/50 rounded-xl p-3 text-[11px] space-y-1.5">
+              <div class="flex justify-between"><span class="text-muted-foreground">Total CO₂ saved:</span><span class="text-foreground num">${totalCO2.toFixed(3)} t</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Total gas made:</span><span class="text-foreground num">${fmt(totalGas, 1)} m³</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Methane stopped:</span><span class="text-foreground num">${totalMethane.toFixed(3)} t</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Report section:</span><span class="text-foreground">Principle 6</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Status:</span><span class="text-emerald-600">Ready</span></div>
+            </div>
+            <div class="bg-secondary/40 rounded-xl p-3 text-[11px] leading-relaxed">
+              <span class="text-foreground font-medium block mb-1">Audit trail</span>
+              <span class="text-muted-foreground">Every batch is written into the ledger. Any auditor can check it.</span>
+            </div>
+          </div>
+        `;
+                if (readOnly) {
+                    btn.innerText = 'Read-only (auditor)';
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btn.innerText = 'Send to SEBI';
+                    btn.onclick = async () => {
+                        try {
+                            if (window.ByteToBiteAPI) {
+                                await window.ByteToBiteAPI.recordEscrow({
+                                    listingId: 'CARBON-' + Date.now().toString().slice(-6),
+                                    milestone: 'CARBON_CREDIT',
+                                    amount: totalCO2,
+                                    releasedBy: 'COMPOST_HUB'
+                                });
+                            }
+                        } catch (e) { }
+                        showToast(`${totalCO2.toFixed(3)} t of CO₂ saved — sent to SEBI.`);
+                        closeDrawer();
+                    };
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+            else if (mode === 'tank') {
+                const t = payload;
+                title.innerText = t.id + ' — live readings';
+                content.innerHTML = `
+          <div class="space-y-3">
+            <div class="bg-secondary/50 rounded-xl p-3 text-[11px] space-y-1.5">
+              <div class="flex justify-between"><span class="text-muted-foreground">Name:</span><span class="text-foreground">${escapeHtml(t.name)}</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Temperature:</span><span class="text-foreground num">${t.temp.toFixed(1)} °C</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Acidity (pH):</span><span class="text-foreground num">${t.ph.toFixed(2)}</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">How full:</span><span class="text-foreground num">${t.fill.toFixed(0)} %</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Jobs running:</span><span class="text-foreground num">${t.jobs}</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">Gas pressure:</span><span class="text-foreground num">${t.pressure.toFixed(2)} bar</span></div>
+            </div>
+            <p class="leading-relaxed">Sensors check this tank every 2 seconds.</p>
+          </div>
+        `;
+                btn.innerText = 'Okay';
+                btn.onclick = () => closeDrawer();
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            drawer.classList.remove('translate-x-full');
+        }
+
+        function closeDrawer() {
+            document.getElementById('persistentDrawer').classList.add('translate-x-full');
+        }
+
+        // ==========================================
+        // PROCESSING
+        // ==========================================
+        async function startProcessing(lotId) {
+            if (readOnly) return;
+            const lot = queueList.find(l => l.id === lotId);
+            if (!lot) return;
+            const c = checkLot(lot);
+            const target = [...tanks].sort((x, y) => x.fill - y.fill)[0];
+            target.fill = Math.min(95, target.fill + (c.kg / 500));
+            target.jobs += 1;
+
+            digestingList.push({ ...lot, calc: c, tankId: target.id, startedAt: Date.now() });
+            queueList = queueList.filter(l => l.id !== lotId);
+
+            totalGas += c.gasCanMake;
+            totalMethane += c.co2Saved * 0.028;
+            totalCO2 += c.co2Saved;
+
+            try {
+                if (window.ByteToBiteAPI) {
+                    const fresh = await window.ByteToBiteAPI.getLot(lot.id);
+                    if (fresh) await window.ByteToBiteAPI.publishLot({
+                        ...fresh, status: 'DIGESTING', digesterTank: target.id, digestionStartedAt: Date.now()
+                    });
+                    await window.ByteToBiteAPI.recordEscrow({
+                        listingId: lot.id, milestone: 'BALANCE_70', amount: 0, releasedBy: 'COMPOST_HUB'
+                    });
+                }
+            } catch (e) { }
+
+            setTimeout(() => finishProcessing(lot.id), 15000);
+
+            showToast(`${fmt(c.kg)} kg went into ${target.id}. Processing started.`);
+            refreshQueue();
+            refreshStats();
+            refreshTanks();
+            refreshLedger();
+            closeDrawer();
+        }
+
+        function finishProcessing(lotId) {
+            const idx = digestingList.findIndex(d => d.id === lotId);
+            if (idx < 0) return;
+            const d = digestingList[idx];
+            const batch = {
+                id: 'COMPOST-' + Date.now().toString().slice(-6),
+                from: lotId,
+                kg: d.calc.kg,
+                gas: d.calc.gasCanMake,
+                co2: d.calc.co2Saved,
+                grade: d.calc.grade,
+                days: d.calc.daysToCompost,
+                when: Date.now()
+            };
+            doneList.push(batch);
+            digestingList.splice(idx, 1);
+            const t = tanks.find(x => x.id === d.tankId);
+            if (t) { t.fill = Math.max(10, t.fill - (d.calc.kg / 600)); t.jobs = Math.max(0, t.jobs - 1); }
+
+            try {
+                if (window.ByteToBiteAPI) {
+                    window.ByteToBiteAPI.publishLot({
+                        id: batch.id,
+                        category: 'COMPOST_FINISHED',
+                        massKg: Math.round(batch.kg * 0.35),
+                        rate: 4.5,
+                        status: 'OPEN',
+                        origin: DEFAULT_FACILITY.name,
+                        lat: DEFAULT_FACILITY.lat, lng: DEFAULT_FACILITY.lng,
+                        subType: `Grade ${batch.grade} compost`,
+                        createdAt: Date.now()
+                    });
+                }
+            } catch (e) { }
+
+            showToast(`Compost ready! ${batch.id} — Grade ${batch.grade}`);
+            refreshTanks();
+            refreshStats();
+            refreshCompost();
+            refreshCerts();
+        }
+
+        // ==========================================
+        // UI REFRESHERS
+        // ==========================================
+        function refreshQueue() {
+            const sbIntake = document.getElementById('sb-intake-count');
+            const sbDig = document.getElementById('sb-digesting-count');
+            const sbComp = document.getElementById('sb-compost-count');
+            const mapLabel = document.getElementById('map-trip-label');
+            if (sbIntake) sbIntake.textContent = queueList.length;
+            if (sbDig) sbDig.textContent = digestingList.length;
+            if (sbComp) sbComp.textContent = doneList.length;
+            if (mapLabel) mapLabel.textContent = `${queueList.length} on the way`;
+
+            const list = document.getElementById('queue-list');
+            if (!list) return;
+            if (queueList.length === 0) {
+                list.innerHTML = `<div class="text-[11px] text-muted-foreground py-3 text-center">All clear. Nothing waiting right now.</div>`;
+                return;
+            }
+            list.innerHTML = queueList.map(lot => {
+                const c = checkLot(lot);
+                const isOld = (lot.divertReason || '').includes('THERMAL') || c.hoursOld > 72;
+                const isBad = (lot.divertReason || '').includes('CONTAM');
+                const tagClass = isOld ? 'bg-rose-50 text-rose-600 border-rose-200'
+                    : isBad ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                const tagText = isOld ? 'too old' : isBad ? 'rejected' : 'flagged';
+                const btnHtml = readOnly
+                    ? `<span class="text-[10px] text-muted-foreground italic">view only</span>`
+                    : `<button onclick='openDrawer("intake", { lot: ${JSON.stringify(lot).replace(/"/g, '&quot;').replace(/'/g, '&#39;')} })' class="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-3 py-1 text-[10px] font-medium transition-colors">Take in</button>`;
+                return `
+          <div class="flex items-center justify-between gap-2 p-2.5 border border-border rounded-lg hover:bg-secondary/30 transition-colors">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-[11px] font-semibold text-foreground">${escapeHtml(lot.id)}</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium border ${tagClass}">${tagText}</span>
+              </div>
+              <div class="text-[10px] text-muted-foreground truncate">${escapeHtml(lot.origin || 'a farm')} · ${fmt(c.kg)} kg · ${escapeHtml(c.type.name)}</div>
+            </div>
+            ${btnHtml}
+          </div>
+        `;
+            }).join('');
+        }
+
+        function refreshStats() {
+            const s1 = document.getElementById('stat-carbon');
+            const s2 = document.getElementById('stat-biomethane');
+            const s3 = document.getElementById('stat-zerofill');
+            if (s1) s1.textContent = `${totalCO2.toFixed(1)} t`;
+            if (s2) s2.textContent = `${fmt(totalGas, 0)} m³`;
+            if (s3) s3.textContent = '0%';
+        }
+
+        function refreshLedger() {
+            const l1 = document.getElementById('ledger-tco2');
+            const l2 = document.getElementById('ledger-biomethane');
+            const l3 = document.getElementById('ledger-methane');
+            const l4 = document.getElementById('ledger-batches');
+            if (l1) l1.textContent = `${totalCO2.toFixed(3)} t`;
+            if (l2) l2.textContent = `${fmt(totalGas, 1)} m³`;
+            if (l3) l3.textContent = `${totalMethane.toFixed(3)} t`;
+            if (l4) l4.textContent = doneList.length;
+        }
+
+        function refreshTanks() {
+            const grid = document.getElementById('tanks-grid');
+            if (!grid) return;
+            grid.innerHTML = tanks.map(t => {
+                const pct = Math.min(100, t.fill);
+                return `
+          <button onclick='openDrawer("tank", ${JSON.stringify(t).replace(/'/g, "&#39;").replace(/"/g, '&quot;')})' class="w-full text-left border border-border rounded-lg p-2.5 hover:bg-secondary/30 transition-colors">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] text-muted-foreground">${escapeHtml(t.name)}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></span>
+            </div>
+            <div class="text-base text-foreground num">${t.temp.toFixed(1)}°C · pH ${t.ph.toFixed(1)}</div>
+            <div class="text-[10px] text-muted-foreground">${t.jobs} job${t.jobs !== 1 ? 's' : ''} running</div>
+            <div class="w-full h-1 mt-1.5 rounded-full bg-secondary overflow-hidden">
+              <div class="h-full bg-foreground/70" style="width:${pct}%"></div>
+            </div>
+          </button>
+        `;
+            }).join('');
+        }
+
+        function refreshCompost() {
+            const list = document.getElementById('compost-list');
+            const count = document.getElementById('compost-count');
+            if (count) count.textContent = doneList.length + (doneList.length === 1 ? ' batch' : ' batches');
+            if (!list) return;
+            if (doneList.length === 0) {
+                list.innerHTML = `<div class="text-[11px] text-muted-foreground py-3 text-center">Nothing finished yet.</div>`;
+                return;
+            }
+            list.innerHTML = doneList.slice().reverse().map(b => `
+        <div class="flex items-center justify-between gap-2 p-2.5 border border-border rounded-lg">
+          <div>
+            <div class="text-[11px] font-semibold text-foreground">${escapeHtml(b.id)}</div>
+            <div class="text-[10px] text-muted-foreground">From ${escapeHtml(b.from)} · Grade ${b.grade} · <span class="num">${Math.round(b.kg * 0.35)}</span> kg compost</div>
+          </div>
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-emerald-50 text-emerald-600 border border-emerald-200">Ready</span>
+        </div>
+      `).join('');
+        }
+
+        function refreshCerts() {
+            const list = document.getElementById('cert-list');
+            if (!list) return;
+            if (doneList.length === 0) {
+                list.innerHTML = `<div class="text-muted-foreground">No certificates made yet.</div>`;
+                return;
+            }
+            list.innerHTML = doneList.slice().reverse().slice(0, 5).map(b => `
+        <div class="flex justify-between items-center border-b border-border py-1.5">
+          <span class="text-foreground">${escapeHtml(b.id)}</span>
+          <span class="text-emerald-600">Issued</span>
+        </div>
+      `).join('');
+        }
+
+        function updateCalculator(kg) {
+            const v = document.getElementById('sliderMassValue');
+            if (v) v.textContent = Number(kg).toLocaleString() + ' kg';
+            const gas = (kg * 0.45).toFixed(1);
+            const co2 = ((kg * 1.9) / 1000).toFixed(2);
+            const b = document.getElementById('calcBiogasDisplay');
+            const c = document.getElementById('calcCarbonDisplay');
+            if (b) b.textContent = gas + ' m³';
+            if (c) c.textContent = co2 + ' t';
+        }
+
+        // ==========================================
+        // WATCHDOG
+        // ==========================================
+        async function runWatchdog() {
+            try {
+                if (!window.ByteToBiteAPI) return;
+                const lots = await window.ByteToBiteAPI.getLots();
+                const now = Date.now();
+
+                const flagged = lots.filter(l => {
+                    if (l._isBarter) return false;
+                    if (['DIGESTING', 'COMPOST_FINISHED', 'DELIVERED'].includes(l.status)) return false;
+                    if (l.divertReason || l.cancelReason) return true;
+                    if (l.status === 'OPEN' && (now - (l.createdAt || now)) > OLD_LOT_HOURS * 3600000) return true;
+                    return false;
+                });
+
+                const already = new Set(queueList.map(l => l.id));
+                for (const lot of flagged) {
+                    if (already.has(lot.id)) continue;
+                    queueList.push({
+                        ...lot,
+                        divertReason: lot.divertReason || lot.cancelReason || 'AUTO_THERMAL_DECAY',
+                        autoFoundAt: now
+                    });
+                    if (!readOnly) {
+                        try {
+                            await window.ByteToBiteAPI.publishLot({
+                                ...lot, status: 'DIVERTED',
+                                divertReason: lot.divertReason || lot.cancelReason || 'AUTO_THERMAL_DECAY',
+                                divertedAt: now
+                            });
+                        } catch (e) { }
+                    }
+                }
+
+                const liveIds = new Set(lots.map(l => l.id));
+                queueList = queueList.filter(l => liveIds.has(l.id));
+
+                refreshQueue();
+                refreshMap();
+            } catch (e) { console.warn('Watchdog error:', e); }
+        }
+
+        // ==========================================
+        // TANK LIVE READINGS
+        // ==========================================
+        function startTankReadings() {
+            if (tankTimer) return;
+            tankTimer = setInterval(() => {
+                tanks.forEach(t => {
+                    const base = t.name === 'Hot tank' ? 55 : t.name === 'Warm tank' ? 37 : 28;
+                    t.temp = base + (Math.random() - 0.5) * 1.6;
+                    t.ph = 7 + (Math.random() - 0.5) * 0.6;
+                    t.pressure = 1.5 + (Math.random() - 0.5) * 0.5;
+                });
+                refreshTanks();
+            }, 2500);
+        }
+
+        // ==========================================
+        // MAP
+        // ==========================================
+        function initMap() {
+            if (map) return;
+            const el = document.getElementById('leaflet-map');
+            if (!el) return;
+            map = L.map(el, { zoomControl: false, attributionControl: false }).setView([DEFAULT_FACILITY.lat, DEFAULT_FACILITY.lng], 10);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+            L.marker([DEFAULT_FACILITY.lat, DEFAULT_FACILITY.lng], {
+                icon: L.divIcon({
+                    className: '',
+                    html: `<div style="background:#111;color:#fff;padding:4px 10px;font-weight:600;border-radius:6px;font-size:11px;border:1px solid #111;">${escapeHtml(DEFAULT_FACILITY.name)}</div>`,
+                    iconSize: [140, 24], iconAnchor: [70, 24]
+                })
+            }).addTo(map);
+
+            L.circle([DEFAULT_FACILITY.lat, DEFAULT_FACILITY.lng], {
+                radius: SINK_RADIUS_KM * 1000,
+                color: '#111', weight: 1, fillColor: '#111', fillOpacity: 0.03, dashArray: '3 5'
+            }).addTo(map);
+
+            window.map = map;
+            refreshMap();
+        }
+
+        function refreshMap() {
+            if (!map) return;
+            mapMarkers.forEach(m => map.removeLayer(m));
+            mapMarkers = [];
+            queueList.forEach(lot => {
+                if (!lot.lat || !lot.lng) return;
+                const isOld = (lot.divertReason || '').includes('THERMAL');
+                const color = isOld ? '#e11d48' : (lot.divertReason || '').includes('CONTAM') ? '#d97706' : '#059669';
+                const marker = L.circleMarker([lot.lat, lot.lng], {
+                    radius: 6, color, weight: 2, fillColor: color, fillOpacity: 0.5
+                }).addTo(map);
+                marker.bindPopup(`<b>${escapeHtml(lot.id)}</b><br>${escapeHtml(lot.origin || 'Farm')}<br>${fmt(lot.massKg)} kg`);
+                mapMarkers.push(marker);
+            });
+        }
+
+        // ==========================================
+        // CERTIFICATE
+        // ==========================================
+        function downloadCertificate() {
+            const last = doneList[doneList.length - 1];
+            const data = {
+                facility: DEFAULT_FACILITY.name,
+                cpcbId: currentUser?.cpcbId || 'PB/PWM/2024/091',
+                latestBatch: last || null,
+                totalCO2Saved_t: totalCO2,
+                totalGasMade_m3: totalGas,
+                batchesCompleted: doneList.length,
+                issuedAt: new Date().toISOString(),
+                issuedBy: currentUser?.name || 'Operator'
+            };
+            const json = JSON.stringify(data, null, 2);
+            crypto.subtle.digest('SHA-256', new TextEncoder().encode(json)).then(buf => {
+                const hash = '0x' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+                const final = { ...data, fingerprint: hash };
+                const blob = new Blob([JSON.stringify(final, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bytetobite-certificate-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Certificate downloaded.');
+                closeDrawer();
+            });
+        }
+
+        // ==========================================
+        // REFRESH / SUBSCRIBE / URL
+        // ==========================================
+        async function refreshMetrics() {
+            await runWatchdog();
+            refreshQueue();
+            refreshMap();
+            showToast('Just checked — all up to date.');
+        }
+
+        async function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const reason = params.get('divertReason');
+            const id = params.get('tripId') || params.get('batchId') || params.get('lot');
+            if (reason && id) {
+                try {
+                    if (window.ByteToBiteAPI && !readOnly) {
+                        const lot = await window.ByteToBiteAPI.getLot(id);
+                        if (lot) await window.ByteToBiteAPI.publishLot({ ...lot, status: 'DIVERTED', divertReason: reason, divertedAt: Date.now() });
+                    }
+                } catch (e) { }
+                showToast(`Got a rerouted batch: ${reason.replace(/_/g, ' ').toLowerCase()}`, 'warn');
+            }
+        }
+
+        function subscribeToDB() {
+            if (!window.ByteToBiteAPI) return;
+            if (unsubscribeDB) unsubscribeDB();
+            unsubscribeDB = window.ByteToBiteAPI.subscribe(async () => {
+                try { await runWatchdog(); } catch (e) { }
+            });
+        }
+
+        // ==========================================
+        // URL PARAMS FOR AUTO-LOGIN
+        // ==========================================
+        function checkLoginParams() {
+            const params = new URLSearchParams(window.location.search);
+            const role = params.get('role');
+            const dev = params.get('dev');
+            if (dev === '1' || role === 'operator') {
+                completeLogin({ ...DEMO_PROFILES.operator });
+            } else if (role === 'auditor') {
+                completeLogin({ ...DEMO_PROFILES.auditor });
+            } else {
+                // Restore previous session
+                (async () => {
+                    try {
+                        if (window.ByteToBiteAPI) {
+                            const saved = await window.ByteToBiteAPI.getProfile('compost-operator')
+                                || await window.ByteToBiteAPI.getProfile('compost-auditor');
+                            if (saved) completeLogin(saved);
+                        }
+                    } catch (e) { }
+                })();
+            }
+        }
+
+        // ==========================================
+        // BOOT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const v = document.getElementById('bg-video');
+            if (v) {
+                v.muted = true; v.loop = true;
+                const kick = () => v.play().catch(() => { });
+                kick();
+                v.addEventListener('loadeddata', kick, { once: true });
+                document.addEventListener('visibilitychange', () => { if (!document.hidden && v.paused) kick(); });
+            }
+
+            checkLoginParams();
+
+            // Kill entrance animations after 1.5s for smooth scrolling
+            setTimeout(() => {
+                document.querySelectorAll('.anim-badge, .anim-headline, .anim-subhead, .anim-cta, .anim-dashboard').forEach(el => {
+                    el.classList.add('anim-done');
+                });
+            }, 1500);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (watchdogTimer) clearInterval(watchdogTimer);
+            if (tankTimer) clearInterval(tankTimer);
+            if (unsubscribeDB) unsubscribeDB();
+        });
+    </script>
+</body>
+
+</html>

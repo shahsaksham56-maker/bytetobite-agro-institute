@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ByteToBite — Node 02 · Kitchen Monitor</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        @keyframes ribbonDrift {
+
+            0%,
+            100% {
+                transform: translateY(0px) scaleY(1);
+            }
+
+            50% {
+                transform: translateY(-14px) scaleY(1.03);
+            }
+        }
+
+        @keyframes ribbonEcho {
+
+            0%,
+            100% {
+                transform: translateY(0px) scaleY(1);
+                opacity: 0.35;
+            }
+
+            50% {
+                transform: translateY(12px) scaleY(0.97);
+                opacity: 0.65;
+            }
+        }
+
+        .animate-ribbon-main {
+            animation: ribbonDrift 7.5s ease-in-out infinite;
+        }
+
+        .animate-ribbon-sub {
+            animation: ribbonEcho 9s ease-in-out infinite;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            height: 22px;
+            width: 22px;
+            border-radius: 9999px;
+            background: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            height: 22px;
+            width: 22px;
+            border-radius: 9999px;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script src="institutional-db.js"></script>
+
+    <script>
+        if (!window.InstitutionalAPI) {
+            window.InstitutionalAPI = {
+                MODE: 'unavailable',
+                getCurrentSession: async () => null,
+                getInstitute: async () => null,
+                getMealPlans: async () => [],
+                getPrepByPlan: async () => null,
+                getLatestTally: async () => null,
+                saveMealPrep: async () => { throw new Error('InstitutionalAPI not loaded'); },
+                saveMealPlan: async () => { throw new Error('InstitutionalAPI not loaded'); },
+                subscribe: () => () => { },
+                agents: {
+                    forecast: async () => ({ suggested_headcount: 0, base_headcount: 0, confidence: 0, factors: [] }),
+                    wasteRisk: async () => 0,
+                    suggestMenu: () => [],
+                    anomaly: () => null,
+                },
+            };
+        }
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ═══════════════════════════════════════════════════════════════
+        // PRISM RING BUTTON
+        // ═══════════════════════════════════════════════════════════════
+        const RAINBOW_PRISM = ["#ff2d55", "#ff9500", "#ffe600", "#34c759", "#32ade6", "#5856d6", "#af52de"];
+        const PRISM_BAND_MASK = {
+            maskImage: "linear-gradient(#000 0 0), linear-gradient(#000 0 0)",
+            maskClip: "border-box, content-box",
+            maskComposite: "exclude",
+            WebkitMaskImage: "linear-gradient(#000 0 0), linear-gradient(#000 0 0)",
+            WebkitMaskClip: "border-box, content-box",
+            WebkitMaskComposite: "xor",
+        };
+
+        function PrismRingButton({
+            label = "BUTTON", onClick = () => { }, padding = "10px 24px", rounded = 9999,
+            colors = { fill: "#0D0D0D", hoverFill: "#000000B3", textColor: "#FFFFFF", hoverTextColor: "#EDE9FF" },
+            stroke = { colors: RAINBOW_PRISM, strokeWidth: 2 }, speed = 50, hoverScale = 1.04,
+            style = {}, className = "", icon = null, iconSide = "left", disabled = false,
+        }) {
+            const [isHovered, setIsHovered] = useState(false);
+            const [side, setSide] = useState(240);
+            const btnRef = useRef(null);
+            const restRef = useRef(null);
+            const fullRef = useRef(null);
+            const glowSpinRef = useRef(null);
+
+            const speedMultiplier = 10 * (Math.max(0, Math.min(100, Math.round(speed))) / 50);
+            const degPerSec = speedMultiplier * 36;
+            const stops = stroke?.colors && stroke.colors.length ? stroke.colors : RAINBOW_PRISM;
+            const fullConic = `conic-gradient(from 0deg, ${[...stops, stops[0]].join(", ")})`;
+            const restStops = stops.map((c, i) => `${c} ${((360 * i) / (stops.length - 1)).toFixed(2)}deg`).join(", ");
+            const restConic = `conic-gradient(from 0deg, ${restStops})`;
+
+            useEffect(() => {
+                const el = btnRef.current;
+                if (!el) return;
+                const measure = () => setSide(Math.ceil(Math.hypot(el.offsetWidth, el.offsetHeight) * 1.2));
+                measure();
+                const ro = new ResizeObserver(measure);
+                ro.observe(el);
+                return () => ro.disconnect();
+            }, []);
+
+            useEffect(() => {
+                let raf = 0, last = 0, angle = 0;
+                const tick = (t) => {
+                    if (!last) last = t;
+                    angle = (angle + (degPerSec * (t - last)) / 1000) % 360;
+                    last = t;
+                    const tr = `rotate(${angle}deg)`;
+                    if (restRef.current) restRef.current.style.transform = tr;
+                    if (fullRef.current) fullRef.current.style.transform = tr;
+                    if (glowSpinRef.current) glowSpinRef.current.style.transform = tr;
+                    raf = requestAnimationFrame(tick);
+                };
+                raf = requestAnimationFrame(tick);
+                return () => cancelAnimationFrame(raf);
+            }, [degPerSec]);
+
+            const spinStyle = {
+                position: "absolute", top: "50%", left: "50%",
+                width: `${side}px`, height: `${side}px`,
+                marginTop: `-${side / 2}px`, marginLeft: `-${side / 2}px`,
+            };
+
+            return (
+                <div className={className} style={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", ...style }}>
+                    <button ref={btnRef} type="button" onClick={disabled ? undefined : onClick} disabled={disabled}
+                        onMouseEnter={() => !disabled && setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                        style={{
+                            position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                            flexDirection: iconSide === "right" ? "row-reverse" : "row", padding,
+                            borderRadius: typeof rounded === "number" ? `${rounded}px` : rounded, border: "none",
+                            backgroundColor: isHovered ? (colors.hoverFill || "#171717") : (colors.fill || "#0D0D0D"),
+                            cursor: disabled ? "not-allowed" : "pointer", outline: "none",
+                            opacity: disabled ? 0.45 : 1,
+                            transform: isHovered && !disabled ? `scale(${hoverScale})` : "scale(1)",
+                            transition: "transform 0.4s cubic-bezier(0.44, 0, 0.56, 1), background-color 0.4s ease",
+                            width: "100%", height: "100%",
+                        }}>
+                        <div aria-hidden="true" style={{ position: "absolute", inset: 0, zIndex: 0, filter: `blur(${isHovered ? 36 : 18}px)`, transition: "filter 0.4s ease", pointerEvents: "none" }}>
+                            <div style={{ position: "absolute", inset: 0, padding: `${stroke.strokeWidth || 2}px`, borderRadius: typeof rounded === "number" ? `${rounded}px` : rounded, ...PRISM_BAND_MASK }}>
+                                <div ref={glowSpinRef} style={{ ...spinStyle, background: fullConic }} />
+                            </div>
+                        </div>
+                        <div aria-hidden="true" style={{ position: "absolute", inset: 0, padding: `${stroke.strokeWidth || 2}px`, borderRadius: typeof rounded === "number" ? `${rounded}px` : rounded, zIndex: 1, pointerEvents: "none", ...PRISM_BAND_MASK }}>
+                            <div ref={restRef} style={{ ...spinStyle, background: restConic, opacity: isHovered ? 0 : 1, transition: "opacity 0.4s ease" }} />
+                            <div ref={fullRef} style={{ ...spinStyle, background: fullConic, opacity: isHovered ? 1 : 0, transition: "opacity 0.4s ease" }} />
+                        </div>
+                        {icon && <span style={{ position: "relative", zIndex: 2, display: "inline-flex" }}>{icon}</span>}
+                        <span style={{ position: "relative", zIndex: 2, color: isHovered ? (colors.hoverTextColor || "#EDE9FF") : (colors.textColor || "#FFFFFF"), whiteSpace: "nowrap" }}>
+                            {label}
+                        </span>
+                    </button>
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ARROW REVEAL BUTTON
+        // ═══════════════════════════════════════════════════════════════
+        function ArrowRevealButton({
+            label = "Continue", onClick, fill = "#141414", textColor = "#FFFFFF",
+            badgeBackground = "#FA5F00", iconColor = "#FFFFFF", padding = "16px 28px",
+            gap = 18, rounded = 100, badgeSize = 36, iconSize = 18, disabled = false,
+        }) {
+            const [isHovered, setIsHovered] = useState(false);
+            const [isPressed, setIsPressed] = useState(false);
+            const [hoverScale, setHoverScale] = useState(1);
+            const [hoverX, setHoverX] = useState(0);
+            const btnRef = useRef(null);
+            const slotRef = useRef(null);
+
+            useEffect(() => {
+                if (!btnRef.current || !slotRef.current) return;
+                const measure = () => {
+                    const btnW = btnRef.current.offsetWidth;
+                    const btnH = btnRef.current.offsetHeight;
+                    const slotLeft = slotRef.current.offsetLeft;
+                    const slotW = slotRef.current.offsetWidth;
+                    const cx = slotLeft + slotW / 2;
+                    const far = Math.hypot(Math.max(cx, btnW - cx), btnH / 2);
+                    const coverD = Math.ceil(2 * far * 1.05);
+                    setHoverScale(coverD / badgeSize);
+                    setHoverX(btnW / 2 - cx);
+                };
+                measure();
+                const ro = new ResizeObserver(measure);
+                ro.observe(btnRef.current);
+                return () => ro.disconnect();
+            }, [badgeSize]);
+
+            return (
+                <button ref={btnRef} onClick={disabled ? undefined : onClick} disabled={disabled}
+                    onMouseEnter={() => !disabled && setIsHovered(true)}
+                    onMouseLeave={() => { setIsHovered(false); setIsPressed(false); }}
+                    onMouseDown={() => !disabled && setIsPressed(true)}
+                    onMouseUp={() => setIsPressed(false)}
+                    style={{
+                        position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between",
+                        width: "100%", padding, gap, backgroundColor: fill, color: textColor,
+                        borderRadius: `${rounded}px`, border: "none",
+                        cursor: disabled ? "not-allowed" : "pointer", overflow: "hidden", outline: "none",
+                        opacity: disabled ? 0.5 : 1,
+                        transform: isPressed ? "scale(0.97)" : "scale(1)",
+                        transition: "transform 0.25s cubic-bezier(0.44, 0, 0.56, 1), box-shadow 0.3s",
+                        boxShadow: isHovered ? "0 12px 28px rgba(0, 0, 0, 0.35)" : "0 8px 20px rgba(0, 0, 0, 0.25)",
+                    }}>
+                    <div style={{ position: "absolute", zIndex: 2, top: "50%", right: "18px", width: `${badgeSize}px`, height: `${badgeSize}px`, marginTop: `-${badgeSize / 2}px`, borderRadius: "9999px", backgroundColor: badgeBackground, pointerEvents: "none", transformOrigin: "center", transform: isHovered ? `scale(${hoverScale})` : "scale(1)", transition: "transform 0.46s cubic-bezier(0.44, 0, 0.56, 1)" }} />
+                    <span style={{ position: "relative", zIndex: 1, fontWeight: 800, fontSize: "15px", transform: isHovered ? "translateX(6px)" : "translateX(0)", transition: "transform 0.46s" }}>
+                        {label}
+                    </span>
+                    <span ref={slotRef} style={{ flex: "none", width: `${badgeSize}px`, height: `${badgeSize}px` }} />
+                    <div style={{ position: "absolute", zIndex: 3, top: "50%", right: "18px", width: `${badgeSize}px`, height: `${badgeSize}px`, marginTop: `-${badgeSize / 2}px`, display: "flex", alignItems: "center", justifyContent: "center", color: iconColor, pointerEvents: "none", transform: isHovered ? `translateX(${hoverX}px) rotate(-45deg)` : "translateX(0px) rotate(0deg)", transition: "transform 0.46s" }}>
+                        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12H19M19 12L13 6M19 12L13 18" />
+                        </svg>
+                    </div>
+                </button>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // HOOK: LOAD FROM InstitutionalAPI
+        // ═══════════════════════════════════════════════════════════════
+        function useKitchenData() {
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [institute, setInstitute] = useState(null);
+            const [plan, setPlan] = useState(null);
+            const [prep, setPrep] = useState(null);
+            const [served, setServed] = useState(0);
+            const [suggestion, setSuggestion] = useState(null);
+            const [plans, setPlans] = useState([]);
+            const [prepared, setPrepared] = useState(0);
+
+            const loadAll = useCallback(async () => {
+                try {
+                    const api = window.InstitutionalAPI;
+                    if (!api) throw new Error('InstitutionalAPI not loaded — include institutional-db.js');
+                    setLoading(true);
+
+                    const session = await api.getCurrentSession();
+                    if (!session || !session.institute_id) {
+                        throw new Error('No session — open institutional.html first, or use ?dev=1');
+                    }
+                    const inst = await api.getInstitute(session.institute_id);
+                    if (!inst) throw new Error('Institute not found');
+                    setInstitute(inst);
+
+                    const allPlans = (await api.getMealPlans(inst.id)) || [];
+                    setPlans(allPlans);
+
+                    const sorted = allPlans.slice().sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+                    const active = sorted.find(p => p.status === 'IN_SERVICE')
+                        || sorted.find(p => p.status === 'PUBLISHED')
+                        || sorted.find(p => p.status === 'COMPLETED')
+                        || sorted[0] || null;
+                    setPlan(active);
+
+                    if (active?.id) {
+                        const existingPrep = await api.getPrepByPlan(active.id);
+                        setPrep(existingPrep);
+                        if (existingPrep) {
+                            setPrepared(existingPrep.prepared_count || 0);
+                            const tally = await api.getLatestTally(existingPrep.id);
+                            setServed(tally?.served_count || 0);
+                        } else {
+                            setPrepared(active.predicted_demand || 0);
+                            setServed(0);
+                        }
+
+                        const planned = active.predicted_demand || 0;
+                        const completed = allPlans.filter(p => p.status === 'COMPLETED' && p.prepared_count && p.predicted_demand);
+                        const factors = [];
+                        let factor = 1.0;
+                        if (completed.length >= 2) {
+                            const ratios = completed.slice(0, 10).map(p => (p.prepared_count || 0) / (p.predicted_demand || 1));
+                            const avgRatio = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+                            const drift = avgRatio - 1;
+                            factors.push({ label: 'Historic prep drift', delta_pct: Math.round(drift * 100) });
+                            factor *= (1 + drift * 0.5);
+                        }
+                        const d = new Date((active.date || new Date().toISOString().slice(0, 10)) + 'T00:00:00');
+                        const dow = d.getDay();
+                        const dowAdj = { 0: -0.04, 1: 0, 2: 0, 3: 0.01, 4: 0.01, 5: 0.05, 6: 0.03 }[dow] || 0;
+                        if (dowAdj) {
+                            factor *= (1 + dowAdj);
+                            factors.push({ label: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dow], delta_pct: Math.round(dowAdj * 100) });
+                        }
+                        const items = active.menu_items || [];
+                        const perishAvg = items.length ? items.reduce((s, it) => s + (it.perishability ?? 0.4), 0) / items.length : 0.4;
+                        const perishAdj = -(perishAvg - 0.4) * 0.15;
+                        if (Math.abs(perishAdj) > 0.005) {
+                            factor *= (1 + perishAdj);
+                            factors.push({ label: 'Menu perishability', delta_pct: Math.round(perishAdj * 100) });
+                        }
+                        const suggested = Math.max(10, Math.round(planned * factor));
+                        setSuggestion({ suggested, planned, factors });
+                    } else {
+                        setPrep(null);
+                        setPrepared(0);
+                        setServed(0);
+                        setSuggestion(null);
+                    }
+                    setError(null);
+                } catch (e) {
+                    setError(e.message || String(e));
+                } finally {
+                    setLoading(false);
+                }
+            }, []);
+
+            useEffect(() => { loadAll(); }, [loadAll]);
+
+            useEffect(() => {
+                const api = window.InstitutionalAPI;
+                if (!api || !api.subscribe) return;
+                const unsub = api.subscribe(async (type) => {
+                    const label = (type || '').replace('bytetobite:', '').replace('-changed', '');
+                    if (['tallies', 'meal-plans', 'meal-preps'].includes(label)) {
+                        await loadAll();
+                    }
+                });
+                return () => unsub && unsub();
+            }, [loadAll]);
+
+            const savePrep = useCallback(async (verify) => {
+                const api = window.InstitutionalAPI;
+                if (!api || !plan || !institute) return { ok: false, msg: 'Not ready' };
+                try {
+                    const payload = {
+                        id: prep?.id,
+                        institute_id: institute.id,
+                        plan_id: plan.id,
+                        prepared_count: prepared,
+                        agent_suggested_count: suggestion?.suggested || null,
+                        agent_factors: suggestion?.factors || [],
+                        variance_pct: plan.predicted_demand
+                            ? Math.round(((prepared - plan.predicted_demand) / plan.predicted_demand) * 100)
+                            : null,
+                        notes: prep?.notes || '',
+                        chef_verified_at: verify ? Date.now() : (prep?.chef_verified_at || null),
+                    };
+                    const saved = await api.saveMealPrep(payload);
+                    setPrep(saved);
+                    if (verify && plan.status !== 'IN_SERVICE' && plan.status !== 'COMPLETED') {
+                        await api.saveMealPlan({ ...plan, status: 'IN_SERVICE' });
+                        setPlan({ ...plan, status: 'IN_SERVICE' });
+                    }
+                    await loadAll();
+                    return { ok: true };
+                } catch (e) {
+                    return { ok: false, msg: e.message || 'Save failed' };
+                }
+            }, [plan, institute, prep, prepared, suggestion, loadAll]);
+
+            const updateMenuItems = useCallback(async (newItems) => {
+                const api = window.InstitutionalAPI;
+                if (!api || !plan) return { ok: false, msg: 'No active plan' };
+                try {
+                    const updated = { ...plan, menu_items: newItems };
+                    const saved = await api.saveMealPlan(updated);
+                    setPlan(saved);
+                    return { ok: true };
+                } catch (e) {
+                    return { ok: false, msg: e.message || 'Failed to save menu' };
+                }
+            }, [plan]);
+
+            return {
+                loading, error, institute, plan, prep, served, suggestion, plans,
+                prepared, setPrepared, savePrep, updateMenuItems, reload: loadAll,
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MENU EDITOR
+        // ═══════════════════════════════════════════════════════════════
+        const MENU_CATEGORIES = [
+            { key: 'staple', label: 'Staple', perishability: 0.35 },
+            { key: 'protein', label: 'Protein', perishability: 0.55 },
+            { key: 'light', label: 'Light', perishability: 0.30 },
+            { key: 'nonveg', label: 'Non-veg', perishability: 0.72 },
+            { key: 'dessert', label: 'Dessert', perishability: 0.78 },
+            { key: 'breakfast', label: 'Breakfast', perishability: 0.22 },
+            { key: 'festive', label: 'Festive', perishability: 0.55 },
+            { key: 'south', label: 'South', perishability: 0.25 },
+        ];
+
+        function MenuEditor({ items, onChange, disabled }) {
+            const [draftName, setDraftName] = useState('');
+            const [draftQty, setDraftQty] = useState(1);
+            const [draftCat, setDraftCat] = useState('staple');
+
+            const add = () => {
+                const name = draftName.trim();
+                if (!name) return;
+                const cat = MENU_CATEGORIES.find(c => c.key === draftCat) || MENU_CATEGORIES[0];
+                const next = [...(items || []), { name, qty: Math.max(1, parseInt(draftQty, 10) || 1), category: cat.key, perishability: cat.perishability }];
+                onChange(next);
+                setDraftName('');
+                setDraftQty(1);
+                setDraftCat('staple');
+            };
+
+            const remove = (idx) => {
+                const next = (items || []).filter((_, i) => i !== idx);
+                onChange(next);
+            };
+
+            const updateField = (idx, field, value) => {
+                const next = (items || []).map((it, i) => {
+                    if (i !== idx) return it;
+                    const copy = { ...it };
+                    if (field === 'qty') copy.qty = Math.max(1, parseInt(value, 10) || 1);
+                    else if (field === 'category') {
+                        copy.category = value;
+                        const cat = MENU_CATEGORIES.find(c => c.key === value);
+                        if (cat) copy.perishability = cat.perishability;
+                    } else copy[field] = value;
+                    return copy;
+                });
+                onChange(next);
+            };
+
+            return (
+                <div className="bg-white/10 p-4 sm:p-5 rounded-2xl border border-white/20">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-white/90">
+                            Menu items · {items?.length || 0}
+                        </h4>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-white/60">
+                            {disabled ? 'locked' : 'add / edit / remove'}
+                        </span>
+                    </div>
+
+                    {(items || []).length === 0 && (
+                        <div className="text-[11px] text-white/50 py-3 text-center bg-black/20 rounded-xl mb-3">
+                            No menu items yet. Add one below.
+                        </div>
+                    )}
+
+                    <div className="space-y-2 mb-3">
+                        {(items || []).map((it, idx) => (
+                            <div key={idx} className="grid items-center gap-2 p-2 bg-black/25 rounded-xl border border-white/15"
+                                style={{ gridTemplateColumns: '1fr 70px 110px 32px' }}>
+                                <input
+                                    type="text"
+                                    value={it.name || ''}
+                                    onChange={(e) => updateField(idx, 'name', e.target.value)}
+                                    disabled={disabled}
+                                    placeholder="Item name"
+                                    className="bg-transparent text-white text-[13px] font-medium focus:outline-none disabled:opacity-60 min-w-0 px-1"
+                                />
+                                <input
+                                    type="number"
+                                    value={it.qty || 1}
+                                    onChange={(e) => updateField(idx, 'qty', e.target.value)}
+                                    disabled={disabled}
+                                    min="1"
+                                    className="bg-white/10 text-white text-[12px] font-mono text-center rounded-md py-1 focus:outline-none disabled:opacity-60"
+                                />
+                                <select
+                                    value={it.category || 'staple'}
+                                    onChange={(e) => updateField(idx, 'category', e.target.value)}
+                                    disabled={disabled}
+                                    className="bg-white/10 text-white text-[11px] rounded-md py-1 px-1 focus:outline-none disabled:opacity-60"
+                                    style={{ colorScheme: 'dark' }}
+                                >
+                                    {MENU_CATEGORIES.map(c => (
+                                        <option key={c.key} value={c.key} style={{ color: '#000' }}>{c.label}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => remove(idx)}
+                                    disabled={disabled}
+                                    title="Remove item"
+                                    className="w-7 h-7 rounded-md bg-white/10 hover:bg-red-500/40 flex items-center justify-center text-white/70 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 6 6 18M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {!disabled && (
+                        <div className="grid items-center gap-2 p-2 bg-white/5 rounded-xl border border-dashed border-white/25"
+                            style={{ gridTemplateColumns: '1fr 70px 110px 60px' }}>
+                            <input
+                                type="text"
+                                value={draftName}
+                                onChange={(e) => setDraftName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+                                placeholder="+ New item name"
+                                className="bg-transparent text-white text-[13px] placeholder-white/40 focus:outline-none min-w-0 px-1"
+                            />
+                            <input
+                                type="number"
+                                value={draftQty}
+                                onChange={(e) => setDraftQty(e.target.value)}
+                                min="1"
+                                placeholder="Qty"
+                                className="bg-white/10 text-white text-[12px] font-mono text-center rounded-md py-1 focus:outline-none"
+                            />
+                            <select
+                                value={draftCat}
+                                onChange={(e) => setDraftCat(e.target.value)}
+                                className="bg-white/10 text-white text-[11px] rounded-md py-1 px-1 focus:outline-none"
+                                style={{ colorScheme: 'dark' }}
+                            >
+                                {MENU_CATEGORIES.map(c => (
+                                    <option key={c.key} value={c.key} style={{ color: '#000' }}>{c.label}</option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={add}
+                                disabled={!draftName.trim()}
+                                className="text-[11px] font-bold uppercase tracking-wider bg-white text-black rounded-md py-1.5 hover:bg-white/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // NODE 02 VIEW
+        // ═══════════════════════════════════════════════════════════════
+        function Node02View() {
+            const [drawerOpen, setDrawerOpen] = useState(false);
+            const [toastMessage, setToastMessage] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
+            const [hasLocalEdits, setHasLocalEdits] = useState(false);
+            const kitchen = useKitchenData();
+
+            const VIDEO_URL = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260713_234424_b1332b69-2e69-4302-8dbc-40f86846afbd.mp4';
+
+            const showToast = (title, description) => {
+                setToastMessage({ title, description });
+                setTimeout(() => setToastMessage(null), 3800);
+            };
+
+            const planned = kitchen.plan?.predicted_demand || 0;
+            const prepared = kitchen.prepared || 0;
+            const served = kitchen.served || 0;
+            const agentSuggested = kitchen.suggestion?.suggested ?? planned;
+
+            const effectiveDemand = served > 0 ? served : planned;
+            const surplus = Math.max(0, prepared - effectiveDemand);
+            const deficit = Math.max(0, effectiveDemand - prepared);
+            const coverage = effectiveDemand === 0 ? 1 : +(prepared / effectiveDemand).toFixed(4);
+
+            const baselineWaste = Math.round(planned * 0.15);
+            const currentWaste = surplus;
+            const wasteSaved = Math.max(0, baselineWaste - currentWaste);
+            const wasteReductionPct = baselineWaste === 0 ? 0 : ((baselineWaste - currentWaste) / baselineWaste) * 100;
+            const costSaved = wasteSaved * 65;
+
+            const isSaved = !!(kitchen.prep?.id) && !hasLocalEdits;
+
+            let status = 'Balanced';
+            let statusColor = 'bg-amber-500/30 text-amber-200 border-amber-300/40';
+            if (coverage > 1.05) { status = 'Safe / Good Buffer'; statusColor = 'bg-emerald-500/30 text-emerald-200 border-emerald-300/40'; }
+            else if (coverage < 0.98) { status = 'Low Stock Warning'; statusColor = 'bg-rose-500/30 text-rose-200 border-rose-300/40'; }
+
+            useEffect(() => { setHasLocalEdits(false); }, [kitchen.prep?.id]);
+
+            const handlePreparedChange = (v) => {
+                kitchen.setPrepared(Math.max(0, Math.floor(v) || 0));
+                setHasLocalEdits(true);
+            };
+
+            const acceptAgentValue = () => handlePreparedChange(agentSuggested);
+            const adjustBy = (delta) => handlePreparedChange(prepared + delta);
+            const setToPlanned = () => handlePreparedChange(planned);
+            const isAtAgentValue = prepared === agentSuggested;
+            const isAtPlannedValue = prepared === planned;
+
+            const handleMenuChange = async (nextItems) => {
+                const res = await kitchen.updateMenuItems(nextItems);
+                if (!res.ok) showToast('Could not save menu', res.msg || 'Unknown error');
+                else setHasLocalEdits(true);
+            };
+
+            const handleSaveDraft = async () => {
+                if (isSaving) return;
+                if (!hasLocalEdits && isSaved) {
+                    showToast('Nothing to save', 'You haven\'t changed anything.');
+                    return;
+                }
+                setIsSaving(true);
+                const res = await kitchen.savePrep(false);
+                setIsSaving(false);
+                if (res.ok) {
+                    setHasLocalEdits(false);
+                    showToast('Draft saved', `${prepared} meals saved to grid.`);
+                } else {
+                    showToast('Could not save', res.msg || 'Unknown error');
+                }
+            };
+
+            const handleVerify = async () => {
+                if (isSaving) return;
+                if (!kitchen.plan) {
+                    showToast('No active plan', 'Publish a meal plan on Node 01 first.');
+                    return;
+                }
+                setIsSaving(true);
+                const res = await kitchen.savePrep(true);
+                setIsSaving(false);
+                if (res.ok) {
+                    setHasLocalEdits(false);
+                    showToast('Prep confirmed', `${prepared} meals confirmed · live counts running`);
+                    setTimeout(() => setDrawerOpen(false), 900);
+                } else {
+                    showToast('Could not confirm', res.msg || 'Unknown error');
+                }
+            };
+
+            const handleReload = async () => {
+                await kitchen.reload();
+                setHasLocalEdits(false);
+                showToast('Grid re-synced', 'Latest plan and counts loaded.');
+            };
+
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [drawerOpen, kitchen.loading, kitchen.error]);
+
+            if (kitchen.error) {
+                return (
+                    <main className="relative w-full min-h-screen flex items-center justify-center bg-gradient-to-b from-[#FF8233] to-[#FDAC55] text-white px-6">
+                        <div className="max-w-md w-full bg-black/70 backdrop-blur-xl border border-white/20 rounded-3xl p-8 text-center">
+                            <div className="text-amber-300 font-black text-xs uppercase tracking-widest mb-3">Node 02 · Not ready</div>
+                            <div className="text-white font-bold text-lg mb-2">Could not connect to the grid</div>
+                            <div className="text-white/70 text-sm leading-relaxed mb-6">{kitchen.error}</div>
+                            <a href="institutional.html" className="inline-block px-6 py-3 bg-white text-black font-bold rounded-full text-sm hover:bg-white/90 transition-colors">
+                                Go to sign in
+                            </a>
+                        </div>
+                    </main>
+                );
+            }
+
+            return (
+                <main className="relative w-full h-screen overflow-hidden flex flex-col bg-gradient-to-b from-[#FF8233] to-[#FDAC55] select-none text-white">
+                    {toastMessage && (
+                        <div className="fixed top-6 right-6 z-50 bg-neutral-950/90 border border-white/20 rounded-2xl p-4 shadow-2xl backdrop-blur-xl">
+                            <div className="font-bold text-xs uppercase text-amber-400">{toastMessage.title}</div>
+                            <div className="text-xs text-neutral-300 mt-0.5">{toastMessage.description}</div>
+                        </div>
+                    )}
+
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ maskImage: 'linear-gradient(to bottom, black 35%, transparent 95%)', WebkitMaskImage: 'linear-gradient(to bottom, black 35%, transparent 95%)' }}>
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white h-[46vh] md:h-[52vh]" style={{ width: 'clamp(140px, 18vw, 340px)' }} />
+                        <svg viewBox="0 0 1920 600" preserveAspectRatio="none" className="w-full h-full absolute inset-0 opacity-75" fill="none">
+                            <path className="animate-ribbon-sub" d="M -50 320 C 280 200, 480 440, 780 340 C 960 270, 1100 240, 1260 330 C 1480 460, 1720 220, 1980 300" stroke="rgba(255, 255, 255, 0.35)" strokeWidth="10" strokeLinecap="round" />
+                            <path className="animate-ribbon-main" d="M -60 270 C 220 400, 440 160, 720 280 C 920 370, 1020 390, 1200 290 C 1440 150, 1680 390, 1990 240" stroke="rgba(255, 255, 255, 0.65)" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+
+                    <header className="relative z-20 flex items-center justify-between px-6 sm:px-10 py-5">
+                        <div className="flex items-center gap-3">
+                            <PrismRingButton
+                                label="← Hub"
+                                onClick={() => window.location.href = 'hub.html'}
+                                padding="8px 20px"
+                                speed={40}
+                                stroke={{ colors: RAINBOW_PRISM, strokeWidth: 1.5 }}
+                                colors={{ fill: "rgba(0, 0, 0, 0.7)", hoverFill: "rgba(0, 0, 0, 0.9)", textColor: "#FFFFFF", hoverTextColor: "#EDE9FF" }}
+                                style={{ fontSize: "12px", fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase" }}
+                            />
+                            <span className="text-white font-black text-lg sm:text-2xl tracking-tight hidden sm:inline ml-2">
+                                ByteToBite <span className="opacity-80 font-normal">| Kitchen Monitor</span>
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {kitchen.institute && (
+                                <span className="hidden md:inline-flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-4 py-2 text-[11px] font-mono text-white/85 border border-white/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    {kitchen.institute.code} · {kitchen.institute.mess_name || 'Campus Mess'}
+                                </span>
+                            )}
+                        </div>
+                    </header>
+
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginTop: 'calc(-6vh - 25px)' }}>
+                        <div className="w-[120vw] h-[85vh] sm:w-[70vw] sm:h-[70vh] md:w-[62vw] md:h-[78vh] flex items-center justify-center">
+                            <video src={VIDEO_URL} autoPlay loop muted playsInline className="w-full h-full object-contain pointer-events-none mix-blend-darken" />
+                        </div>
+                    </div>
+
+                    <footer className="relative z-30 mt-auto pb-6 sm:pb-8 flex flex-col items-center text-center px-4 max-w-6xl mx-auto w-full">
+                        <div className="mb-3 flex flex-wrap items-center justify-center gap-3">
+                            <span className="text-white text-base sm:text-lg font-bold">
+                                {kitchen.plan ? `${kitchen.plan.date} · ${(kitchen.plan.meal_slot || '').toUpperCase()}` : 'Kitchen Monitor'}
+                            </span>
+                            <span className={`px-4 py-1 rounded-full text-xs sm:text-sm font-extrabold border shadow-sm backdrop-blur-md ${statusColor}`}>
+                                {status} (CR: {coverage})
+                            </span>
+                            {isSaved && (
+                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-black border border-amber-300">
+                                    Draft saved
+                                </span>
+                            )}
+                            {hasLocalEdits && (
+                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/30 text-white border border-white/50">
+                                    ● Unsaved edits
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 text-white border border-white/30 shadow-md">
+                                <div className="text-xs sm:text-sm font-semibold opacity-90 mb-0.5">Prep / Demand</div>
+                                <div className="text-xl sm:text-2xl font-black font-mono tracking-tight">{prepared} / {effectiveDemand}</div>
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 text-white border border-white/30 shadow-md">
+                                <div className="text-xs sm:text-sm font-semibold opacity-90 mb-0.5">Served</div>
+                                <div className="text-xl sm:text-2xl font-black font-mono tracking-tight text-emerald-200">{served || '—'}</div>
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 text-white border border-white/30 shadow-md">
+                                <div className="text-xs sm:text-sm font-semibold opacity-90 mb-0.5">Surplus / Shortage</div>
+                                <div className="text-xl sm:text-2xl font-black font-mono tracking-tight">
+                                    <span className="text-amber-200">{surplus}</span> / <span className="text-rose-200">{deficit}</span>
+                                </div>
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 text-white border border-white/30 shadow-md">
+                                <div className="text-xs sm:text-sm font-semibold opacity-90 mb-0.5">Cost Saved</div>
+                                <div className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
+                                    ₹{costSaved.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
+                            <PrismRingButton
+                                label="↻ Refresh from grid"
+                                onClick={handleReload}
+                                padding="12px 26px"
+                                speed={45}
+                                stroke={{ colors: RAINBOW_PRISM, strokeWidth: 1.5 }}
+                                colors={{ fill: "rgba(10, 10, 10, 0.75)", hoverFill: "rgba(20, 20, 20, 0.9)", textColor: "#FFFFFF", hoverTextColor: "#34D399" }}
+                                style={{ fontSize: "13px", fontWeight: "700" }}
+                            />
+                            <PrismRingButton
+                                label={isSaving ? "Saving…" : "Kitchen Settings"}
+                                onClick={() => setDrawerOpen(true)}
+                                padding="14px 34px"
+                                speed={65}
+                                hoverScale={1.05}
+                                stroke={{ colors: RAINBOW_PRISM, strokeWidth: 2 }}
+                                colors={{ fill: "#0D0D0D", hoverFill: "#171717", textColor: "#FFFFFF", hoverTextColor: "#EDE9FF" }}
+                                disabled={isSaving}
+                                style={{ fontSize: "15px", fontWeight: "900" }}
+                            />
+                        </div>
+                    </footer>
+
+                    <div className={`fixed inset-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${drawerOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'}`}>
+                        <div onClick={() => setDrawerOpen(false)} className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500 ${drawerOpen ? 'opacity-100' : 'opacity-0'}`} />
+
+                        <aside className={`absolute top-0 right-0 h-full w-full sm:w-[480px] flex flex-col justify-between shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${drawerOpen ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'linear-gradient(145deg, #FF6B1A 0%, #FF8D36 100%)' }}>
+                            <div className="flex-1 overflow-y-auto p-6 sm:p-7 space-y-5">
+                                <div className="flex items-center justify-between pb-4 border-b border-white/20">
+                                    <div>
+                                        <h3 className="text-white font-black text-2xl">Kitchen Settings</h3>
+                                        <p className="text-white/80 text-xs sm:text-sm font-medium mt-0.5">
+                                            {kitchen.plan ? `${kitchen.plan.date} · ${(kitchen.plan.meal_slot || '').toUpperCase()}` : 'No active plan'}
+                                        </p>
+                                    </div>
+                                    <button onClick={() => setDrawerOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors">✕</button>
+                                </div>
+
+                                <div className="bg-white/10 p-4 sm:p-5 rounded-2xl border border-white/20">
+                                    <label className="text-xs font-bold text-white uppercase tracking-wider block mb-2">Planned Demand · from Node 01</label>
+                                    <div className="w-full bg-black/25 text-white px-4 py-2.5 rounded-xl text-base font-bold font-mono border border-white/25 flex items-center justify-between">
+                                        <span>{planned} <span className="text-white/60 font-normal">plates</span></span>
+                                        {!isAtPlannedValue && (
+                                            <button onClick={setToPlanned} className="text-[10px] font-mono bg-white/15 hover:bg-white/25 px-2 py-1 rounded-md transition-colors uppercase tracking-wider">
+                                                Use {planned}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/10 p-4 sm:p-5 rounded-2xl border border-white/20">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <label className="text-xs font-bold text-white uppercase tracking-wider">Cooked · how many plates?</label>
+                                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-200 bg-amber-500/20 border border-amber-300/40 px-2 py-0.5 rounded">
+                                            Manual override
+                                        </span>
+                                    </div>
+
+                                    <div className="w-full bg-black/25 rounded-xl border border-white/25 flex items-center mb-3 overflow-hidden">
+                                        <button onClick={() => adjustBy(-10)} disabled={prepared < 10}
+                                            className="px-3 py-3 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-black">−10</button>
+                                        <button onClick={() => adjustBy(-1)} disabled={prepared < 1}
+                                            className="px-3 py-3 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-lg font-black">−</button>
+                                        <input
+                                            type="number"
+                                            value={kitchen.prepared}
+                                            onChange={(e) => handlePreparedChange(Number(e.target.value))}
+                                            className="flex-1 bg-transparent text-white py-2.5 text-center text-base font-bold font-mono border-none focus:outline-none"
+                                            style={{ minWidth: 0 }}
+                                        />
+                                        <button onClick={() => adjustBy(1)}
+                                            className="px-3 py-3 text-white/70 hover:text-white hover:bg-white/10 text-lg font-black">+</button>
+                                        <button onClick={() => adjustBy(10)}
+                                            className="px-3 py-3 text-white/70 hover:text-white hover:bg-white/10 text-sm font-black">+10</button>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <button
+                                            onClick={acceptAgentValue}
+                                            disabled={isAtAgentValue}
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${isAtAgentValue ? 'bg-white/25 border-white/40 text-white/60 cursor-default'
+                                                    : 'bg-white/15 hover:bg-white/25 border-white/30 text-white'
+                                                }`}
+                                        >
+                                            <i data-lucide="sparkles" className="w-3 h-3 text-amber-200"></i>
+                                            Agent: {agentSuggested}
+                                            {isAtAgentValue && <span className="ml-0.5">✓</span>}
+                                        </button>
+                                        <button onClick={() => adjustBy(25)}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/15 hover:bg-white/25 border border-white/30 text-white transition-all">
+                                            +25 buffer
+                                        </button>
+                                        <button onClick={() => adjustBy(-25)} disabled={prepared < 25}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/15 hover:bg-white/25 border border-white/30 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                                            −25
+                                        </button>
+                                        <button onClick={() => handlePreparedChange(0)}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/15 hover:bg-white/25 border border-white/30 text-white transition-all">
+                                            Reset
+                                        </button>
+                                    </div>
+
+                                    <div className="text-[11px] text-white/70 leading-relaxed">
+                                        Agent suggested <strong className="text-amber-200">{agentSuggested}</strong> plates.
+                                        {!isAtAgentValue && (
+                                            <> You set <strong className="text-white">{prepared}</strong>. Variance:{' '}
+                                                <strong className={prepared > agentSuggested ? 'text-amber-200' : 'text-rose-200'}>
+                                                    {prepared > agentSuggested ? '+' : ''}{prepared - agentSuggested}
+                                                </strong>.
+                                            </>
+                                        )}
+                                        {isAtAgentValue && <span className="text-emerald-200"> ✓ Using agent suggestion.</span>}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/10 p-4 sm:p-5 rounded-2xl border border-white/20">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="text-xs font-bold text-white uppercase tracking-wider">Quick buffer (vs planned)</label>
+                                        <span className="text-white font-black text-base font-mono bg-black/20 px-3 py-1 rounded-lg">
+                                            {planned ? `${Math.round(((kitchen.prepared - planned) / planned) * 100) > 0 ? '+' : ''}${Math.round(((kitchen.prepared - planned) / planned) * 100)}%` : '0%'}
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min={-25} max={25} step={1}
+                                        value={planned ? Math.max(-25, Math.min(25, Math.round(((kitchen.prepared - planned) / planned) * 100))) : 0}
+                                        onChange={(e) => {
+                                            const pct = Number(e.target.value);
+                                            handlePreparedChange(Math.max(0, Math.round(planned * (1 + pct / 100))));
+                                        }}
+                                        className="w-full h-2.5 bg-black/25 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <div className="flex justify-between text-[10px] text-white/50 mt-1.5 font-mono">
+                                        <span>−25%</span><span>planned</span><span>+25%</span>
+                                    </div>
+                                </div>
+
+                                <MenuEditor
+                                    items={kitchen.plan?.menu_items || []}
+                                    onChange={handleMenuChange}
+                                    disabled={false}
+                                />
+
+                                {kitchen.suggestion?.factors?.length > 0 && (
+                                    <div className="bg-white/10 p-4 sm:p-5 rounded-2xl border border-white/20">
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-white/90 mb-3">Prep Agent reasoning</h4>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {kitchen.suggestion.factors.map((f, i) => (
+                                                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-mono font-bold bg-white/15 border border-white/25 text-white">
+                                                    {f.label} · {f.delta_pct > 0 ? '+' : ''}{f.delta_pct}%
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="bg-black/25 p-4 sm:p-5 rounded-2xl border border-white/20 text-white">
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-white/90 mb-3">Live math</h4>
+                                    <div className="grid grid-cols-2 gap-y-2 text-xs sm:text-sm font-mono">
+                                        <span className="opacity-80">Baseline waste (15%):</span>
+                                        <span className="text-right font-bold">{baselineWaste} meals</span>
+                                        <span className="opacity-80">Current surplus:</span>
+                                        <span className="text-right font-bold text-amber-200">{currentWaste} meals</span>
+                                        <span className="opacity-80">Waste avoided:</span>
+                                        <span className="text-right font-bold text-emerald-300">{wasteReductionPct.toFixed(1)}%</span>
+                                        <span className="opacity-80">Cost saved:</span>
+                                        <span className="text-right font-bold text-white">₹{costSaved.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-5 sm:p-6 bg-black/15 backdrop-blur-md border-t border-white/20 space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={handleSaveDraft}
+                                        disabled={isSaving || (isSaved && !hasLocalEdits)}
+                                        className="py-3 bg-white/20 hover:bg-white/30 text-white rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        {isSaving ? 'Saving…' : (isSaved && !hasLocalEdits) ? 'Draft saved ✓' : 'Save draft'}
+                                    </button>
+                                    <button
+                                        onClick={handleVerify}
+                                        disabled={isSaving}
+                                        className="py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                                    >
+                                        {isSaving ? 'Working…' : 'Confirm prep'}
+                                    </button>
+                                </div>
+                                <ArrowRevealButton
+                                    label={
+                                        isSaving ? "Please wait…"
+                                            : hasLocalEdits ? "Save & confirm prep"
+                                                : "Confirm prep & start service"
+                                    }
+                                    onClick={hasLocalEdits ? async () => { await handleSaveDraft(); await handleVerify(); } : handleVerify}
+                                    fill="#141414" textColor="#FFFFFF" badgeBackground="#FA5F00"
+                                    padding="16px 24px" rounded={100} badgeSize={38} iconSize={20}
+                                    disabled={isSaving}
+                                />
+                            </div>
+                        </aside>
+                    </div>
+                </main>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Node02View />);
+    </script>
+</body>
+
+</html>
